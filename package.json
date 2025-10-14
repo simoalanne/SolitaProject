@@ -1,0 +1,25 @@
+{
+  "name": "slt-boost",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "src/frontend",
+    "src/backend",
+    "src/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=src/frontend\" \"npm run dev --workspace=src/backend\"",
+    "build": "npm run build --workspace=src/frontend",
+    "start": "npm run build && npm run start --workspace=src/backend",
+    "lint": "npm run lint --workspaces",
+    "type-check": "npm run type-check --workspaces"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.1",
+    "typescript": "^5.9.3"
+  }
+}
