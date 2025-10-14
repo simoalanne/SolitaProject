@@ -1,0 +1,6 @@
+body, html {
+  /* This file should contain global CSS variables and resets. Majority of styles should be inline in components or in component-specific CSS files. */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
