@@ -1,0 +1,7 @@
+{
+  "name": "@myorg/shared",
+  "description": "Shared types and schemas",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "schema.ts"
+}
