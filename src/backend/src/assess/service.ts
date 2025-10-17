@@ -4,6 +4,7 @@ import {
   type CompanyRisks,
 } from "../../../shared/schema.ts";
 import generateFeedBack from "../ai/aiClient.ts";
+import { getTotalFundingForConsortium } from "./funding.ts";
 
 const assessProject = async (
   projectInput: ProjectInput
@@ -15,6 +16,8 @@ const assessProject = async (
     consortium.leadApplicantBusinessId,
     ...consortium.memberBusinessIds,
   ];
+  const totalFunding = await getTotalFundingForConsortium(businessIds);
+  console.log(`In the past, consortium has received ${totalFunding}€ funding from Business Finland.`);
   const placeHolderOutput: ProjectOutput = {
     success: {
       successProbability: 1,
