@@ -1,3 +1,4 @@
+### Assess a project proposal
 POST http://localhost:3000/api/assess
 Content-Type: application/json
 
@@ -12,3 +13,9 @@ Content-Type: application/json
     "description": "Creating a cloud-based platform to optimize supply chain operations for Finnish SMEs, leveraging AI-driven predictive analytics to reduce costs and improve efficiency."
   }
 }
+
+### Resolve company name from business ID
+GET http://localhost:3000/api/companies/by-business-id?businessId=2905040-7
+
+### Autocomplete company name suggestions
+GET http://localhost:3000/api/companies/autocomplete?partialName=Solita&limit=3

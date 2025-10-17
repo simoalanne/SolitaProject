@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // rules from: https://www.vero.fi
-const businessIdSchema = z
+export const businessIdSchema = z
   .string()
   .regex(
     /^(\d{7})-(\d)$/,
