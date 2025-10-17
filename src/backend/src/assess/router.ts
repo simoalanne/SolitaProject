@@ -1,5 +1,5 @@
 import express from "express";
-import validateBody from "../utils/schemaValidator.ts";
+import { validateBody } from "../utils/schemaValidator.ts";
 import {
   ProjectInputSchema,
   ProjectOutputSchema,
