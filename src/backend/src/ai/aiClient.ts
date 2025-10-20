@@ -5,6 +5,15 @@ import type { AIResponse } from "./types.ts";
 const ai = new GoogleGenAI({});
 
 // Not clear yet what data is passed here so this may change
+/**
+ * Generates feedback on the likelyhood of a company receiving financing.
+ * 
+ * Uses the Google Gemini API to call an AI that reviews given company data
+ * which then returns feedback on the likelyhood of the company receiving financing
+ * in a JSON format.
+ * @param projectInput Contains the data of the company to be reviewed.
+ * @returns The AI Response as a promise.
+ */
 const generateFeedBack = async (projectInput: ProjectInput): Promise<AIResponse> => {
   const expectedJson: string = JSON.stringify({
     innovationScore: "number between 0 and 1",
