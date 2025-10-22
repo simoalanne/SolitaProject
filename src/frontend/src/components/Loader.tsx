@@ -11,7 +11,7 @@ const Loader: React.FC<LoaderProps> = ({ message = "Loading...", size = 50 }) =>
   return (
     <div style={{ textAlign: "center", padding: "20px" }}>
       <div
-        className="spinner"
+        className="spinner" 
         style={{
           width: size,
           height: size,
@@ -19,6 +19,8 @@ const Loader: React.FC<LoaderProps> = ({ message = "Loading...", size = 50 }) =>
           borderTop: `${size / 10}px solid #3498db`,
           borderRadius: "50%",
           animation: "spin 2s linear infinite",
+          alignSelf: "center",
+          justifySelf: "center",
         }}
       ></div>
       <p>{message}</p>  
