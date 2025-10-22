@@ -32,6 +32,11 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
     llmFeedback: "This is some feedback from the LLM.",
   };
 
+
+  /**
+   * Will be used to send input to backend API in the future
+   * Currently simulates loading state and then shows placeholder output
+   */
   const handleSubmit = async () => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -46,6 +51,8 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
     return <PlaceHolderOutput output={placeHolderOutput} />;
   }
 
+
+  // UI here is very basic, just for demonstration purposes
   return (
     <div>
       <h2>Project Input</h2>
