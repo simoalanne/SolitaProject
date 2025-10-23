@@ -1,38 +1,34 @@
 import {
   type ProjectInput,
   type ProjectOutput,
-  type CompanyRisks,
 } from "../../../shared/schema.ts";
-import generateFeedBack from "../ai/aiClient.ts";
-import { getTotalFundingForConsortium } from "./funding.ts";
+import generateFeedback from "../ai/aiClient.ts";
+import { getFundingHistoryForCompany } from "../assess/funding.ts";
+import { getFinancialRiskForCompany } from "./financial.ts";
 
 const assessProject = async (
   projectInput: ProjectInput
 ): Promise<ProjectOutput> => {
-  const llmFeedback = await generateFeedBack(projectInput);
-  // TODO: Replace the placeholder logic with actual assessment logic (api calls, formulas, etc)
-  const consortium = projectInput.consortium;
-  const businessIds = [
-    consortium.leadApplicantBusinessId,
-    ...consortium.memberBusinessIds,
-  ];
-  const totalFunding = await getTotalFundingForConsortium(businessIds);
-  console.log(`In the past, consortium has received ${totalFunding}€ funding from Business Finland.`);
-  const placeHolderOutput: ProjectOutput = {
-    success: {
-      successProbability: 1,
-      trafficLight: "green",
-    },
-    companyRisks: businessIds.reduce((acc, id) => {
-      acc[id] = {
-        financialRisk: "low",
-        businessFinlandFundingHistory: "none",
-      };
-      return acc;
-    }, {} as CompanyRisks),
-    llmFeedback: llmFeedback.feedback,
+  // Run company evaluation and feedback generation in parallel since they are independent from each other
+  const [companyEvaluations, feedback] = await Promise.all([
+    Promise.all(
+      projectInput.businessIds.map(async (id) => {
+        const financialRisk = await getFinancialRiskForCompany(id);
+        const fundingHistory = getFundingHistoryForCompany(id);
+        return {
+          businessId: id,
+          businessFinlandFundingHistory: fundingHistory,
+          financialRisk: financialRisk,
+          trafficLight: "green" as const,
+        };
+      })
+    ),
+    generateFeedback(projectInput.project.description),
+  ]);
+  return {
+    companyEvaluations,
+    llmProjectAssessment: feedback,
   };
-  return placeHolderOutput;
 };
 
 export default assessProject;

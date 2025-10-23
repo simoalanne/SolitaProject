@@ -12,11 +12,13 @@ export const businessIdSchema = z
       const [digits, checkDigitStr] = val
         .split("-")
         .map((c) => c.split("").map(Number));
+
       const weights = [7, 9, 10, 5, 8, 4, 2];
       const sum = digits.reduce(
         (acc, digit, idx) => acc + digit * weights[idx],
         0
       );
+
       const divisor = 11;
       const remainder = sum % divisor;
       // if remainer is 1 it's automatically invalid
@@ -29,69 +31,74 @@ export const businessIdSchema = z
   );
 
 const ConsortiumSchema = z
-  .object({
-    leadApplicantBusinessId: businessIdSchema,
-    memberBusinessIds: z.array(businessIdSchema).default([]),
-  })
-  .refine(
-    (data) => !data.memberBusinessIds.includes(data.leadApplicantBusinessId),
-    { message: "Lead applicant cannot also appear in member list." }
-  )
-  .refine(
-    (data) =>
-      new Set(data.memberBusinessIds).size === data.memberBusinessIds.length,
-    { message: "Member business IDs must be unique." }
-  );
+  .array(businessIdSchema)
+  .min(1, "At least one business ID is required.")
+  .refine((arr) => new Set(arr).size === arr.length, {
+    message: "Business IDs must be unique.",
+  });
 
 const Project = z
   .object({
     budget: z.number().nonnegative(),
-    requestedGrant: z.number().nonnegative(),
+    requestedFunding: z.number().nonnegative(),
     description: z.string(),
   })
-  .refine((data) => data.requestedGrant <= data.budget, {
-    message: "Requested grant cannot exceed the total budget.",
+  .refine((data) => data.requestedFunding <= data.budget, {
+    message: "Requested funding cannot exceed total budget.",
   });
 
 export const ProjectInputSchema = z.object({
-  consortium: ConsortiumSchema,
+  businessIds: ConsortiumSchema,
   project: Project,
 });
 
-const TrafficLightSchema = z.enum(["green", "yellow", "red"]);
+export const TrafficLightSchema = z.enum(["green", "yellow", "red"]);
+export const FinancialRiskSchema = z.enum(["low", "medium", "high"]);
+export const FundingHistorySchema = z.enum(["none", "low", "medium", "high"]);
 
-const SuccessSchema = z.object({
-  successProbability: z.number().min(0).max(1),
+export const CompanyEvaluationSchema = z.object({
+  businessId: businessIdSchema,
+  financialRisk: FinancialRiskSchema,
+  businessFinlandFundingHistory: FundingHistorySchema,
   trafficLight: TrafficLightSchema,
 });
 
-const RiskLevelSchema = z.enum(["low", "medium", "high"]);
-const FundingHistoryLevelSchema = z.enum(["none", "low", "medium", "high"]);
-
-const CompanyRiskSchema = z.object({
-  financialRisk: RiskLevelSchema,
-  businessFinlandFundingHistory: FundingHistoryLevelSchema,
+export const LLMProjectAssessmentSchema = z.object({
+  innovationTrafficLight: TrafficLightSchema,
+  strategicFitTrafficLight: TrafficLightSchema,
+  feedback: z.string(),
 });
-
-const companyRisksSchema = z.record(businessIdSchema, CompanyRiskSchema);
 
 export const ProjectOutputSchema = z.object({
-  success: SuccessSchema,
-  companyRisks: companyRisksSchema,
-  llmFeedback: z.string(),
+  companyEvaluations: z.array(CompanyEvaluationSchema).min(1),
+  llmProjectAssessment: LLMProjectAssessmentSchema,
 });
 
-// export all types so its easier to work with them in other files
+/** Unique Finnish Business ID (Y-tunnus) that can be validated for format and check digit. */
 export type BusinessId = z.infer<typeof businessIdSchema>;
+
+/** Array of unique Business IDs representing the project consortium. */
 export type Consortium = z.infer<typeof ConsortiumSchema>;
+
+/** Core project data including budget, requested funding, and short description of the project. */
 export type Project = z.infer<typeof Project>;
+
+/** Input payload containing consortium business IDs and project details. */
 export type ProjectInput = z.infer<typeof ProjectInputSchema>;
+
+/** Output payload including company evaluations and LLM-generated project assessment. */
 export type ProjectOutput = z.infer<typeof ProjectOutputSchema>;
+
 export type TrafficLight = z.infer<typeof TrafficLightSchema>;
-export type Success = z.infer<typeof SuccessSchema>;
-export type CompanyRisk = z.infer<typeof CompanyRiskSchema>;
-export type RiskLevel = z.infer<typeof RiskLevelSchema>;
-export type FundingHistoryLevel = z.infer<typeof FundingHistoryLevelSchema>;
-export type CompanyRisks = z.infer<typeof companyRisksSchema>;
 
+/** LLM-generated assessment of the project's description in terms of innovation and strategic fit. */
+export type LLMProjectAssessment = z.infer<typeof LLMProjectAssessmentSchema>;
 
+/** Evaluation of a single company’s financial health and past funding record. */
+export type CompanyEvaluation = z.infer<typeof CompanyEvaluationSchema>;
+
+/** Assessed financial risk level of a company from revenue, profitability, growth etc. perspective. */
+export type FinancialRisk = z.infer<typeof FinancialRiskSchema>;
+
+/** Represents the past funding the company has received from Business Finland. */
+export type FundingHistory = z.infer<typeof FundingHistorySchema>;
