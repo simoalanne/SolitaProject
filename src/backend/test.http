@@ -3,13 +3,10 @@ POST http://localhost:3000/api/assess
 Content-Type: application/json
 
 {
-  "consortium": {
-    "leadApplicantBusinessId": "0108023-3",
-    "memberBusinessIds": []
-  },
+  "businessIds": ["2905040-7"],
   "project": {
     "budget": 100000,
-    "requestedGrant": 50000,
+    "requestedFunding": 50000,
     "description": "Creating a cloud-based platform to optimize supply chain operations for Finnish SMEs, leveraging AI-driven predictive analytics to reduce costs and improve efficiency."
   }
 }

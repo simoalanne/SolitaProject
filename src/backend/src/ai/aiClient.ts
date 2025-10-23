@@ -1,41 +1,44 @@
 import { GoogleGenAI } from "@google/genai";
-import { type ProjectInput } from "../../../shared/schema.ts";
-import type { AIResponse } from "./types.ts";
+import {
+  type LLMProjectAssessment,
+  LLMProjectAssessmentSchema,
+} from "../../../shared/schema.ts";
 
-const ai = new GoogleGenAI({});
+const ai = new GoogleGenAI({}); // Requires valid GEMINI_API_KEY env variable to work
 
-// Not clear yet what data is passed here so this may change
 /**
  * Generates feedback on the likelyhood of a company receiving financing.
- * 
+ *
  * Uses the Google Gemini API to call an AI that reviews given company data
  * which then returns feedback on the likelyhood of the company receiving financing
  * in a JSON format.
- * @param projectInput Contains the data of the company to be reviewed.
+ * @param projectDescription - a short description of the project the ai uses as context
  * @returns The AI Response as a promise.
  */
-const generateFeedBack = async (projectInput: ProjectInput): Promise<AIResponse> => {
-  const expectedJson: string = JSON.stringify({
-    innovationScore: "number between 0 and 1",
-    strategicFitScore: "number between 0 and 1",
-    feedback: "textual feedback in 1-3 sentences",
-  });
+const generateFeedback = async (
+  projectDescription: string
+): Promise<LLMProjectAssessment> => {
   try {
-    // TODO: More context especially about what is "strategic fit"
-    const prompt = `review following business idea from novelty and "strategic fit" perspective. 
-                Strategic fit means how well the project aligns with a Business Finland's goals and priorities. 
-                Return your answer in JSON format exactly as follows: ${expectedJson} Do not return anything else than JSON.
-                Here is the Business idea: ${projectInput.project.description}`;
-    // TODO: check here https://ai.google.dev/gemini-api/docs/structured-output how to enforce structured output
+    /* context for strategic fit could just be hardcoded by pasting stuff from
+       https://www.businessfinland.fi/en/for-finnish-customers/services/programs
+    */
+    const prompt = `Review the following business idea from a novelty and "strategic fit" perspective. 
+    Strategic fit means how well the project aligns with a Business Finland's goals and priorities. 
+    Here is the Business idea: ${projectDescription}`;
+
     const response = await ai.models.generateContent({
       model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.0-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
+        responseSchema: responseSchema,
       },
     });
-    const aiResponse = JSON.parse(response.text) as AIResponse;
-    console.log("AI response:", aiResponse);
+
+    const aiResponse = LLMProjectAssessmentSchema.parse(
+      JSON.parse(response.text)
+    );
+    // The responses could be logged here before returning the response
     return aiResponse;
   } catch (error) {
     console.error("Error accessing Gemini API:", error);
@@ -43,4 +46,28 @@ const generateFeedBack = async (projectInput: ProjectInput): Promise<AIResponse>
   }
 };
 
-export default generateFeedBack;
+// This schema enforces that the AI responses in the expected format
+const responseSchema = {
+  type: "object",
+  properties: {
+    innovationTrafficLight: {
+      type: "string",
+      enum: ["green", "yellow", "red"],
+      description:
+        "(green=best, red=worst) traffic light indicating level of innovation",
+    },
+    strategicFitTrafficLight: {
+      type: "string",
+      enum: ["green", "yellow", "red"],
+      description:
+        "(green=best, red=worst) traffic light indicating level of strategic fit",
+    },
+    feedback: {
+      type: "string",
+      description: "textual feedback in 1-3 sentences",
+    },
+  },
+  required: ["innovationTrafficLight", "strategicFitTrafficLight", "feedback"],
+};
+
+export default generateFeedback;

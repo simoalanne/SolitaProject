@@ -9,7 +9,9 @@
     "src/shared"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=src/frontend\" \"npm run dev --workspace=src/backend\"",
+    "dev:frontend": "npm run dev --workspace=src/frontend",
+    "dev:backend": "npm run dev --workspace=src/backend",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "build": "npm run build --workspace=src/frontend",
     "start": "npm run build && npm run start --workspace=src/backend",
     "lint": "npm run lint --workspaces",
