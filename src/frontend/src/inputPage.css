@@ -1,0 +1,52 @@
+* {
+    /*avoid clipping*/
+    box-sizing: border-box;
+}
+
+.form {
+    background-color: rgb(104, 105, 110);
+    width: 70vw;
+    height: 60vh;
+    margin: 0 auto;
+}
+
+.inputs-grid {
+    background-color: rgb(65, 60, 60);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/*bigger desc input field pt1*/
+.input-box:nth-child(5) {
+    grid-column: span 2;
+}
+
+/*bigger desc input field pt2*/
+#desc-input {
+    height: 70px;
+}
+
+/*size up all text boxes*/
+input {
+    height: 40px;
+    width: 100%;
+}
+
+@media only screen and (min-width: 600px) {
+
+    /*justify items + align items and inputs-grid's margin
+    makes centering items possible! 
+    'place-items: center' limits inputs-grid too much*/
+    .form {
+        border-radius: 2px;
+        width: 50%;
+        display: grid;
+        justify-items: stretch;
+        align-items: center;
+    }
+
+    .inputs-grid {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+}
