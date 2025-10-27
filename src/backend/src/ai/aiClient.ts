@@ -1,4 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
+import { type ProjectInput } from "../../../shared/schema.ts";
+import type { AIResponse } from "./types.ts";
+import { Logger } from "../utils/logger.ts"
 import {
   type LLMProjectAssessment,
   LLMProjectAssessmentSchema,
@@ -39,6 +42,7 @@ const generateFeedback = async (
       JSON.parse(response.text)
     );
     // The responses could be logged here before returning the response
+    Logger.info(aiResponse);
     return aiResponse;
   } catch (error) {
     console.error("Error accessing Gemini API:", error);
