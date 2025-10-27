@@ -5,8 +5,7 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
-    "generate-windows": "npm i && set PLAYWRIGHT_BROWSERS_PATH=src\\setup\\.browsers && npx playwright install chromium && node index.ts",
-    "generate-linux": "npm i && export PLAYWRIGHT_BROWSERS_PATH=src/setup/.browsers && npx playwright install chromium && node index.ts"
+    "generate": "npm i && npx playwright install chromium && node index.ts"
   },
   "keywords": [],
   "author": "",
