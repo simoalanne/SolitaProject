@@ -1,10 +1,9 @@
 import pino from "pino";
-import "pino-pretty"
 
 export const Logger = pino({
   level: "info",
-  transport: {
-    target: "pino-pretty",
-    options: { colorize: true },
-  },
+  // pino-pretty is dev dependency so it can't be used in production
+  transport: process.env.NODE_ENV !== "production"
+    ? { target: "pino-pretty", options: { colorize: true } }
+    : undefined,
 });
