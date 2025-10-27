@@ -1,13 +1,13 @@
 // Moved from src/frontend/src/components/PlaceHolderInput.tsx
 // It will be decided later whether InputPage and OutputPage remain in pages/ or move to components/
 
-import { type ProjectInput, ProjectInputSchema, type ProjectOutput } from "@myorg/shared";
+import { ProjectInputSchema, type ProjectOutput } from "@myorg/shared";
 import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
-import '../inputPage.css';
+import "../../css/inputPage.css";
 
-const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
+const PlaceHolderInput = () => {
   const [loading, setLoading] = React.useState(false);
   const [showOutput, setShowOutput] = React.useState(false);
   //input states, create handlechange?
@@ -17,35 +17,64 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
   const [grant, setGrant] = React.useState("");
   const [desc, setDesc] = React.useState("");
 
-
   const placeHolderOutput: ProjectOutput = {
-    success: {
-      successProbability: 0.75,
+  companyEvaluations: [
+    {
+      businessId: "company-123",
+      financialRisk: "medium",
+      businessFinlandFundingHistory: "none",
       trafficLight: "yellow",
     },
-    companyRisks: {
-      "1234567-8": {
-        financialRisk: "medium",
-        businessFinlandFundingHistory: "none",
-      },
-      "2345678-9": {
-        financialRisk: "low",
-        businessFinlandFundingHistory: "low",
-      },
-      "3456789-0": {
-        financialRisk: "high",
-        businessFinlandFundingHistory: "high",
-      },
+    {
+      businessId: "company-456",
+      financialRisk: "low",
+      businessFinlandFundingHistory: "high",
+      trafficLight: "green",
     },
-    llmFeedback: "This is some feedback from the LLM.",
-  };
-
+    {
+      businessId: "company-789",
+      financialRisk: "high",
+      businessFinlandFundingHistory: "low",
+      trafficLight: "red",
+    },
+  ],
+  llmProjectAssessment: {
+    innovationTrafficLight: "green",
+    strategicFitTrafficLight: "yellow",
+    feedback: "This is a placeholder feedback for the project.",
+  },
+};
 
   /**
    * Will be used to send input to backend API in the future
    * Currently simulates loading state and then shows placeholder output
    */
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const input = {
+      consortium: {
+        leadApplicantBusinessId: applicantID,
+        memberBusinessIds: memberID.split(",").map(id => id.trim()),
+      },
+      project: {
+        budget: Number(budget),
+        requestedFunding: Number(grant),
+        description: desc,
+      },
+    };
+
+    // Validate input using Zod schema
+    const result = ProjectInputSchema.safeParse(input);
+    console.log(result);
+
+    // TODO : Send input to backend API when available
+    if (result.success) {
+      alert("Input is valid!");
+    } else {
+      alert("Input is invalid. Check console for details.");
+    }
+
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setLoading(false);
@@ -59,7 +88,6 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
     return <PlaceHolderOutput output={placeHolderOutput} />;
   }
 
-
   // UI here is very basic, just for demonstration purposes
   return (
     <div className="form">
@@ -71,8 +99,6 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
               type="text"
               id="applicantID-input"
               name="applicant-business-id"
-            //value = {input.consortium.leadApplicantBusinessId}
-            //input is in form 010823-3
               value={applicantID}
               placeholder="Lead Applicant Business ID" />
           </div>
@@ -81,7 +107,6 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
               type="text"
               id="memberID-input"
               name="member-business-id"
-            //value = {input.consortium.memberBusinessIds.join(", ")}
               value={memberID}
               placeholder="Member Business IDs" />
           </div>
@@ -90,7 +115,6 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
               id="budget-input"
               type="text"
               name="project-budget"
-            // value = {input.project.budget}
               value={budget}
               placeholder="Project Budget" />
           </div>
@@ -98,24 +122,19 @@ const PlaceHolderInput = ({ input }: { input: ProjectInput }) => {
             <input onChange={(e) => setGrant(e.target.value)} 
               type="text"
               id="grant-input"
-              name="requested-grant"
-            // value = {input.project.requestedGrant}
+              name="requested-funding"
               value={grant}
-              placeholder="Requested Grant" />
+              placeholder="Requested Funding" />
           </div>
           <div className="input-box">
             <input onChange={(e) => setDesc(e.target.value)} 
               type="text"
               id="desc-input"
               name="project-desc"
-            //value = {input.project.description}
               value={desc}
               placeholder="Project Description" />
           </div>
         </div>
-        <h3>Is input data valid?</h3>
-        <p>{ProjectInputSchema.safeParse(input).success.toString()}</p>
-
       <button type="submit">Submit</button>
       </form>
     </div>
