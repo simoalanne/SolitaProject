@@ -17,8 +17,7 @@
     "start:docker": "docker build -t slt-boost . && docker run -p 3000:3000 slt-boost",
     "lint": "npm run lint --workspaces",
     "type-check": "npm run type-check --workspaces",
-    "generate-business-finland-data-windows": "cd src/setup && npm run generate-windows && cd ../..",
-    "generate-business-finland-data-linux": "cd src/setup && npm run generate-linux && cd ../.."
+    "generate-business-finland-data": "cd src/setup && npm run generate && cd ../.."
   },
   "dependencies": {
     "zod": "^3.22.4"
