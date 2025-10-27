@@ -14,17 +14,17 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "build": "npm run build --workspace=src/frontend",
     "start": "npm run build && npm run start --workspace=src/backend",
+    "start:docker": "docker build -t slt-boost . && docker run -p 3000:3000 slt-boost",
     "lint": "npm run lint --workspaces",
     "type-check": "npm run type-check --workspaces",
-    "generate-business-finland-data": "cd src/setup && npm run generate && cd ../.."
+    "generate-business-finland-data-windows": "cd src/setup && npm run generate-windows && cd ../..",
+    "generate-business-finland-data-linux": "cd src/setup && npm run generate-linux && cd ../.."
   },
   "dependencies": {
-    "react-router-dom": "^7.9.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "concurrently": "9.2.1",
-    "pino-pretty": "^13.1.2",
     "typescript": "^5.9.3"
   }
 }
