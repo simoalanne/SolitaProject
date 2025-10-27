@@ -8,24 +8,24 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
     <div>
       <h2>Project Assessment</h2>
       <p>
-        <strong>Success Probability:</strong>{" "}
-        {output.success.successProbability}
+        <strong>Innovation traffic light:</strong>{" "}
+        {output.llmProjectAssessment.innovationTrafficLight}
       </p>
       <p>
-        <strong>Traffic Light:</strong> {output.success.trafficLight}
+        <strong>Strategic fit traffic light:</strong> {output.llmProjectAssessment.strategicFitTrafficLight}
       </p>
-      <h3>Company Risks</h3>
+      <h3>Company Evaluation</h3>
       <ul>
-        {Object.entries(output.companyRisks).map(([id, risk]) => (
-          <li key={id}>
-            <strong>{id}:</strong> Financial Risk - {risk.financialRisk},{" "}
-            Funding History - {risk.businessFinlandFundingHistory}
+        {output.companyEvaluations.map((evaluation) => (
+          <li key={evaluation.businessId}>
+            <strong>{evaluation.businessId}:</strong> Financial Risk - {evaluation.financialRisk},{" "}
+            Funding History - {evaluation.businessFinlandFundingHistory}
           </li>
         ))}
       </ul>
       <h3>LLM Feedback</h3>
-      <p>{output.llmFeedback}</p>
-      <h3>Is ouptput data valid?</h3>
+      <p>{output.llmProjectAssessment.feedback}</p>
+      <h3>Is output data valid?</h3>
       <p>{ProjectOutputSchema.safeParse(output).success.toString()}</p>
     </div>
   );
