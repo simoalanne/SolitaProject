@@ -1,0 +1,141 @@
+/* Basic reset */
+.top-nav {
+  width: 100%;
+  background: #222;
+  color: #fff;
+}
+
+
+.top-nav .nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.brand-text {
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+/* Toggle button (mobile) */
+.nav-toggle {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  display: none;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.hamburger,
+.hamburger::before,
+.hamburger::after {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  position: relative;
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+
+.hamburger::before {
+  top: -7px;
+}
+
+.hamburger::after {
+  top: 7px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  justify-content: center;
+
+  /* center in parent */
+  margin: 0.5rem auto 0 auto;
+
+  /* background styling */
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 0.5rem 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  max-width: 300px;
+  /* limits stretching */
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #ddd;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  transition: background 120ms, color 120ms;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+/* Active style */
+.nav-link.active {
+  background: linear-gradient(90deg, #0195da, #0278ff 70%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Responsive: collapse to toggle */
+@media (max-width: 720px) {
+  .nav-toggle {
+    display: block;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    background: linear-gradient(90deg, #0195da, #0278ff 70%);
+  }
+
+  .nav-links {
+    position: absolute;
+    right: 1rem;
+    top: 64px;
+    background: #1c1c1c;
+    flex-direction: column;
+    padding: 0.5rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: none;
+    min-width: 160px;
+    z-index: 80;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: 0.6rem 0.9rem;
+  }
+}
