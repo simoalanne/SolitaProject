@@ -1,4 +1,5 @@
-import { type Request, type Response, type NextFunction } from "express";
+import { validateInput } from "../../../shared/schema.ts";
+import e, { type Request, type Response, type NextFunction } from "express";
 import { ZodSchema, z } from "zod";
 
 /**
@@ -18,11 +19,9 @@ import { ZodSchema, z } from "zod";
 const validate =
   (schema: ZodSchema, key: "body" | "query") =>
   (req: Request, res: Response, next: NextFunction): void => {
-    const result = schema.safeParse(req[key]);
-    if (!result.success) {
-      res
-        .status(400)
-        .json({ error: result.error.errors.map((e) => e.message).join(", ") });
+    const result = validateInput(req[key], schema);
+    if (result.errors) {
+      res.status(400).json({ errors: result.errors });
       return;
     }
     next();
