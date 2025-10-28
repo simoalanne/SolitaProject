@@ -34,13 +34,16 @@ export const validateInput = <T>(
   validateAgainst: ZodSchema<T>
 ) => {
   const parseResult = validateAgainst.safeParse(input);
-  const allErrors =
-    parseResult.error?.issues.map(
-      (i) => errorCodes[i.message as keyof typeof errorCodes]
-    ) || errorCodes.UNKNOWN_ERROR;
   return parseResult.success
     ? { input: parseResult.data as T, errors: null }
-    : { input: null, errors: allErrors };
+    : {
+        input: null,
+        errors: parseResult.error.issues.map(
+          (i) =>
+            errorCodes[i.message as keyof typeof errorCodes] ??
+            errorCodes.UNKNOWN_ERROR
+        ),
+      };
 };
 
 // rules from: https://www.vero.fi
