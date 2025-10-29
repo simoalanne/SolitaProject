@@ -135,7 +135,7 @@ const PlaceHolderInput = () => {
               placeholder="Project Description" />
           </div>
         </div>
-      <button type="submit">Submit</button>
+      <button id="submit-btn" type="submit">Submit</button>
       </form>
     </div>
   );

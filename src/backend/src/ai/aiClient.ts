@@ -1,6 +1,4 @@
 import { GoogleGenAI } from "@google/genai";
-import { type ProjectInput } from "../../../shared/schema.ts";
-import type { AIResponse } from "./types.ts";
 import { Logger } from "../utils/logger.ts"
 import {
   type LLMProjectAssessment,

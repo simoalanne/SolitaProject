@@ -1,12 +1,55 @@
-import { z } from "zod";
+import { z, type ZodSchema } from "zod";
+
+/** Standardized error codes for validation failures. */
+export const errorCodes = {
+  INVALID_BUSINESS_ID_FORMAT: "INVALID_BUSINESS_ID_FORMAT",
+  INVALID_BUSINESS_ID_CHECK_DIGIT: "INVALID_BUSINESS_ID_CHECK_DIGIT",
+  BUSINESS_IDS_NOT_UNIQUE: "BUSINESS_IDS_NOT_UNIQUE",
+  BUSINESS_IDS_REQUIRED: "BUSINESS_IDS_REQUIRED",
+  INVALID_PROJECT_BUDGET: "INVALID_PROJECT_BUDGET",
+  INVALID_REQUESTED_FUNDING: "INVALID_REQUESTED_FUNDING",
+  REQUESTED_FUNDING_EXCEEDS_BUDGET: "REQUESTED_FUNDING_EXCEEDS_BUDGET",
+  DESCRIPTION_TOO_LONG: "DESCRIPTION_TOO_LONG",
+  UNKNOWN_ERROR: "UNKNOWN_ERROR",
+} as const;
+
+export type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
+
+/**
+ * Validates given input against the provided Zod schema.
+ * @param input - The input data to validate.
+ * @param validateAgainst - The Zod schema to validate against.
+ * @returns An object containing either the validated input and null errors,
+ *          or null input and an array of error messages.
+ * @example
+ * const result = validateInput(someData, SomeZodSchema);
+ * if (result.error) {
+ *   // handle error
+ * } else {
+ *   // input is guaranteed to be valid and of type T here
+ * }
+ */
+export const validateInput = <T>(
+  input: unknown,
+  validateAgainst: ZodSchema<T>
+) => {
+  const parseResult = validateAgainst.safeParse(input);
+  return parseResult.success
+    ? { input: parseResult.data as T, errors: null }
+    : {
+        input: null,
+        errors: parseResult.error.issues.map(
+          (i) =>
+            errorCodes[i.message as keyof typeof errorCodes] ??
+            errorCodes.UNKNOWN_ERROR
+        ),
+      };
+};
 
 // rules from: https://www.vero.fi
 export const businessIdSchema = z
   .string()
-  .regex(
-    /^(\d{7})-(\d)$/,
-    "Invalid business ID format. Expected format: 1234567-8"
-  )
+  .regex(/^(\d{7})-(\d)$/, { message: errorCodes.INVALID_BUSINESS_ID_FORMAT })
   .refine(
     (val) => {
       const [digits, checkDigitStr] = val
@@ -27,24 +70,30 @@ export const businessIdSchema = z
       const checkDigit = remainder === 0 ? 0 : divisor - remainder;
       return checkDigit === checkDigitStr[0];
     },
-    { message: "Invalid business ID check digit." }
+    { message: errorCodes.INVALID_BUSINESS_ID_CHECK_DIGIT }
   );
 
 const ConsortiumSchema = z
   .array(businessIdSchema)
-  .min(1, "At least one business ID is required.")
+  .min(1, { message: errorCodes.BUSINESS_IDS_REQUIRED })
   .refine((arr) => new Set(arr).size === arr.length, {
-    message: "Business IDs must be unique.",
+    message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
   });
 
 const Project = z
   .object({
-    budget: z.number().nonnegative(),
-    requestedFunding: z.number().nonnegative(),
-    description: z.string(),
+    budget: z
+      .number()
+      .nonnegative({ message: errorCodes.INVALID_PROJECT_BUDGET }),
+    requestedFunding: z
+      .number()
+      .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING }),
+    description: z
+      .string()
+      .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG }),
   })
   .refine((data) => data.requestedFunding <= data.budget, {
-    message: "Requested funding cannot exceed total budget.",
+    message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
   });
 
 export const ProjectInputSchema = z.object({
