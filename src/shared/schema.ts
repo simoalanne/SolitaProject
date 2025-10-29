@@ -10,6 +10,8 @@ export const errorCodes = {
   INVALID_REQUESTED_FUNDING: "INVALID_REQUESTED_FUNDING",
   REQUESTED_FUNDING_EXCEEDS_BUDGET: "REQUESTED_FUNDING_EXCEEDS_BUDGET",
   DESCRIPTION_TOO_LONG: "DESCRIPTION_TOO_LONG",
+  INVALID_REVENUE_ENTRIES_COUNT: "INVALID_REVENUE_ENTRIES_COUNT",
+  INVALID_PROFIT_ENTRIES_COUNT: "INVALID_PROFIT_ENTRIES_COUNT",
   UNKNOWN_ERROR: "UNKNOWN_ERROR",
 } as const;
 
@@ -74,11 +76,23 @@ export const businessIdSchema = z
   );
 
 const ConsortiumSchema = z
-  .array(businessIdSchema)
+  .array(
+    z.object({
+      businessId: businessIdSchema,
+      // Last 5 years of revenues and profits, copied from kauppalehti.fi
+      revenues: z
+        .array(z.number())
+        .length(5, { message: errorCodes.INVALID_REVENUE_ENTRIES_COUNT }),
+      profits: z
+        .array(z.number())
+        .length(5, { message: errorCodes.INVALID_PROFIT_ENTRIES_COUNT }),
+    })
+  )
   .min(1, { message: errorCodes.BUSINESS_IDS_REQUIRED })
-  .refine((arr) => new Set(arr).size === arr.length, {
-    message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
-  });
+  .refine(
+    (arr) => new Set(arr.map((e) => e.businessId)).size === arr.length,
+    { message: errorCodes.BUSINESS_IDS_NOT_UNIQUE }
+  );
 
 const Project = z
   .object({
