@@ -6,8 +6,9 @@
 .form {
     background-color: rgb(104, 105, 110);
     width: 70vw;
-    height: 60vh;
+    height: auto;
     margin: 0 auto;
+    padding-bottom: 2%;
 }
 
 .inputs-grid {
@@ -17,9 +18,18 @@
     padding: 2px;
 }
 
-/*bigger desc input field pt1*/
-.input-box:nth-child(5) {
+.inputs-grid-copy {
+    background-color: rgb(65, 60, 60);
+    display: grid;
     grid-column: span 2;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 2px;
+}
+
+/*bigger desc input field pt1*/
+/* span across all columns */
+.desc-box {
+    grid-column: 1/-1;
 }
 
 /*bigger desc input field pt2*/
@@ -33,6 +43,10 @@ input {
     width: 100%;
 }
 
+.buttons {
+    gap: 20px;
+}
+
 #submit-btn {
     margin-top: 10px;
     border: 2px solid black;
@@ -41,12 +55,20 @@ input {
     background-color: rgb(185, 176, 193);
     color: black;
     height: 5vh;
-    width: 10vw;
+    width: 20vw;
 }
 
 #submit-btn:hover {
     background-color: aliceblue;
     color: black;
+}
+
+#add-btn {
+    font-size: x-large;
+    display: grid;
+    margin-left: 10px;
+    width: 40px;
+    height: auto;
 }
 
 @media only screen and (min-width: 600px) {
@@ -66,5 +88,13 @@ input {
     .inputs-grid {
         max-width: 80%;
         margin: 0 auto;
+    }
+
+    #add-btn {
+        margin-left: 10%;
+    }
+
+    #submit-btn {
+        width: 10vw;
     }
 }
