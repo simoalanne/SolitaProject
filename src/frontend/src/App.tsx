@@ -1,26 +1,42 @@
+import { BrowserRouter } from "react-router-dom";
 import ReactLogo from "./assets/addImportedAssetsHere.svg";
+import { NavBar } from "./components/NavBar";
 import { AppRoutes } from "./routes/AppRoutes";
 
 //import PlaceHolderOutput from "./components/PlaceHolderOutput";
-
 const App = () => {
   return (
+    <BrowserRouter>
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         minHeight: "100vh",
         width: "100%",
-        textAlign: "center",
         backgroundColor: "#333",
         color: "#f1f1f1",
       }}
     >
-      <img src={ReactLogo} className="logo react" alt="React logo" />
-      <AppRoutes />
+      
+      {/* Navbar at top */}
+      <NavBar /> 
+
+      {/* Main content */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+        }}
+      >
+        <img src={ReactLogo} className="logo react" alt="React logo" />
+        <AppRoutes />
+      </div>
     </div>
+    </BrowserRouter>
   );
 };
 

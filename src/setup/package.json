@@ -5,7 +5,7 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
-    "generate": "npm i && node index.ts"
+    "generate": "npm i && npx playwright install chromium && node index.ts"
   },
   "keywords": [],
   "author": "",
