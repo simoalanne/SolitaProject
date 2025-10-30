@@ -23,18 +23,48 @@
     display: grid;
     grid-column: span 2;
     grid-template-columns: repeat(2, 1fr);
-    padding: 2px;
 }
 
-/*bigger desc input field pt1*/
+/*beauty thing*/
+.grant-input {
+    padding-bottom: 5px;
+}
+
+/*bigger fields pt1*/
 /* span across all columns */
+.applicantID {
+    grid-column: 1/-1;
+}
+
+.memberID {
+    grid-column: 1/-1;
+}
+
+/*Project desc*/
 .desc-box {
     grid-column: 1/-1;
+}
+
+/*copy's desc*/
+.member-desc {
+    width: 180%;
 }
 
 /*bigger desc input field pt2*/
 #desc-input {
     height: 70px;
+}
+
+.desc-textarea {
+    /*dont allow rezising the box -breaks grid*/
+    resize: none;
+    width: 100%;
+    height: 50px;
+    overflow: auto;
+    /* internal scrollbar when content exceeds max-height */
+    white-space: pre-wrap;
+    /* word-break: break-word; */
+    box-sizing: border-box;
 }
 
 /*size up all text boxes*/
@@ -43,6 +73,7 @@ input {
     width: 100%;
 }
 
+/* Buttons */
 .buttons {
     gap: 20px;
 }
@@ -69,6 +100,16 @@ input {
     margin-left: 10px;
     width: 40px;
     height: auto;
+}
+
+#del-btn {
+    font-size: x-large;
+    justify-self: end;
+    width: 30px;
+    height: 35px;
+    /*placement:*/
+    align-self: center;
+    margin-right: 10px;
 }
 
 @media only screen and (min-width: 600px) {
