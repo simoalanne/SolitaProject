@@ -61,7 +61,7 @@ const PlaceHolderInput = () => {
 
   // Update one field of a copy (found by id)
   // Creates a new copies array where only the matching copy is replaced.
-  const updateCopyField = (id: string, field: keyof Omit<Copy, 'id'>, value: string) => {
+  const updateField = (id: string, field: keyof Omit<Copy, 'id'>, value: string) => {
     setCopies(prev => 
       prev.map(c =>
          c.id === id ? { ...c, [field]: value } : c));
@@ -115,27 +115,28 @@ const PlaceHolderInput = () => {
       }
     };
 
-    // turn copies into form that backend expects
-    const copyInput = copies.map(c => {
-      return {
-        consortium: {
-          //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
-          memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
-        },
-        project: {
-          //parseNum instead in Number?
-          budget: Number(c.budget),
-          requestedFunding: Number(c.grant),
-          description: c.desc
-        }
-      };
-    });
+    // turn copies into form that backend expects, 
+    // remember to check schema
+    // EDIT FREELY: left this just as guideline
+
+    // const copyInput = copies.map(c => {
+    //   return {
+    //     consortium: {
+    //       //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
+    //       memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
+    //     },
+    //     project: {
+    //       //parseNum instead in Number?
+    //       budget: Number(c.budget),
+    //       requestedFunding: Number(c.grant),
+    //       description: c.desc
+    //     }
+    //   };
+    // });
 
     // Validate input using Zod schema
     const result = ProjectInputSchema.safeParse(input);
     console.log(result);
-    const copiesValidation = ProjectInputSchema.safeParse(copyInput)
-    console.log(copiesValidation)
 
     // TODO : Send input to backend API when available
     if (result.success) {
@@ -209,28 +210,28 @@ const PlaceHolderInput = () => {
             <React.Fragment key={c.id}>
               <div className="inputs-grid-copy">
                 <div className="input-box memberID">
-                  <input value={c.memberID} onChange={(e) => updateCopyField(c.id, "memberID", e.target.value)}
+                  <input value={c.memberID} onChange={(e) => updateField(c.id, "memberID", e.target.value)}
                     type="text"
                     id={`memberID-${c.id}`}
                     name="member-business-id"
                     placeholder="Member Business ID" />
                 </div>
                 <div className="input-box">
-                  <input value={c.budget} onChange={(e) => updateCopyField(c.id, "budget", e.target.value)}
+                  <input value={c.budget} onChange={(e) => updateField(c.id, "budget", e.target.value)}
                     type="number"
                     id={`budget-${c.id}`}
                     name="budget-id"
                     placeholder="Project Budget" />
                 </div>
                 <div className="input-box">
-                  <input value={c.grant} onChange={(e) => updateCopyField(c.id, "grant", e.target.value)}
+                  <input value={c.grant} onChange={(e) => updateField(c.id, "grant", e.target.value)}
                     type="number"
                     id={`grant-${c.id}`}
                     name="grant-id"
                     placeholder="Requested Funding" />
                 </div>
                 <div className="input-box member-desc">
-                  <textarea value={c.desc} onChange={(e) => updateCopyField(c.id, "desc", e.target.value)}
+                  <textarea value={c.desc} onChange={(e) => updateField(c.id, "desc", e.target.value)}
                     id={`desc-${c.id}`}
                     name="desc-id"
                     placeholder="description"
