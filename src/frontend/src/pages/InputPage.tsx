@@ -31,6 +31,7 @@ const PlaceHolderInput = () => {
   //const [memberID, setMemberID] = React.useState("");
   const [budget, setBudget] = React.useState("");
   const [grant, setGrant] = React.useState("");
+  const [projectDesc, setProjectDesc] = React.useState("")
   const [desc, setDesc] = React.useState("");
   const [copies, setCopies] = React.useState<Copy[]>([]);
 
@@ -163,10 +164,10 @@ const PlaceHolderInput = () => {
         <h2>Project Input</h2>
         <div className="inputs-grid">
           <div className="input-box desc-box">
-            <textarea onChange={(e) => setDesc(e.target.value)}
+            <textarea onChange={(e) => setProjectDesc(e.target.value)}
               id="desc-input"
               name="project-desc"
-              value={desc}
+              value={projectDesc}
               placeholder="Project Description" 
               className="desc-textarea"/>
           </div>
@@ -186,13 +187,21 @@ const PlaceHolderInput = () => {
               value={budget}
               placeholder="Project Budget" />
           </div>
-          <div className="input-box grant-input">
+          <div className="input-box">
             <input onChange={(e) => setGrant(e.target.value)} 
               type="number"
               id="grant-input"
               name="requested-funding"
               value={grant}
               placeholder="Requested Funding" />
+          </div>
+          <div className="input-box desc-box">
+            <textarea onChange={(e) => setDesc(e.target.value)}
+              id="lead-desc-input"
+              name="lead-desc"
+              value={desc}
+              placeholder="Lead Applicant Description"
+              className="desc-textarea" />
           </div>
           {/* Fragment with a key -> React can track each mapped group without adding an extra DOM node.
            (Move the key to the ".inputs-grid-copy" div to keep DOM simpler?)*/}
