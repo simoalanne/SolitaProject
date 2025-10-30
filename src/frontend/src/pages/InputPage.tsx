@@ -16,18 +16,19 @@ const PlaceHolderInput = () => {
    parse in submit!*/
   type Copy = {
     id: string;
-    applicantID: string;
     memberID: string;
     budget: string;
     grant: string;
+    desc: string;
   };
 
 
   const [loading, setLoading] = React.useState(false);
   const [showOutput, setShowOutput] = React.useState(false);
   // input states
+  //delete memberID when ensured it is not needed
   const [applicantID, setApplicantID] = React.useState("");
-  const [memberID, setMemberID] = React.useState("");
+  //const [memberID, setMemberID] = React.useState("");
   const [budget, setBudget] = React.useState("");
   const [grant, setGrant] = React.useState("");
   const [desc, setDesc] = React.useState("");
@@ -42,14 +43,20 @@ const PlaceHolderInput = () => {
   const addInputCopy = () => {
     const newCopy: Copy = {
       id: makeId(),
-      applicantID: "",
       memberID:"",
       budget: "",
       grant: "",
+      desc: ""
     };
     //returns new array
     setCopies(prev => [...prev, newCopy]); 
   };
+
+  //delete inputs
+  const deleteInputCopy = (id: string) => {
+    //create new array with copies whose id is NOT here
+    setCopies(prev => prev.filter(c => c.id !== id));
+  }
 
   // Update one field of a copy (found by id)
   // Creates a new copies array where only the matching copy is replaced.
@@ -98,7 +105,7 @@ const PlaceHolderInput = () => {
     const input = {
       consortium: {
         leadApplicantBusinessId: applicantID,
-        memberBusinessIds: memberID.split(",").map(id => id.trim()),
+        //memberBusinessIds: memberID.split(",").map(id => id.trim()),
       },
       project: {
         budget: Number(budget),
@@ -111,7 +118,6 @@ const PlaceHolderInput = () => {
     const copyInput = copies.map(c => {
       return {
         consortium: {
-          leadApplicantBusinessId: c.applicantID,
           //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
           memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
         },
@@ -119,8 +125,7 @@ const PlaceHolderInput = () => {
           //parseNum instead in Number?
           budget: Number(c.budget),
           requestedFunding: Number(c.grant),
-          // is desc rly needed here? 
-          description: ""
+          description: c.desc
         }
       };
     });
@@ -157,21 +162,21 @@ const PlaceHolderInput = () => {
       <form onSubmit={handleSubmit}>
         <h2>Project Input</h2>
         <div className="inputs-grid">
-          <div className="input-box">
+          <div className="input-box desc-box">
+            <textarea onChange={(e) => setDesc(e.target.value)}
+              id="desc-input"
+              name="project-desc"
+              value={desc}
+              placeholder="Project Description" 
+              className="desc-textarea"/>
+          </div>
+          <div className="input-box applicantID">
             <input onChange={(e) => setApplicantID(e.target.value)}
               type="text"
               id="applicantID-input"
               name="applicant-business-id"
               value={applicantID}
               placeholder="Lead Applicant Business ID" />
-          </div>
-          <div className="input-box">
-            <input onChange={(e) => setMemberID(e.target.value)} 
-              type="text"
-              id="memberID-input"
-              name="member-business-id"
-              value={memberID}
-              placeholder="Member Business ID" />
           </div>
           <div className="input-box">
             <input onChange={(e) => setBudget(e.target.value)} 
@@ -181,7 +186,7 @@ const PlaceHolderInput = () => {
               value={budget}
               placeholder="Project Budget" />
           </div>
-          <div className="input-box">
+          <div className="input-box grant-input">
             <input onChange={(e) => setGrant(e.target.value)} 
               type="number"
               id="grant-input"
@@ -194,15 +199,7 @@ const PlaceHolderInput = () => {
           {copies.map((c) => (
             <React.Fragment key={c.id}>
               <div className="inputs-grid-copy">
-                <div className="input-box">
-                  <input
-                    value={c.applicantID} onChange={(e) => updateCopyField(c.id, "applicantID", e.target.value)}
-                    type="text"
-                    id={`applicantID-${c.id}`}
-                    name="applicant-business-id"
-                    placeholder="Lead Applicant Business ID"/>
-                </div>
-                <div className="input-box">
+                <div className="input-box memberID">
                   <input value={c.memberID} onChange={(e) => updateCopyField(c.id, "memberID", e.target.value)}
                     type="text"
                     id={`memberID-${c.id}`}
@@ -223,17 +220,19 @@ const PlaceHolderInput = () => {
                     name="grant-id"
                     placeholder="Requested Funding" />
                 </div>
+                <div className="input-box member-desc">
+                  <textarea value={c.desc} onChange={(e) => updateCopyField(c.id, "desc", e.target.value)}
+                    id={`desc-${c.id}`}
+                    name="desc-id"
+                    placeholder="description"
+                    className="desc-textarea"/>
+                </div>
+                <button id="del-btn" type="button"
+                  onClick={() => deleteInputCopy(c.id)}
+                >-</button>
               </div>
             </React.Fragment>
           ))}
-          <div className="input-box desc-box">
-            <input onChange={(e) => setDesc(e.target.value)} 
-              type="text"
-              id="desc-input"
-              name="project-desc"
-              value={desc}
-              placeholder="Project Description" />
-          </div>
         </div>
         <div className="buttons">
           <button type="button" id="add-btn" onClick={addInputCopy}>+</button>
