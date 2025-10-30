@@ -25,36 +25,38 @@
     grid-template-columns: repeat(2, 1fr);
 }
 
-/*beauty thing*/
-.grant-input {
-    padding-bottom: 5px;
-}
-
 /*bigger fields pt1*/
-/* span across all columns */
+/*lead applicant id field*/
 .applicantID {
+    /* span across all columns */
     grid-column: 1/-1;
 }
 
+/*member id field*/
 .memberID {
     grid-column: 1/-1;
 }
 
-/*Project desc*/
+/*Project description*/
 .desc-box {
     grid-column: 1/-1;
+    width: 100%;
 }
 
-/*copy's desc*/
-.member-desc {
-    width: 180%;
-}
-
-/*bigger desc input field pt2*/
+/*bigger height for project desciption*/
 #desc-input {
     height: 70px;
 }
 
+/*members' description
+ Separate from .desc-box
+  bcause of del-btn*/
+.member-desc {
+    width: 150%;
+}
+
+
+/* All textareas, unless spesified elsewhere*/
 .desc-textarea {
     /*dont allow rezising the box -breaks grid*/
     resize: none;
@@ -73,7 +75,6 @@ input {
     width: 100%;
 }
 
-/* Buttons */
 .buttons {
     gap: 20px;
 }
@@ -137,5 +138,14 @@ input {
 
     #submit-btn {
         width: 10vw;
+    }
+
+    #del-btn {
+        margin-right: 2px;
+    }
+
+    /*copy's desc*/
+    .member-desc {
+        width: 170%;
     }
 }
