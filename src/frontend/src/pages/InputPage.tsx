@@ -47,11 +47,12 @@ const PlaceHolderInput = () => {
       budget: "",
       grant: "",
     };
-    //returns new array, 
+    //returns new array
     setCopies(prev => [...prev, newCopy]); 
   };
 
-  //find copy obj with id
+  // Update one field of a copy (found by id)
+  // Creates a new copies array where only the matching copy is replaced.
   const updateCopyField = (id: string, field: keyof Omit<Copy, 'id'>, value: string) => {
     setCopies(prev => 
       prev.map(c =>
@@ -111,9 +112,11 @@ const PlaceHolderInput = () => {
       return {
         consortium: {
           leadApplicantBusinessId: c.applicantID,
+          //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
           memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
         },
         project: {
+          //parseNum instead in Number?
           budget: Number(c.budget),
           requestedFunding: Number(c.grant),
           // is desc rly needed here? 
@@ -186,6 +189,8 @@ const PlaceHolderInput = () => {
               value={grant}
               placeholder="Requested Funding" />
           </div>
+          {/* Fragment with a key -> React can track each mapped group without adding an extra DOM node.
+           (Move the key to the ".inputs-grid-copy" div to keep DOM simpler?)*/}
           {copies.map((c) => (
             <React.Fragment key={c.id}>
               <div className="inputs-grid-copy">
