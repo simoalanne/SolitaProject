@@ -31,7 +31,7 @@ const generateContent = async <T>(
     },
   });
   Logger.info(response.text);
-  return zodSchema.parse(JSON.parse(response.text));
+  return zodSchema.parse(JSON.parse(response.text!));
 };
 
 // Right now there are two different prompts and response schemas:

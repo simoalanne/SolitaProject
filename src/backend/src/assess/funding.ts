@@ -49,7 +49,7 @@ export const getFundingHistoryForCompany = (
     { value: Infinity, label: "high" },
   ];
 
-  return thresholds.find((t) => pastFunding <= t.value).label as FundingHistory;
+  return thresholds.find((t) => pastFunding <= t.value)!.label as FundingHistory;
 };
 
 export default getFundingHistoryForCompany;

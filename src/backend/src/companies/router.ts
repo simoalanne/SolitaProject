@@ -40,7 +40,7 @@ companiesRouter.get(
   "/autocomplete",
   validateQueryParams(paramsAutoCompleteSchema),
   async (req, res) => {
-    const { partialName, limit } = req.query as AutoCompleteQuery;
+    const { partialName, limit } = req.query as unknown as AutoCompleteQuery;
     const suggestions = await autoCompleteCompanyName(partialName, limit);
     if (suggestions.length === 0)
       return res.status(404).json({ error: "No companies found" });
