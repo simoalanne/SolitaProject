@@ -16,7 +16,7 @@ const allSchemasMap = Object.entries(allSchemas).reduce(
  */
 const openApiDoc = {
   openapi: "3.1.0",
-  info: { title: "Solita Boost API", version: "1.0.0" },
+  info: { title: "SLT Boost API", version: "1.0.0" },
   paths: {
     "/api/assess": {
       post: {
@@ -40,7 +40,7 @@ const openApiDoc = {
             },
           },
           "400": {
-            description: "Virheellinen pyyntö",
+            description: "Bad Request - Invalid input data",
             content: {
               "application/json": {
                 schema: {
