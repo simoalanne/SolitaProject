@@ -167,13 +167,13 @@ export const LLMCompanyRoleAssessmentSchema = z
     ),
     feedback: z
       .string()
-      .max(250)
+      //.max(250) the llm api does not respect max length currently so it can't be enforced here
       .describe(
         "Short summary feedback on how well does the company fit into the project in English."
       ),
     feedbackFi: z
       .string()
-      .max(250)
+      //.max(250)
       .describe(
         "Short summary feedback on how well does the company fit into the project in Finnish."
       )
@@ -190,13 +190,13 @@ export const LLMProjectAssessmentSchema = z
     ),
     feedback: z
       .string()
-      .max(500)
+      //.max(500)
       .describe(
         "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in English."
       ),
     feedbackFi: z
       .string()
-      .max(500)
+      //.max(500)
       .describe(
         "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."
       )
@@ -221,7 +221,7 @@ export const ProjectOutputSchema = z.object({
   overallTrafficLight: TrafficLightSchema.describe(
     "Overall traffic light rating for the entire project based on weighted company evaluations based on their budget shares as well as LLM novelty and strategic fit assessments."
   ),
-  llmProjectAssessment: LLMProjectAssessmentSchema,
+  llmProjectAssessment: LLMProjectAssessmentSchema.optional(),
 });
 
 // This exists so backend's openapi.ts can easily add all schemas to docs
