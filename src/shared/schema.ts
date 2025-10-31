@@ -48,12 +48,16 @@ export const validateInput = <T>(
       };
 };
 
+const businessIdRegex = /^(\d{7})-(\d)$/;
+
 // rules from: https://www.vero.fi
 export const businessIdSchema = z
   .string()
-  .regex(/^(\d{7})-(\d)$/, { message: errorCodes.INVALID_BUSINESS_ID_FORMAT })
+  .regex(businessIdRegex, { message: errorCodes.INVALID_BUSINESS_ID_FORMAT })
   .refine(
     (val) => {
+      // refine will run even if regex fails so to prevent errors need to early return here
+      if (!businessIdRegex.test(val)) return false; 
       const [digits, checkDigitStr] = val
         .split("-")
         .map((c) => c.split("").map(Number));
@@ -73,69 +77,167 @@ export const businessIdSchema = z
       return checkDigit === checkDigitStr[0];
     },
     { message: errorCodes.INVALID_BUSINESS_ID_CHECK_DIGIT }
+  )
+  .describe("Finnish Business ID (Y-tunnus)");
+
+const FinancialDataSchema = z
+  .object({
+    revenues: z
+      .array(z.number())
+      .length(5, { message: errorCodes.INVALID_REVENUE_ENTRIES_COUNT })
+      .describe("Company's revenues over the last five years."),
+    profits: z
+      .array(z.number())
+      .length(5, { message: errorCodes.INVALID_PROFIT_ENTRIES_COUNT })
+      .describe("Company's profits over the last five years."),
+  })
+  .describe(
+    "Company's financial data for the last five years. May be left out if not available or don't want to share."
   );
 
 const ConsortiumSchema = z
   .array(
-    z.object({
-      businessId: businessIdSchema,
-      // Last 5 years of revenues and profits, copied from kauppalehti.fi
-      revenues: z
-        .array(z.number())
-        .length(5, { message: errorCodes.INVALID_REVENUE_ENTRIES_COUNT }),
-      profits: z
-        .array(z.number())
-        .length(5, { message: errorCodes.INVALID_PROFIT_ENTRIES_COUNT }),
-    })
+    z
+      .object({
+        businessId: businessIdSchema,
+        budget: z
+          .number()
+          .nonnegative({ message: errorCodes.INVALID_PROJECT_BUDGET })
+          .describe("Company's share of the project budget in euros."),
+        requestedFunding: z
+          .number()
+          .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING })
+          .describe(
+            "Company's requested funding from Business Finland in euros."
+          ),
+        projectRoleDescription: z
+          .string()
+          .min(20)
+          .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG })
+          .describe(
+            "Small summary on what is the company's role in the project."
+          )
+          .optional(),
+        financialData: FinancialDataSchema.optional(),
+      })
+      .refine((data) => data.requestedFunding <= data.budget, {
+        message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
+      })
   )
   .min(1, { message: errorCodes.BUSINESS_IDS_REQUIRED })
-  .refine(
-    (arr) => new Set(arr.map((e) => e.businessId)).size === arr.length,
-    { message: errorCodes.BUSINESS_IDS_NOT_UNIQUE }
+  .refine((arr) => new Set(arr.map((e) => e.businessId)).size === arr.length, {
+    message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
+  })
+  .describe(
+    "List of companies participating in the project and their details."
   );
 
-const Project = z
-  .object({
-    budget: z
-      .number()
-      .nonnegative({ message: errorCodes.INVALID_PROJECT_BUDGET }),
-    requestedFunding: z
-      .number()
-      .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING }),
-    description: z
-      .string()
-      .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG }),
-  })
-  .refine((data) => data.requestedFunding <= data.budget, {
-    message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
-  });
-
 export const ProjectInputSchema = z.object({
-  businessIds: ConsortiumSchema,
-  project: Project,
+  consortium: ConsortiumSchema,
+  generalDescription: z
+    .string()
+    .min(50)
+    .max(400, { message: errorCodes.DESCRIPTION_TOO_LONG })
+    .describe("General description of the project proposal."),
 });
 
-export const TrafficLightSchema = z.enum(["green", "yellow", "red"]);
-export const FinancialRiskSchema = z.enum(["low", "medium", "high"]);
-export const FundingHistorySchema = z.enum(["none", "low", "medium", "high"]);
+export const TrafficLightSchema = z
+  .enum(["green", "yellow", "red"])
+  .describe(
+    "traffic light rating indicating the assessment outcome. green = good, yellow = ok, red = bad"
+  );
+export const FinancialRiskSchema = z
+  .enum(["n/a", "low", "medium", "high"])
+  .describe(
+    "Computed financial risk level of the company based on its financial data."
+  );
+export const FundingHistorySchema = z
+  .enum(["none", "low", "medium", "high"])
+  .describe(
+    "Describes the past funding the company has received from Business Finland."
+  );
 
-export const CompanyEvaluationSchema = z.object({
-  businessId: businessIdSchema,
-  financialRisk: FinancialRiskSchema,
-  businessFinlandFundingHistory: FundingHistorySchema,
-  trafficLight: TrafficLightSchema,
-});
+export const LLMCompanyRoleAssessmentSchema = z
+  .object({
+    relevancy: TrafficLightSchema.describe(
+      "How well the company's role fits the overall project based on the descriptions provided. Does company add value/expertise to the project, or could they be replaced/dropped without impacting the project significantly?"
+    ),
+    clarity: TrafficLightSchema.describe(
+      "How clear is the company's role in the project based on the description provided. Can someone unfamiliar with the project understand what exactly will the company do in the project?"
+    ),
+    feedback: z
+      .string()
+      .max(250)
+      .describe(
+        "Short summary feedback on how well does the company fit into the project in English."
+      ),
+    feedbackFi: z
+      .string()
+      .max(250)
+      .describe(
+        "Short summary feedback on how well does the company fit into the project in Finnish."
+      )
+  })
+  .describe("Feedback from LLM on a single company's fit into the project. If no description was provided this is omitted.");
 
-export const LLMProjectAssessmentSchema = z.object({
-  innovationTrafficLight: TrafficLightSchema,
-  strategicFitTrafficLight: TrafficLightSchema,
-  feedback: z.string(),
-});
+export const LLMProjectAssessmentSchema = z
+  .object({
+    innovationTrafficLight: TrafficLightSchema.describe(
+      "How innovative the project is based on the description provided. Does the project bring something new to the market or significantly improve existing solutions? Or is something that has been done many times before?"
+    ),
+    strategicFitTrafficLight: TrafficLightSchema.describe(
+      "How well does the project align with Business Finland's goals and priorities based on the description provided. Why should Business Finland fund exactly this project?"
+    ),
+    feedback: z
+      .string()
+      .max(500)
+      .describe(
+        "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in English."
+      ),
+    feedbackFi: z
+      .string()
+      .max(500)
+      .describe(
+        "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."
+      )
+  })
+  .describe("Feedback from LLM on the overall project proposal");
+
+export const CompanyEvaluationSchema = z
+  .object({
+    businessId: businessIdSchema,
+    businessFinlandFundingHistory: FundingHistorySchema,
+    financialRisk: FinancialRiskSchema,
+    llmRoleAssessment: LLMCompanyRoleAssessmentSchema.optional(),
+    trafficLight: TrafficLightSchema,
+  })
+  .describe("Evaluation of a single company within the project consortium.");
 
 export const ProjectOutputSchema = z.object({
-  companyEvaluations: z.array(CompanyEvaluationSchema).min(1),
+  companyEvaluations: z
+    .array(CompanyEvaluationSchema)
+    .min(1)
+    .describe("Evaluations for each company in the project consortium."),
+  overallTrafficLight: TrafficLightSchema.describe(
+    "Overall traffic light rating for the entire project based on weighted company evaluations based on their budget shares as well as LLM novelty and strategic fit assessments."
+  ),
   llmProjectAssessment: LLMProjectAssessmentSchema,
 });
+
+// This exists so backend's openapi.ts can easily add all schemas to docs
+export const allSchemas = {
+  BusinessId: businessIdSchema,
+  FinancialData: FinancialDataSchema,
+  Consortium: ConsortiumSchema,
+  ProjectInput: ProjectInputSchema,
+  TrafficLight: TrafficLightSchema,
+  FinancialRisk: FinancialRiskSchema,
+  FundingHistory: FundingHistorySchema,
+  LLMCompanyRoleAssessment: LLMCompanyRoleAssessmentSchema,
+  LLMProjectAssessment: LLMProjectAssessmentSchema,
+  CompanyEvaluation: CompanyEvaluationSchema,
+  ProjectOutput: ProjectOutputSchema,
+};
 
 /** Unique Finnish Business ID (Y-tunnus) that can be validated for format and check digit. */
 export type BusinessId = z.infer<typeof businessIdSchema>;
@@ -143,8 +245,7 @@ export type BusinessId = z.infer<typeof businessIdSchema>;
 /** Array of unique Business IDs representing the project consortium. */
 export type Consortium = z.infer<typeof ConsortiumSchema>;
 
-/** Core project data including budget, requested funding, and short description of the project. */
-export type Project = z.infer<typeof Project>;
+export type Company = Consortium[number];
 
 /** Input payload containing consortium business IDs and project details. */
 export type ProjectInput = z.infer<typeof ProjectInputSchema>;
@@ -156,6 +257,11 @@ export type TrafficLight = z.infer<typeof TrafficLightSchema>;
 
 /** LLM-generated assessment of the project's description in terms of innovation and strategic fit. */
 export type LLMProjectAssessment = z.infer<typeof LLMProjectAssessmentSchema>;
+
+/** LLM-generated assessment of a single company's role in the project in terms of relevancy and clarity. */
+export type LLMCompanyRoleAssessment = z.infer<
+  typeof LLMCompanyRoleAssessmentSchema
+>;
 
 /** Evaluation of a single company’s financial health and past funding record. */
 export type CompanyEvaluation = z.infer<typeof CompanyEvaluationSchema>;

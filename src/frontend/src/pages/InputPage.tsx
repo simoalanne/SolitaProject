@@ -92,7 +92,9 @@ const PlaceHolderInput = () => {
     innovationTrafficLight: "green",
     strategicFitTrafficLight: "yellow",
     feedback: "This is a placeholder feedback for the project.",
+    feedbackFi: "",
   },
+  overallTrafficLight: "yellow",
 };
 
   /**
