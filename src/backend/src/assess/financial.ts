@@ -3,12 +3,12 @@ import { type FinancialRisk, type Consortium } from "@myorg/shared";
 export const getFinancialRiskForCompany = (
   companyInfo: Consortium[number]
 ): FinancialRisk => {
-  const { revenues, profits } = companyInfo.financialData;
+  const { revenues, profits } = companyInfo.financialData!;
   if (revenues.length !== 5 || profits.length !== 5)
     return "n/a";
 
   // All magic numbers should come from a config or env vars later
-  // TODO: add more indicators here
+  // TODO: add more indicators h
   const indicators = [
     hasManyConsecutiveLosses(profits, 1, 2),
     hasLowAvgProfitMargin(revenues, profits, 0.05)

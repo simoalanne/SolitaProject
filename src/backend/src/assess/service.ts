@@ -33,8 +33,8 @@ const assessProject = async (
           { value: financialRisk, weight: 0.6 },
           { value: fundingHistory, weight: 0.2 },
           // assume neutral if llm feedback is missing
-          { value: roleFeedback.relevancy || "yellow", weight: 0.1 },
-          { value: roleFeedback.clarity || "yellow", weight: 0.1 }
+          { value: roleFeedback?.relevancy || "yellow", weight: 0.1 },
+          { value: roleFeedback?.clarity || "yellow", weight: 0.1 }
         );
 
         return {
@@ -108,10 +108,10 @@ const getFinancialRisk = (company: Company) =>
 // gets feedback for a company's role in the project from llm or null if no role description is provided
 const getFeedbackForRole = async (
   overallDescription: string,
-  roleDescription: string
+  roleDescription: string | undefined
 ) =>
   roleDescription
     ? await generateFeedbackForCompany(overallDescription, roleDescription)
-    : null;
+    : undefined;
 
 export default assessProject;
