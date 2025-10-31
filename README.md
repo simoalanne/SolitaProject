@@ -29,16 +29,7 @@ npm run dev
 
 ## Backend endpoints
 
-1. Assess a project  
-    - POST `/api/assess` — takes project input and returns assessment output.
-
-2. Get company by business ID  
-    - GET `/api/companies/by-business-id?businessId=1234567-8` — returns company name.
-
-3. Autocomplete company names  
-    - GET `/api/companies/autocomplete?partialName=partialCompanyName&limit=X` — returns a list of pairs: business ID + company name.
-
-See [src/backend/test.http](src/backend/test.http) for example calls.
+when running the app see http://localhost:3000/api/docs/ for guidance (adjust port if needed)
 
 ## Calling the backend — examples
 
