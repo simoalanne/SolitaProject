@@ -10,12 +10,12 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
       <div className="innovation">
         <p>
           <strong>Innovation traffic light:</strong>{" "}
-          {output.llmProjectAssessment.innovationTrafficLight}
+          {output.llmProjectAssessment?.innovationTrafficLight}
         </p>
       </div>
       <div className="strategy">
         <p>
-          <strong>Strategic fit traffic light:</strong> {output.llmProjectAssessment.strategicFitTrafficLight}
+          <strong>Strategic fit traffic light:</strong> {output.llmProjectAssessment?.strategicFitTrafficLight}
         </p>
       </div>
       <div className="evaluation">
@@ -31,7 +31,7 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
       </div>
       <div className="feedback">
         <h3>LLM Feedback</h3>
-        <p>{output.llmProjectAssessment.feedback}</p>
+        <p>{output.llmProjectAssessment?.feedback}</p>
       </div>
       <h3>Is output data valid?</h3>
       <p>{ProjectOutputSchema.safeParse(output).success.toString()}</p>

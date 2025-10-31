@@ -10,6 +10,8 @@ Add the following to `src/backend/.env`:
 GEMINI_API_KEY=your_Google_Gemini_API_key
 ```
 
+The backend WILL work without setting above but then responses wont include any llm generated data
+
 ### How to run
 
 Locally:

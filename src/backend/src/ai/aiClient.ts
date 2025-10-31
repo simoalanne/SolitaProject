@@ -21,17 +21,24 @@ const ai = new GoogleGenAI({}); // Requires valid GEMINI_API_KEY env variable to
 const generateContent = async <T>(
   zodSchema: ZodSchema<T>,
   prompt: string
-): Promise<T> => {
-  const response = await ai.models.generateContent({
-    model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.0-flash",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: generateSchema(zodSchema),
-    },
-  });
-  Logger.info(response.text);
-  return zodSchema.parse(JSON.parse(response.text!));
+): Promise<T | undefined> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: process.env.GOOGLE_GEMINI_MODEL || "gemini-2.0-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: generateSchema(zodSchema),
+      },
+    });
+    Logger.info(response.text);
+    return zodSchema.parse(JSON.parse(response.text!));
+    // Ensure that the whole assessment process doesn't fail if one AI call fails
+    // This also allows to use the backend without AI key for testing purposes
+  } catch (error) {
+    Logger.error(`AI generation error: ${(error as Error).message}`);
+    return undefined;
+  }
 };
 
 // Right now there are two different prompts and response schemas:
@@ -53,7 +60,7 @@ const generateContent = async <T>(
  */
 export const generateFeedback = async (
   projectDescription: string
-): Promise<LLMProjectAssessment> => {
+): Promise<LLMProjectAssessment | undefined> => {
   /*
     context for strategic fit could just be hardcoded by pasting stuff from
     https://www.businessfinland.fi/en/for-finnish-customers/services/programs
@@ -74,7 +81,7 @@ export const generateFeedback = async (
 export const generateFeedbackForCompany = async (
   overallProjectDescription: string,
   companyRoleDescription: string
-): Promise<LLMCompanyRoleAssessment> => {
+): Promise<LLMCompanyRoleAssessment | undefined> => {
   const prompt = `Evaluate how well the company fits into the project based on the following descriptions.
     Overall project description: ${overallProjectDescription}
     Company role description: ${companyRoleDescription}`;
