@@ -10,7 +10,7 @@ const allSchemasMap = Object.entries(allSchemas).reduce(
   {} as Record<string, object>
 );
 
-/** 
+/**
  * Exposes a json object that represents the OpenAPI 3.1 specification for the backend API.
  * This can then be used by any OpenAPI compatible renderer like swagger-ui-express used currently in app.ts
  */
@@ -44,8 +44,35 @@ const openApiDoc = {
             content: {
               "application/json": {
                 schema: {
-                  type: "array",
-                  items: { type: "string", enum: Object.values(errorCodes) },
+                  type: "object",
+                  properties: {
+                    errors: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          path: {
+                            type: "array",
+                            description:
+                              "Path to the field that caused the error",
+                            items: {
+                              anyOf: [{ type: "string" }, { type: "integer" }],
+                            },
+                          },
+                          errorCodes: {
+                            type: "array",
+                            description: "List of error codes for this field",
+                            items: {
+                              type: "string",
+                              enum: Object.values(errorCodes),
+                            },
+                          },
+                        },
+                        required: ["path", "errorCodes"],
+                      },
+                    },
+                  },
+                  required: ["errors"],
                 },
               },
             },

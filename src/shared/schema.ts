@@ -12,6 +12,7 @@ export const errorCodes = {
   DESCRIPTION_TOO_LONG: "DESCRIPTION_TOO_LONG",
   INVALID_REVENUE_ENTRIES_COUNT: "INVALID_REVENUE_ENTRIES_COUNT",
   INVALID_PROFIT_ENTRIES_COUNT: "INVALID_PROFIT_ENTRIES_COUNT",
+  REQUIRED_FIELD_MISSING: "REQUIRED_FIELD_MISSING",
   UNKNOWN_ERROR: "UNKNOWN_ERROR",
 } as const;
 
@@ -22,7 +23,7 @@ export type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
  * @param input - The input data to validate.
  * @param validateAgainst - The Zod schema to validate against.
  * @returns An object containing either the validated input and null errors,
- *          or null input and an array of error messages.
+ *          or null input and an array of grouped validation errors containing paths and error codes.
  * @example
  * const result = validateInput(someData, SomeZodSchema);
  * if (result.error) {
@@ -36,16 +37,29 @@ export const validateInput = <T>(
   validateAgainst: ZodSchema<T>
 ) => {
   const parseResult = validateAgainst.safeParse(input);
-  return parseResult.success
-    ? { input: parseResult.data as T, errors: null }
-    : {
-        input: null,
-        errors: parseResult.error.issues.map(
-          (i) =>
-            errorCodes[i.message as keyof typeof errorCodes] ??
-            errorCodes.UNKNOWN_ERROR
-        ),
-      };
+
+  if (parseResult.success) {
+    return { input: parseResult.data as T, errors: null };
+  }
+
+  type GroupedError = { path: (string | number)[]; errorCodes: ErrorCode[] };
+
+  const groupedErrors = Object.values(
+    parseResult.error.issues.reduce((acc, i) => {
+      const key = JSON.stringify(i.path);
+      const code = Object.values(errorCodes).includes(i.message as ErrorCode)
+        ? (i.message as ErrorCode)
+        : i.message === "Required"
+        ? errorCodes.REQUIRED_FIELD_MISSING
+        : errorCodes.UNKNOWN_ERROR;
+
+      if (!acc[key]) acc[key] = { path: i.path, errorCodes: [] }; //
+      acc[key].errorCodes.push(code);
+      return acc;
+    }, {} as Record<string, GroupedError>)
+  );
+
+  return { input: null, errors: groupedErrors };
 };
 
 const businessIdRegex = /^(\d{7})-(\d)$/;
@@ -57,7 +71,7 @@ export const businessIdSchema = z
   .refine(
     (val) => {
       // refine will run even if regex fails so to prevent errors need to early return here
-      if (!businessIdRegex.test(val)) return false; 
+      if (!businessIdRegex.test(val)) return false;
       const [digits, checkDigitStr] = val
         .split("-")
         .map((c) => c.split("").map(Number));
@@ -95,39 +109,60 @@ const FinancialDataSchema = z
     "Company's financial data for the last five years. May be left out if not available or don't want to share."
   );
 
-const ConsortiumSchema = z
-  .array(
-    z
-      .object({
-        businessId: businessIdSchema,
-        budget: z
-          .number()
-          .nonnegative({ message: errorCodes.INVALID_PROJECT_BUDGET })
-          .describe("Company's share of the project budget in euros."),
-        requestedFunding: z
-          .number()
-          .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING })
-          .describe(
-            "Company's requested funding from Business Finland in euros."
-          ),
-        projectRoleDescription: z
-          .string()
-          .min(20)
-          .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG })
-          .describe(
-            "Small summary on what is the company's role in the project."
-          )
-          .optional(),
-        financialData: FinancialDataSchema.optional(),
-      })
-      .refine((data) => data.requestedFunding <= data.budget, {
-        message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
-      })
-  )
-  .min(1, { message: errorCodes.BUSINESS_IDS_REQUIRED })
-  .refine((arr) => new Set(arr.map((e) => e.businessId)).size === arr.length, {
-    message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
+export const ConsortiumItemSchema = z
+  .object({
+    businessId: businessIdSchema,
+    budget: z
+      .number()
+      .nonnegative({ message: errorCodes.INVALID_PROJECT_BUDGET })
+      .describe("Company's share of the project budget in euros."),
+    requestedFunding: z
+      .number()
+      .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING })
+      .describe(
+        "Company's requested funding from Business Finland in euros."
+      ),
+    projectRoleDescription: z
+      .string()
+      .min(20)
+      .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG })
+      .describe(
+        "Small summary on what is the company's role in the project."
+      )
+      .optional(),
+    financialData: FinancialDataSchema.optional(),
   })
+  .superRefine((item, ctx) => {
+    if (item.requestedFunding > item.budget) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
+        path: ["budget"],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
+        path: ["requestedFunding"],
+      });
+    }
+  });
+
+export const ConsortiumSchema = z
+  .array(ConsortiumItemSchema)
+  .min(1, { message: errorCodes.BUSINESS_IDS_REQUIRED })
+  .superRefine((arr, ctx) =>
+    arr.forEach((item, index) => {
+      const dupesExist =
+        arr.filter((e) => e.businessId === item.businessId).length > 1;
+      if (dupesExist) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
+          path: [index, "businessId"],
+        });
+      }
+    })
+  )
   .describe(
     "List of companies participating in the project and their details."
   );
@@ -176,9 +211,11 @@ export const LLMCompanyRoleAssessmentSchema = z
       //.max(250)
       .describe(
         "Short summary feedback on how well does the company fit into the project in Finnish."
-      )
+      ),
   })
-  .describe("Feedback from LLM on a single company's fit into the project. If no description was provided this is omitted.");
+  .describe(
+    "Feedback from LLM on a single company's fit into the project. If no description was provided this is omitted."
+  );
 
 export const LLMProjectAssessmentSchema = z
   .object({
@@ -199,7 +236,7 @@ export const LLMProjectAssessmentSchema = z
       //.max(500)
       .describe(
         "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."
-      )
+      ),
   })
   .describe("Feedback from LLM on the overall project proposal");
 
