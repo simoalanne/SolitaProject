@@ -1,11 +1,12 @@
 // Moved from src/frontend/src/components/PlaceHolderInput.tsx
 // It will be decided later whether InputPage and OutputPage remain in pages/ or move to components/
 
-import { ProjectInputSchema, type ProjectOutput } from "@myorg/shared";
+import {type ProjectOutput, type ProjectInput, ProjectInputSchema, validateInput, type Company } from "@myorg/shared";
 import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/inputPage.css";
+import { buildConsortium} from "../utils/BuildInput";
 
 
 const PlaceHolderInput = () => {
@@ -16,7 +17,7 @@ const PlaceHolderInput = () => {
    parse in submit!*/
   type Copy = {
     id: string;
-    memberID: string;
+    businessID: string;
     budget: string;
     grant: string;
     desc: string;
@@ -32,7 +33,7 @@ const PlaceHolderInput = () => {
   const [budget, setBudget] = React.useState("");
   const [grant, setGrant] = React.useState("");
   const [projectDesc, setProjectDesc] = React.useState("")
-  const [desc, setDesc] = React.useState("");
+  const [leadDesc, setLeadDesc] = React.useState("");
   const [copies, setCopies] = React.useState<Copy[]>([]);
 
 
@@ -44,7 +45,7 @@ const PlaceHolderInput = () => {
   const addInputCopy = () => {
     const newCopy: Copy = {
       id: makeId(),
-      memberID:"",
+      businessID: "",
       budget: "",
       grant: "",
       desc: ""
@@ -104,51 +105,109 @@ const PlaceHolderInput = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    //og input values
-    const input = {
-      consortium: {
-        leadApplicantBusinessId: applicantID,
-        //memberBusinessIds: memberID.split(",").map(id => id.trim()),
-      },
-      project: {
-        budget: Number(budget),
-        requestedFunding: Number(grant),
-        description: desc,
-      }
-    };
-
-    // turn copies into form that backend expects, 
+    // turn copies into form that backend expects,
     // remember to check schema
     // EDIT FREELY: left this just as guideline
 
-    // const copyInput = copies.map(c => {
-    //   return {
-    //     consortium: {
-    //       //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
-    //       memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
-    //     },
-    //     project: {
-    //       //parseNum instead in Number?
-    //       budget: Number(c.budget),
-    //       requestedFunding: Number(c.grant),
-    //       description: c.desc
-    //     }
-    //   };
-    // });
+    /*
+    const input = copies.map(c => {
+      return {
+        consortium: {
+          //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
+          memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
+          leadBusinessId: applicantID
+        },
+        project: {
+          budget: Number(c.budget),
+          requestedFunding: Number(c.grant),
+          description: c.desc
+        }
+      };
+    });
+    */
 
-    // Validate input using Zod schema
-    const result = ProjectInputSchema.safeParse(input);
-    console.log(result);
+    /*
+    
+    (alias) type Company = {
+    businessId: string;
+    budget: number;
+    requestedFunding: number;
+    projectRoleDescription?: string | undefined;
+    financialData?: {
+        revenues: number[];
+        profits: number[];
+    } | undefined;
 
-    // TODO : Send input to backend API when available
-    if (result.success) {
-      alert("Input is valid!");
-    } else {
-      alert("Input is invalid. Check console for details.");
+
+    }*/
+
+
+    // Build lead applicant data object
+    const leadApplicantData: Company = {
+      businessId: applicantID,
+      budget: Number(budget),
+      requestedFunding: Number(grant),
+      projectRoleDescription: leadDesc,
+      financialData: {
+        revenues: [],
+        profits: [],
+      },
+    };
+
+    // Map the copies to Company objects
+    const memberCompanies: Company[] = copies.map((c) => ({
+      businessId: c.businessID,
+      budget: Number(c.budget),
+      requestedFunding: Number(c.grant),
+      projectRoleDescription: c.desc,
+      financialData: {
+        revenues: [],
+        profits: [],
+      },
+    }));
+
+    console.log("Lead Applicant Data:", leadApplicantData);
+
+    // Build the actual input object to send to backend here
+    const input: ProjectInput = {
+      consortium: buildConsortium(memberCompanies, leadApplicantData),
+      generalDescription: projectDesc
+    };
+
+    // Validate the input against the schema before sending
+    console.log("Constructed ProjectInput:", input);
+    const validationErrors = validateInput(input, ProjectInputSchema);
+
+    if (validationErrors) {
+      console.error("Validation errors found:", validationErrors.errors);
+      setLoading(false);
+      return;
+    }
+    // If no validation errors, proceed to send input to backend
+    console.log("Input is valid. Proceeding to send to backend...");
+    setLoading(true);
+
+    // Start the api call
+    try {
+      const response = await fetch("/api/assess", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(input)
+      });
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
+      const data: ProjectOutput = await response.json();
+      console.log("API response data:", data);
+    } catch (error) {
+      console.error("Error during API call:", error);
+      setLoading(false);
+      return;
     }
 
-    setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     setLoading(false);
     setShowOutput(true);
   };
@@ -199,10 +258,10 @@ const PlaceHolderInput = () => {
               placeholder="Requested Funding" />
           </div>
           <div className="input-box desc-box">
-            <textarea onChange={(e) => setDesc(e.target.value)}
+            <textarea onChange={(e) => setLeadDesc(e.target.value)}
               id="lead-desc-input"
               name="lead-desc"
-              value={desc}
+              value={leadDesc}
               placeholder="Lead Applicant Description"
               className="desc-textarea" />
           </div>
@@ -212,10 +271,10 @@ const PlaceHolderInput = () => {
             <React.Fragment key={c.id}>
               <div className="inputs-grid-copy">
                 <div className="input-box memberID">
-                  <input value={c.memberID} onChange={(e) => updateField(c.id, "memberID", e.target.value)}
+                  <input value={c.businessID} onChange={(e) => updateField(c.id, "businessID", e.target.value)}
                     type="text"
-                    id={`memberID-${c.id}`}
-                    name="member-business-id"
+                    id={`businessID-${c.id}`}
+                    name="business-id"
                     placeholder="Member Business ID" />
                 </div>
                 <div className="input-box">
