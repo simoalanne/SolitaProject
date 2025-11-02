@@ -17,6 +17,10 @@ export const errorCodes = {
 } as const;
 
 export type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
+export type GroupedError = {
+  path: (string | number)[];
+  errorCodes: ErrorCode[];
+};
 
 /**
  * Validates given input against the provided Zod schema.
@@ -41,8 +45,6 @@ export const validateInput = <T>(
   if (parseResult.success) {
     return { input: parseResult.data as T, errors: null };
   }
-
-  type GroupedError = { path: (string | number)[]; errorCodes: ErrorCode[] };
 
   const groupedErrors = Object.values(
     parseResult.error.issues.reduce((acc, i) => {
@@ -119,16 +121,12 @@ export const ConsortiumItemSchema = z
     requestedFunding: z
       .number()
       .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING })
-      .describe(
-        "Company's requested funding from Business Finland in euros."
-      ),
+      .describe("Company's requested funding from Business Finland in euros."),
     projectRoleDescription: z
       .string()
       .min(20)
       .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG })
-      .describe(
-        "Small summary on what is the company's role in the project."
-      )
+      .describe("Small summary on what is the company's role in the project.")
       .optional(),
     financialData: FinancialDataSchema.optional(),
   })
