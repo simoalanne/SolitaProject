@@ -43,37 +43,7 @@ const openApiDoc = {
             description: "Bad Request - Invalid input data",
             content: {
               "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    errors: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          path: {
-                            type: "array",
-                            description:
-                              "Path to the field that caused the error",
-                            items: {
-                              anyOf: [{ type: "string" }, { type: "integer" }],
-                            },
-                          },
-                          errorCodes: {
-                            type: "array",
-                            description: "List of error codes for this field",
-                            items: {
-                              type: "string",
-                              enum: Object.values(errorCodes),
-                            },
-                          },
-                        },
-                        required: ["path", "errorCodes"],
-                      },
-                    },
-                  },
-                  required: ["errors"],
-                },
+                schema: { $ref: "#/components/schemas/ValidationErrors" },
               },
             },
           },
@@ -187,10 +157,6 @@ const openApiDoc = {
   components: {
     schemas: {
       ...allSchemasMap,
-      ErrorCodes: {
-        type: "string",
-        enum: Object.values(errorCodes),
-      },
     },
   },
 };

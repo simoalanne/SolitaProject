@@ -5,11 +5,11 @@ export const errorCodes = {
   INVALID_BUSINESS_ID_FORMAT: "INVALID_BUSINESS_ID_FORMAT",
   INVALID_BUSINESS_ID_CHECK_DIGIT: "INVALID_BUSINESS_ID_CHECK_DIGIT",
   BUSINESS_IDS_NOT_UNIQUE: "BUSINESS_IDS_NOT_UNIQUE",
-  BUSINESS_IDS_REQUIRED: "BUSINESS_IDS_REQUIRED",
-  INVALID_PROJECT_BUDGET: "INVALID_PROJECT_BUDGET",
-  INVALID_REQUESTED_FUNDING: "INVALID_REQUESTED_FUNDING",
   REQUESTED_FUNDING_EXCEEDS_BUDGET: "REQUESTED_FUNDING_EXCEEDS_BUDGET",
-  DESCRIPTION_TOO_LONG: "DESCRIPTION_TOO_LONG",
+  TOO_SMALL: "TOO_SMALL", // for numbers
+  TOO_BIG: "TOO_BIG",
+  TOO_SHORT: "TOO_SHORT", // for strings
+  TOO_LONG: "TOO_LONG",
   INVALID_REVENUE_ENTRIES_COUNT: "INVALID_REVENUE_ENTRIES_COUNT",
   INVALID_PROFIT_ENTRIES_COUNT: "INVALID_PROFIT_ENTRIES_COUNT",
   REQUIRED_FIELD_MISSING: "REQUIRED_FIELD_MISSING",
@@ -17,10 +17,58 @@ export const errorCodes = {
 } as const;
 
 export type ErrorCode = (typeof errorCodes)[keyof typeof errorCodes];
-export type GroupedError = {
-  path: (string | number)[];
-  errorCodes: ErrorCode[];
+
+export type InBetween = { min: number; max: number };
+
+const generalDecsLimits: InBetween = { min: 20, max: 400 };
+const projectRoleDescLimits: InBetween = { min: 20, max: 200 };
+const budgetLimits: InBetween = { min: 1000, max: 1000000000 };
+const requestedFundingLimits: InBetween = { min: 100, max: 1000000000 };
+
+// Frontend can use this to show limits in the UI and ensure that it's in sync
+// with the backend validation
+export const fieldsMetadata: Record<string, InBetween> = {
+  generalDescription: generalDecsLimits,
+  projectRoleDescription: projectRoleDescLimits,
+  budget: budgetLimits,
+  requestedFunding: requestedFundingLimits,
+} as const;
+
+// Map some of the common Zod error codes to standardized error codes
+const zodMessageToErrorCodeMap = {
+  too_small: {
+    forNumber: errorCodes.TOO_SMALL,
+    forString: errorCodes.TOO_SHORT,
+  },
+  too_big: { forNumber: errorCodes.TOO_BIG, forString: errorCodes.TOO_LONG },
+  invalid_type: {
+    forNumber: errorCodes.TOO_SMALL,
+    forString: errorCodes.REQUIRED_FIELD_MISSING,
+  },
 };
+
+const errorEnum = z
+  .enum(Object.values(errorCodes) as [string, ...string[]])
+  .describe("Standardized error codes for validation failures.");
+
+const ValidationErrorsSchema = z
+  .array(
+    z
+      .object({
+        path: z
+          .array(z.union([z.string(), z.number()]))
+          .describe(
+            "Array of path segments leading to the field with the error(s)."
+          ),
+        errorCodes: z.array(errorEnum),
+      })
+      .describe(
+        "Contains the path to the field with errors and associated error codes."
+      )
+  )
+  .describe("Array of Error objects representing validation failures.");
+
+export type Errors = z.infer<typeof ValidationErrorsSchema>;
 
 /**
  * Validates given input against the provided Zod schema.
@@ -46,19 +94,31 @@ export const validateInput = <T>(
     return { input: parseResult.data as T, errors: null };
   }
 
+  // Zods build in message is just "too_small" or "too_big" and there's no way
+  // to tell if the issue is with a number or string so has to be hardcoded here
+  const numericFields = ["budget", "requestedFunding"];
+
   const groupedErrors = Object.values(
     parseResult.error.issues.reduce((acc, i) => {
       const key = JSON.stringify(i.path);
-      const code = Object.values(errorCodes).includes(i.message as ErrorCode)
+      const codeOrCodePair = Object.values(errorCodes).includes(
+        i.message as ErrorCode
+      )
         ? (i.message as ErrorCode)
-        : i.message === "Required"
-        ? errorCodes.REQUIRED_FIELD_MISSING
-        : errorCodes.UNKNOWN_ERROR;
+        : zodMessageToErrorCodeMap[
+            i.code as keyof typeof zodMessageToErrorCodeMap
+          ] || errorCodes.UNKNOWN_ERROR;
+      const code =
+        typeof codeOrCodePair === "string"
+          ? codeOrCodePair
+          : numericFields.includes(i.path[i.path.length - 1] as string)
+          ? codeOrCodePair.forNumber
+          : codeOrCodePair.forString;
 
-      if (!acc[key]) acc[key] = { path: i.path, errorCodes: [] }; //
+      if (!acc[key]) acc[key] = { path: i.path, errorCodes: [] };
       acc[key].errorCodes.push(code);
       return acc;
-    }, {} as Record<string, GroupedError>)
+    }, {} as Record<string, Errors[number]>)
   );
 
   return { input: null, errors: groupedErrors };
@@ -116,27 +176,22 @@ export const ConsortiumItemSchema = z
     businessId: businessIdSchema,
     budget: z
       .number()
-      .nonnegative({ message: errorCodes.INVALID_PROJECT_BUDGET })
+      .min(budgetLimits.min)
       .describe("Company's share of the project budget in euros."),
     requestedFunding: z
       .number()
-      .nonnegative({ message: errorCodes.INVALID_REQUESTED_FUNDING })
+      .min(requestedFundingLimits.min)
       .describe("Company's requested funding from Business Finland in euros."),
     projectRoleDescription: z
       .string()
-      .min(20)
-      .max(200, { message: errorCodes.DESCRIPTION_TOO_LONG })
+      .min(projectRoleDescLimits.min)
+      .max(projectRoleDescLimits.max)
       .describe("Small summary on what is the company's role in the project.")
       .optional(),
     financialData: FinancialDataSchema.optional(),
   })
   .superRefine((item, ctx) => {
     if (item.requestedFunding > item.budget) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
-        path: ["budget"],
-      });
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: errorCodes.REQUESTED_FUNDING_EXCEEDS_BUDGET,
@@ -147,19 +202,20 @@ export const ConsortiumItemSchema = z
 
 export const ConsortiumSchema = z
   .array(ConsortiumItemSchema)
-  .min(1, { message: errorCodes.BUSINESS_IDS_REQUIRED })
   .superRefine((arr, ctx) =>
-    arr.forEach((item, index) => {
-      const dupesExist =
-        arr.filter((e) => e.businessId === item.businessId).length > 1;
-      if (dupesExist) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
-          path: [index, "businessId"],
-        });
-      }
-    })
+    arr
+      .filter((e) => e.businessId !== "")
+      .forEach((item, index) => {
+        const dupesExist =
+          arr.filter((e) => e.businessId === item.businessId).length > 1;
+        if (dupesExist) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: errorCodes.BUSINESS_IDS_NOT_UNIQUE,
+            path: [index, "businessId"],
+          });
+        }
+      })
   )
   .describe(
     "List of companies participating in the project and their details."
@@ -169,8 +225,8 @@ export const ProjectInputSchema = z.object({
   consortium: ConsortiumSchema,
   generalDescription: z
     .string()
-    .min(50)
-    .max(400, { message: errorCodes.DESCRIPTION_TOO_LONG })
+    .min(generalDecsLimits.min)
+    .max(generalDecsLimits.max)
     .describe("General description of the project proposal."),
 });
 
@@ -272,6 +328,7 @@ export const allSchemas = {
   LLMProjectAssessment: LLMProjectAssessmentSchema,
   CompanyEvaluation: CompanyEvaluationSchema,
   ProjectOutput: ProjectOutputSchema,
+  ValidationErrors: ValidationErrorsSchema,
 };
 
 /** Unique Finnish Business ID (Y-tunnus) that can be validated for format and check digit. */
