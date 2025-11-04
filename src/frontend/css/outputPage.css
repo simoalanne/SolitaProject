@@ -1,0 +1,76 @@
+* {
+    /*avoid clipping*/
+    box-sizing: border-box;
+}
+
+.result-box {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2%;
+    padding: 10px;
+
+    background-color: rgb(104, 105, 110);
+
+    /* width: 60vw; */
+    min-height: 10vh;
+    border-radius: 5px;
+}
+
+.result-box p {
+    text-align: left;
+    margin-left: 10%;
+    flex: 1;
+}
+
+.result-box h3 {
+    text-align: left;
+    margin-left: 2%;
+    flex: 1;
+}
+
+.trafficlight {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+    margin-right: 10%;
+    padding: 1%;
+
+    background-color: #303030;
+
+}
+
+/*singulat light in trafficlights*/
+.dot {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    /* display: inline-block; */
+}
+
+/*3 traffic light -base */
+.trafficlight .dot {
+    opacity: 0.25;
+    /* transition: opacity 120ms ease, transform 120ms ease; */
+}
+
+/*3 traffic lights -active color*/
+.trafficlight .dot.active {
+    opacity: 1;
+    /* transform: scale(1.05); */
+    box-shadow: 0 0 6px #000000;
+}
+
+/* all lights are shown */
+.dot.green {
+    background: #1fff23;
+}
+
+.dot.yellow {
+    background: #ffe100;
+}
+
+.dot.red {
+    background: #ff1900;
+}
