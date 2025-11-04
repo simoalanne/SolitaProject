@@ -6,7 +6,7 @@ import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/inputPage.css";
-import { buildConsortium} from "../utils/BuildInput";
+import { buildConsortium2} from "../utils/BuildInput";
 
 
 const PlaceHolderInput = () => {
@@ -35,6 +35,7 @@ const PlaceHolderInput = () => {
   const [projectDesc, setProjectDesc] = React.useState("")
   const [leadDesc, setLeadDesc] = React.useState("");
   const [copies, setCopies] = React.useState<Copy[]>([]);
+  const [output, setOutput] = React.useState<ProjectOutput | null>(null);
 
 
   // makeId needed for react only
@@ -68,6 +69,7 @@ const PlaceHolderInput = () => {
          c.id === id ? { ...c, [field]: value } : c));
   };
 
+  /*
   const placeHolderOutput: ProjectOutput = {
   companyEvaluations: [
     {
@@ -96,7 +98,7 @@ const PlaceHolderInput = () => {
     feedbackFi: "",
   },
   overallTrafficLight: "yellow",
-};
+  }; */
 
   /**
    * Will be used to send input to backend API in the future
@@ -105,53 +107,12 @@ const PlaceHolderInput = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // turn copies into form that backend expects,
-    // remember to check schema
-    // EDIT FREELY: left this just as guideline
-
-    /*
-    const input = copies.map(c => {
-      return {
-        consortium: {
-          //ternary: if empty input, returns empty array --> bolean remoes empty spaces in memberID
-          memberBusinessIds: c.memberID ? c.memberID.split(",").map(id => id.trim()).filter(Boolean) : [],
-          leadBusinessId: applicantID
-        },
-        project: {
-          budget: Number(c.budget),
-          requestedFunding: Number(c.grant),
-          description: c.desc
-        }
-      };
-    });
-    */
-
-    /*
-    
-    (alias) type Company = {
-    businessId: string;
-    budget: number;
-    requestedFunding: number;
-    projectRoleDescription?: string | undefined;
-    financialData?: {
-        revenues: number[];
-        profits: number[];
-    } | undefined;
-
-
-    }*/
-
-
     // Build lead applicant data object
     const leadApplicantData: Company = {
       businessId: applicantID,
       budget: Number(budget),
       requestedFunding: Number(grant),
       projectRoleDescription: leadDesc,
-      financialData: {
-        revenues: [],
-        profits: [],
-      },
     };
 
     // Map the copies to Company objects
@@ -160,17 +121,13 @@ const PlaceHolderInput = () => {
       budget: Number(c.budget),
       requestedFunding: Number(c.grant),
       projectRoleDescription: c.desc,
-      financialData: {
-        revenues: [],
-        profits: [],
-      },
     }));
 
     console.log("Lead Applicant Data:", leadApplicantData);
 
     // Build the actual input object to send to backend here
     const input: ProjectInput = {
-      consortium: buildConsortium(memberCompanies, leadApplicantData),
+      consortium: buildConsortium2(memberCompanies, leadApplicantData),
       generalDescription: projectDesc
     };
 
@@ -178,7 +135,7 @@ const PlaceHolderInput = () => {
     console.log("Constructed ProjectInput:", input);
     const validationErrors = validateInput(input, ProjectInputSchema);
 
-    if (validationErrors) {
+    if (validationErrors.errors && validationErrors.errors.length > 0) {
       console.error("Validation errors found:", validationErrors.errors);
       setLoading(false);
       return;
@@ -200,14 +157,14 @@ const PlaceHolderInput = () => {
         throw new Error(`API error: ${response.statusText}`);
       }
       const data: ProjectOutput = await response.json();
+      // Then set the output state with received data
+      setOutput(data);
       console.log("API response data:", data);
     } catch (error) {
       console.error("Error during API call:", error);
       setLoading(false);
       return;
     }
-
-
     setLoading(false);
     setShowOutput(true);
   };
@@ -216,7 +173,10 @@ const PlaceHolderInput = () => {
     return <Loader message="Processing your input..." />;
   }
   if (showOutput) {
-    return <PlaceHolderOutput output={placeHolderOutput} />;
+    if (output === null) {
+      return <div>Error: No output data available.</div>;
+    }
+    return <PlaceHolderOutput output={output} />;
   }
 
   // UI here is very basic, just for demonstration purposes

@@ -51,3 +51,39 @@ export function buildConsortium(members: Company[], applicant: Company): Consort
   return consortium;
 }
     
+
+export function buildConsortium2(members: Company[], applicant: Company): Consortium {
+  const consortium: Consortium = [];
+
+  function buildConsortiumEntry(entity: Company, defaultRole: string) {
+    const revenues = parseNumberCSV(entity.financialData?.revenues);
+    const profits = parseNumberCSV(entity.financialData?.profits);
+
+    const hasFinancialData =
+      (revenues && revenues.length > 0) ||
+      (profits && profits.length > 0);
+
+    const entry: Consortium[number] = {
+      businessId: entity.businessId || "",
+      budget: Number(entity.budget) || 0,
+      requestedFunding: Number(entity.requestedFunding) || 0,
+      projectRoleDescription: entity.projectRoleDescription || defaultRole,
+    };
+
+    if (hasFinancialData) {
+      entry.financialData = { revenues, profits };
+    }
+
+    return entry;
+  }
+
+  // Add the lead applicant
+  consortium.push(buildConsortiumEntry(applicant, "Lead Applicant"));
+
+  // Add each consortium member
+  for (const m of members) {
+    consortium.push(buildConsortiumEntry(m, "Consortium Member"));
+  }
+
+  return consortium;
+}
