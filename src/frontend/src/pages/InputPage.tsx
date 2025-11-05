@@ -1,126 +1,129 @@
 // Moved from src/frontend/src/components/PlaceHolderInput.tsx
 // It will be decided later whether InputPage and OutputPage remain in pages/ or move to components/
 
-import {type ProjectOutput, type ProjectInput, ProjectInputSchema, validateInput, type Company } from "@myorg/shared";
+import {
+  type ProjectOutput,
+  type ProjectInput,
+  ProjectInputSchema,
+  validateInput,
+  type Company,
+  type ErrorCode,
+  FinancialDataSchema,
+  businessIdSchema,
+} from "@myorg/shared";
 import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/inputPage.css";
-import { buildConsortium2} from "../utils/BuildInput";
 import parseKauppalehtiData from "../utils/kauppalehtiParser";
 
+const errorMessages: Record<ErrorCode, string> = {
+  INVALID_BUSINESS_ID_FORMAT: "The business ID format is invalid.",
+  INVALID_BUSINESS_ID_CHECK_DIGIT: "The business ID check digit is incorrect.",
+  BUSINESS_IDS_NOT_UNIQUE:
+    "Each business ID must be unique within the consortium.",
+  REQUESTED_FUNDING_EXCEEDS_BUDGET:
+    "Requested funding cannot exceed the project budget.",
+  TOO_SMALL: "The entered value is too small.",
+  TOO_BIG: "The entered value is too large.",
+  TOO_SHORT: "The entered text is too short.",
+  TOO_LONG: "The entered text is too long.",
+  // These should not be needed with current form but are here for completeness
+  INVALID_REVENUE_ENTRIES_COUNT:
+    "Please provide the correct number of revenue entries.",
+  INVALID_PROFIT_ENTRIES_COUNT:
+    "Please provide the correct number of profit entries.",
+  REQUIRED_FIELD_MISSING: "This field is required.",
+  UNKNOWN_ERROR: "An unknown error occurred. Please check your input.",
+};
 
 const PlaceHolderInput = () => {
-
-  // For adding more user inputs
-  /* NOTE 
-   budget and grant are str so that placeholder can be seen 
-   parse in submit!*/
-  type Copy = {
-    id: string;
-    businessID: string;
-    budget: string;
-    grant: string;
-    desc: string;
-    financialData: string;
+  const defaultCompany: Company = {
+    businessId: "",
+    budget: 0,
+    requestedFunding: 0,
+    projectRoleDescription: "",
   };
 
+  const initialForm: ProjectInput = {
+    consortium: [defaultCompany],
+    generalDescription: "",
+  };
+
+  type Path = (string | number)[];
+
+  // key is the field path array joined by '.', value is the error message
+  type ValidationErrors = Record<string, string>;
+
+  // Use a single form state for all inputs. This makes it way easier to integrate validation errors
+  const [form, setForm] = React.useState<ProjectInput>(initialForm);
+  const [errors, setErrors] = React.useState<ValidationErrors>({});
 
   const [loading, setLoading] = React.useState(false);
   const [showOutput, setShowOutput] = React.useState(false);
-  // input states
-  //delete memberID when ensured it is not needed
-  const [applicantID, setApplicantID] = React.useState("");
-  //const [memberID, setMemberID] = React.useState("");
-  const [budget, setBudget] = React.useState("");
-  const [grant, setGrant] = React.useState("");
-  const [projectDesc, setProjectDesc] = React.useState("")
-  const [leadDesc, setLeadDesc] = React.useState("");
-  const [copies, setCopies] = React.useState<Copy[]>([]);
   const [output, setOutput] = React.useState<ProjectOutput | null>(null);
-  const [financialData, setFinancialData] = React.useState<string>("");
   const [financialFormOpen, setFinancialFormOpen] = React.useState(false);
 
+  // Update validation errors whenever the form changes. Not the most optimal solution
+  // performance-wise, but probably fine...
+  React.useEffect(() => {
+    const validationResult = validateInput(form, ProjectInputSchema);
+    const newErrors: ValidationErrors =
+      validationResult.errors?.reduce((acc, curr) => {
+        const pathString = curr.path.join(".");
+        // For now show just first error per field
+        acc[pathString] =
+          errorMessages[curr.errorCodes[0] as ErrorCode] ||
+          errorMessages.UNKNOWN_ERROR;
+        return acc;
+      }, {} as ValidationErrors) || {};
+    setErrors(newErrors);
+  }, [form]);
 
-  // makeId needed for react only
-  const idRef = React.useRef(1);
-  const makeId = () => String(idRef.current++);
+  const updateForm = (fieldPath: Path, value: any) => {
+    setForm((prev) => {
+      const updatedForm = { ...prev };
+      let target: any = updatedForm;
 
-  // User can add more inputs
-  const addInputCopy = () => {
-    const newCopy: Copy = {
-      id: makeId(),
-      businessID: "",
-      budget: "",
-      grant: "",
-      desc: "",
-      financialData: ""
-    };
-    //returns new array
-    setCopies(prev => [...prev, newCopy]); 
+      // Example path: ['consortium', 0, 'budget']
+      for (let i = 0; i < fieldPath.length; i++) {
+        const key = fieldPath[i];
+
+        // Goes to direct parent of the target field like updatedForm['consortium'][0]
+        if (i !== fieldPath.length - 1) {
+          target = target[key];
+          // Sets the value of the target field -> updatedForm['consortium'][0]['budget'] = value
+        } else {
+          target[key] = value;
+        }
+      }
+      return updatedForm;
+    });
   };
 
-  //delete inputs
-  const deleteInputCopy = (id: string) => {
-    //create new array with copies whose id is NOT here
-    setCopies(prev => prev.filter(c => c.id !== id));
-  }
+  const addCompany = () =>
+    setForm((prevForm) => ({
+      ...prevForm,
+      consortium: [...prevForm.consortium, defaultCompany],
+    }));
 
-  // Update one field of a copy (found by id)
-  // Creates a new copies array where only the matching copy is replaced.
-  const updateField = (id: string, field: keyof Omit<Copy, 'id'>, value: string) => {
-    setCopies(prev => 
-      prev.map(c =>
-         c.id === id ? { ...c, [field]: value } : c));
+  const deleteCompany = (index: number) =>
+    setForm((prevForm) => ({
+      ...prevForm,
+      // Don't allow deleting the initial company at index 0
+      consortium: prevForm.consortium.filter((_, i) => i !== index && i >= 0),
+    }));
+
+  const RenderError = ({ fieldPath }: { fieldPath: Path }) => {
+    const pathString = fieldPath.join(".");
+    const errorMessage = errors[pathString];
+    return errorMessage && <p className="error-message">{errorMessage}</p>;
   };
 
-  /**
-   * Will be used to send input to backend API in the future
-   * Currently simulates loading state and then shows placeholder output
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Parse the financial data field by using the kauppalehti parser utility function
-    const leadParsedFinancialData = parseKauppalehtiData(financialData);
-    const memberParsedFinancialData = copies.map(c => ({
-      id: c.id,
-      financials: parseKauppalehtiData(c.financialData)
-    }));
-    console.log("Lead Applicant Parsed Financial Data:", leadParsedFinancialData);
-    console.log("Member Companies Parsed Financial Data:", memberParsedFinancialData);
-
-
-    // Build lead applicant data object
-    const leadApplicantData: Company = {
-      businessId: applicantID,
-      budget: Number(budget),
-      requestedFunding: Number(grant),
-      projectRoleDescription: leadDesc,
-      financialData: leadParsedFinancialData
-
-    };
-
-    // Map the copies to Company objects
-    const memberCompanies: Company[] = copies.map((c) => ({
-      businessId: c.businessID,
-      budget: Number(c.budget),
-      requestedFunding: Number(c.grant),
-      projectRoleDescription: c.desc,
-      financialData: memberParsedFinancialData.find(m => m.id === c.id)?.financials || { revenues: [], profits: [] }
-    }));
-
-    console.log("Lead Applicant Data:", leadApplicantData);
-
-    // Build the actual input object to send to backend here
-    const input: ProjectInput = {
-      consortium: buildConsortium2(memberCompanies, leadApplicantData),
-      generalDescription: projectDesc
-    };
-
-    // Validate the input against the schema before sending
-    console.log("Constructed ProjectInput:", input);
-    const validationErrors = validateInput(input, ProjectInputSchema);
+    const validationErrors = validateInput(form, ProjectInputSchema);
 
     if (validationErrors.errors && validationErrors.errors.length > 0) {
       console.error("Validation errors found:", validationErrors.errors);
@@ -136,9 +139,9 @@ const PlaceHolderInput = () => {
       const response = await fetch("/api/assess", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(input)
+        body: JSON.stringify(form),
       });
       if (!response.ok) {
         throw new Error(`API error: ${response.statusText}`);
@@ -168,148 +171,183 @@ const PlaceHolderInput = () => {
 
   if (financialFormOpen) {
     return (
-      <div><h2>Financial Statement Form</h2>
-        <button onClick={() => setFinancialFormOpen(false)}>Back to Input Form</button>
+      <div>
+        <h2>Financial Statement Form</h2>
+        <button onClick={() => setFinancialFormOpen(false)}>
+          Back to Input Form
+        </button>
         {/* Financial form fields go here */}
-        
       </div>
     );
   }
 
-  // UI here is very basic, just for demonstration purposes
   return (
     <div className="form">
       <form onSubmit={handleSubmit}>
         <h2>Project Input</h2>
         <div className="inputs-grid">
           <div className="input-box desc-box">
-            <textarea onChange={(e) => setProjectDesc(e.target.value)}
+            <textarea
+              onChange={(e) =>
+                updateForm(["generalDescription"], e.target.value)
+              }
               id="desc-input"
               name="project-desc"
-              value={projectDesc}
-              placeholder="Project Description" 
-              className="desc-textarea"/>
-          </div>
-          <div className="input-box applicantID">
-            <input onChange={(e) => setApplicantID(e.target.value)}
-              type="text"
-              id="applicantID-input"
-              name="applicant-business-id"
-              value={applicantID}
-              placeholder="Lead Applicant Business ID" />
-          </div>
-          <div className="input-box">
-            <input onChange={(e) => setBudget(e.target.value)} 
-              id="budget-input"
-              type="number"
-              name="project-budget"
-              value={budget}
-              placeholder="Project Budget" />
-          </div>
-          <div className="input-box">
-            <input onChange={(e) => setGrant(e.target.value)} 
-              type="number"
-              id="grant-input"
-              name="requested-funding"
-              value={grant}
-              placeholder="Requested Funding" />
-          </div>
-          <div className="input-box desc-box">
-            <textarea onChange={(e) => setLeadDesc(e.target.value)}
-              id="lead-desc-input"
-              name="lead-desc"
-              value={leadDesc}
-              placeholder="Lead Applicant Description"
-              className="desc-textarea" />
-          </div>
-          {/* A button to open a financial form where user can paste the info from kauppalehti*/}
-          <div className="input-box desc-box">
-            <textarea onChange={(e) => setFinancialData(e.target.value)}
-              id="financial-input"
-              name="financial-data"
-              value={financialData}
-              placeholder="Paste financial data from Kauppalehti Taloustiedot table"
-              className="desc-textarea" />
-          </div>
-          <div className="kauppalehti-container">
-            <button className="kauppalehti-button">
-              <a
-                className="kauppalehti-link"
-                href={`https://www.kauppalehti.fi/yritykset/yritys/${applicantID.replace(/-/g, "")}#taloustiedot`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open kauppalehti
-              </a>
-            </button>
-            <p className="para">Please enter your business id before <strong>opening Kauppalehti</strong></p>
+              value={form.generalDescription}
+              placeholder="Project Description"
+              className="desc-textarea"
+            />
+            <RenderError fieldPath={["generalDescription"]} />
           </div>
         </div>
-        <br />
         <div className="inputs-grid/copies-container">
-          {/* Fragment with a key -> React can track each mapped group without adding an extra DOM node.
-           (Move the key to the ".inputs-grid-copy" div to keep DOM simpler?)*/}
-          {copies.map((c) => (
-            <React.Fragment key={c.id}>
+          {form.consortium.map((c, index) => (
+            <React.Fragment key={index}>
               <div className="inputs-grid">
                 <div className="input-box memberID">
-                  <input value={c.businessID} onChange={(e) => updateField(c.id, "businessID", e.target.value)}
+                  <input
+                    value={c.businessId}
+                    onChange={(e) =>
+                      updateForm(
+                        ["consortium", index, "businessId"],
+                        e.target.value
+                      )
+                    }
                     type="text"
-                    id={`businessID-${c.id}`}
                     name="business-id"
-                    placeholder="Member Business ID" />
+                    placeholder="Member Business ID"
+                  />
+                  <RenderError
+                    fieldPath={["consortium", index, "businessId"]}
+                  />
                 </div>
                 <div className="input-box">
-                  <input value={c.budget} onChange={(e) => updateField(c.id, "budget", e.target.value)}
+                  <input
+                    value={c.budget}
+                    onChange={(e) =>
+                      updateForm(
+                        ["consortium", index, "budget"],
+                        Number(e.target.value)
+                      )
+                    }
                     type="number"
-                    id={`budget-${c.id}`}
                     name="budget-id"
-                    placeholder="Project Budget" />
+                    placeholder="Project Budget"
+                  />
+                  <RenderError fieldPath={["consortium", index, "budget"]} />
                 </div>
                 <div className="input-box">
-                  <input value={c.grant} onChange={(e) => updateField(c.id, "grant", e.target.value)}
+                  <input
+                    value={c.requestedFunding}
+                    onChange={(e) =>
+                      updateForm(
+                        ["consortium", index, "requestedFunding"],
+                        Number(e.target.value)
+                      )
+                    }
                     type="number"
-                    id={`grant-${c.id}`}
                     name="grant-id"
-                    placeholder="Requested Funding" />
+                    placeholder="Requested Funding"
+                  />
+                  <RenderError
+                    fieldPath={["consortium", index, "requestedFunding"]}
+                  />
                 </div>
                 <div className="input-box desc-box">
-                  <textarea value={c.desc} onChange={(e) => updateField(c.id, "desc", e.target.value)}
-                    id={`desc-${c.id}`}
+                  <textarea
+                    value={c.projectRoleDescription}
+                    onChange={(e) =>
+                      updateForm(
+                        ["consortium", index, "projectRoleDescription"],
+                        e.target.value
+                      )
+                    }
                     name="desc-id"
                     placeholder="description"
-                    className="desc-textarea"/>
+                    className="desc-textarea"
+                  />
+                  <RenderError
+                    fieldPath={["consortium", index, "projectRoleDescription"]}
+                  />
                 </div>
                 <div className="input-box desc-box">
-                  <textarea value={c.financialData} onChange={(e) => updateField(c.id, "financialData", e.target.value)}
-                    id={`financial-${c.id}`}
+                  <textarea
+                    value={
+                      c.financialData
+                        ? `Revenues: ${c.financialData.revenues.join(
+                            ", "
+                          )}\nProfits: ${c.financialData.profits.join(", ")}`
+                        : ""
+                    }
+                    readOnly={
+                      !validateInput(c.financialData, FinancialDataSchema)
+                        .errors
+                    }
+                    // The field can only ever be empty or contain valid data and be readOnly
+                    onChange={(e) =>
+                      updateForm(
+                        ["consortium", index, "financialData"],
+                        parseKauppalehtiData(e.target.value)
+                      )
+                    }
                     name="financial-id"
-                    placeholder="Paste financial data from Kauppalehti taloustiedot table"
-                    className="desc-textarea"/>
+                    placeholder="Paste financial data from Kauppalehti taloustiedot table."
+                    className="desc-textarea"
+                  />
                 </div>
                 <div className="kauppalehti-container">
-                  <button className="kauppalehti-button">
-                    <a
-                      className="kauppalehti-link"
-                      href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessID.replace(/-/g, "")}#taloustiedot`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {/* Show the button only if the businessId can at least formatwise be valid */}
+                  {!validateInput(c.businessId, businessIdSchema).errors &&
+                    !c.financialData && (
+                      <button className="kauppalehti-button">
+                        <a
+                          className="kauppalehti-link"
+                          href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
+                            /-/g,
+                            ""
+                          )}#taloustiedot`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Open kauppalehti
+                        </a>
+                      </button>
+                    )}
+                  {!validateInput(c.financialData, FinancialDataSchema)
+                    .errors && (
+                    <button
+                      className="clear-financial-button"
+                      onClick={() =>
+                        updateForm(
+                          ["consortium", index, "financialData"],
+                          undefined
+                        )
+                      }
                     >
-                      Open kauppalehti
-                    </a>
-                  </button>
-                  <p className="para">Please enter the business id before <strong>opening Kauppalehti</strong></p>
+                      Clear Financial Data
+                    </button>
+                  )}
                 </div>
-                <button id="del-btn" type="button"
-                  onClick={() => deleteInputCopy(c.id)}
-                >-</button>
+                {index === 0 ? null : (
+                  <button
+                    id="del-btn"
+                    type="button"
+                    onClick={() => deleteCompany(index)}
+                  >
+                    -
+                  </button>
+                )}
               </div>
             </React.Fragment>
           ))}
         </div>
         <div className="buttons">
-          <button type="button" id="add-btn" onClick={addInputCopy}>+</button>
-          <button id="submit-btn" type="submit">Submit</button>
+          <button type="button" id="add-btn" onClick={addCompany}>
+            +
+          </button>
+          <button id="submit-btn" type="submit">
+            Submit
+          </button>
         </div>
       </form>
     </div>

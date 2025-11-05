@@ -156,7 +156,7 @@ export const businessIdSchema = z
   )
   .describe("Finnish Business ID (Y-tunnus)");
 
-const FinancialDataSchema = z
+export const FinancialDataSchema = z
   .object({
     revenues: z
       .array(z.number())

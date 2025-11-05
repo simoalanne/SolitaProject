@@ -1,3 +1,5 @@
+import { FinancialDataSchema, validateInput } from "@myorg/shared";
+
 /**
  * This function can be used to parse financial statistics user pasted from kauppalehti.fi
  * @param copyPastedFinancialStats - The raw text copied from kauppalehti.fi
@@ -20,10 +22,13 @@ const parseKauppalehtiData = (copyPastedFinancialStats: string) => {
     });
   };
 
-  return {
+  const data = {
     revenues: getFiveAfter("liikevaihto"),
     profits: getFiveAfter("liiketulos"),
   };
+
+  const validation = validateInput(data, FinancialDataSchema);
+  return !validation.errors && data;
 };
 
 export default parseKauppalehtiData;
