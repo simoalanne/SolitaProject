@@ -48,13 +48,21 @@ const assessProject = async (
     ),
     generateFeedback(projectInput.generalDescription),
   ]);
+
+  const overallTrafficLight = computeOverallTrafficLight(
+    companyEvaluations,
+    projectInput.consortium.map(c => c.budget),
+    projectInput.consortium.reduce((sum, c) => sum + c.budget, 0)
+  );
+
   return {
     companyEvaluations,
-    overallTrafficLight: "green",
+    overallTrafficLight,
     llmProjectAssessment: feedback,
   };
 };
 
+// TODO: weighted scoring used in multiple places. this logic should be centralized somewhere
 const calculateWeightedScore = <
   T extends FinancialRisk | FundingHistory | TrafficLight
 >(
@@ -113,5 +121,31 @@ const getFeedbackForRole = async (
   roleDescription
     ? await generateFeedbackForCompany(overallDescription, roleDescription)
     : undefined;
+
+
+const computeOverallTrafficLight = (
+  companyEvaluations: ProjectOutput["companyEvaluations"],
+  budgets: number[],
+  totalBudget: number,
+  projectFeedback?: ProjectOutput["llmProjectAssessment"]
+): TrafficLight => {
+  // Calculate overall traffic light by weighting company traffic lights + llm project assessment
+  // Individual company traffic light should be weighted per their budget share
+  const trafficLightScores = companyEvaluations.map((evaluation, index) => {
+    const trafficLightScore = calculateWeightedScore(
+      { green: 1, yellow: 0.5, red: 0 },
+      { value: evaluation.trafficLight, weight: budgets[index] / totalBudget }
+    );
+    return trafficLightScore;
+  });
+
+  const overallTrafficLightScore = trafficLightScores.reduce((sum, score) => sum + score, 0);
+
+  // TODO: give some weight to project feedback's innovation and strategic fit traffic lights as well
+  
+  const overallTrafficLight = overallTrafficLightScore >= 0.75 ? "green" : overallTrafficLightScore >= 0.4 ? "yellow" : "red";
+
+  return overallTrafficLight;
+};
 
 export default assessProject;

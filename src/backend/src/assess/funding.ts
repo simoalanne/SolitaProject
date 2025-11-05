@@ -1,9 +1,11 @@
-import { type BusinessId, type FundingHistory } from "@myorg/shared";
+import { type FundingHistory } from "@myorg/shared";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
-type FundingData = Record<BusinessId, number>;
+
+export type FundingEntry = { year: number; amount: number; isLoan: boolean };
+export type FundingData = Record<string, FundingEntry[]>;
 
 /**
  * Loads the funding data from the JSON file
@@ -28,7 +30,7 @@ const loadFundingData = async (): Promise<FundingData> => {
   }
 };
 
-// The file contains around ~22k entries, so just keeping it in memory is fine
+
 const fundingData = await loadFundingData();
 
 /**
@@ -37,19 +39,61 @@ const fundingData = await loadFundingData();
  * @returns The funding history represented as "none" | "low" | "medium" | "high".
  */
 export const getFundingHistoryForCompany = (
-  businessId: BusinessId
+  businessId: string
 ): FundingHistory => {
-  const pastFunding = fundingData[businessId] || 0;
+  const fundingEntry = fundingData[businessId];
 
-  // Placeholder code
-  const thresholds = [
-    { value: 0, label: "none" },
-    { value: 100000, label: "low" },
-    { value: 1000000, label: "medium" },
-    { value: Infinity, label: "high" },
+  if (!fundingEntry) return "none";
+
+  const indicators = [
+    { check: hasRecentGrant(fundingEntry, 3), weight: 2 },
+    { check: hasReceivedFundingMultipleTimes(fundingEntry, 2), weight: 2 },
+    { check: hasMostlyGrants(fundingEntry, 0.5), weight: 1 },
+    { check: hasSignificantFunding(fundingEntry, 50000), weight: 1 },
+    { check: hasLargeSingleFunding(fundingEntry, 0.5), weight: 1 },
   ];
 
-  return thresholds.find((t) => pastFunding <= t.value)!.label as FundingHistory;
+  const totalWeight = indicators.reduce((sum, ind) => sum + ind.weight, 0);
+  const achievedWeight = indicators
+    .filter((ind) => ind.check)
+    .reduce((sum, ind) => sum + ind.weight, 0);
+
+  const percentage = achievedWeight / totalWeight;
+
+  if (percentage === 0) return "none";
+  if (percentage <= 0.33) return "low";
+  if (percentage <= 0.66) return "medium";
+  return "high";
+};
+
+// Data is not exactly easy to analyze so the approach here is set of positive indicators about
+// how the company has successfully received funding in the past without just trying to compare
+// against arbitrary thresholds.
+
+// 1. Received at least one grant in the last N years.
+const hasRecentGrant = (funding: FundingEntry[], recentYears: number) =>
+  funding.some(
+    (f) => !f.isLoan && f.year >= new Date().getFullYear() - recentYears
+  );
+
+// 2. Has received funding more than once in the past.
+const hasReceivedFundingMultipleTimes = (funding: FundingEntry[], minTimes: number) =>
+  funding.length >= minTimes;
+
+// 3. Majority of funding is grant-type.
+const hasMostlyGrants = (funding: FundingEntry[], threshold: number) =>
+  funding.filter((f) => !f.isLoan).length / funding.length >= threshold;
+
+// 4. Any funding above a simple threshold.
+const hasSignificantFunding = (funding: FundingEntry[], threshold: number) =>
+  funding.some((f) => f.amount >= threshold);
+
+// 5. A single funding entry constitutes a large portion of total funding.
+const hasLargeSingleFunding = (funding: FundingEntry[], ratio: number) => {
+  if (funding.length < 2) return false; // Need at least two entries to compare
+  const total = funding.reduce((sum, f) => sum + f.amount, 0);
+  const largest = Math.max(...funding.map((f) => f.amount));
+  return largest / total >= ratio;
 };
 
 export default getFundingHistoryForCompany;
