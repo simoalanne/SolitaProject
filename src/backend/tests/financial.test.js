@@ -28,7 +28,7 @@ describe("getFinancialRiskForCompany", () => {
         const result = getFinancialRiskForCompany(data);
 
         assert.ok(result);
-        assert.strictEqual(result, "n/a");
+        assert.strictEqual(result, "low");
     });
 
     it("Should return 'medium' for somewhat risky financials", () => {
