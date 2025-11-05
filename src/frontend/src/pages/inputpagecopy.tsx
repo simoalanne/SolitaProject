@@ -8,18 +8,17 @@ import {
   validateInput,
   type Company,
   type ErrorCode,
-  FinancialDataSchema,
-  businessIdSchema,
 } from "@myorg/shared";
 import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/inputPage.css";
-import parseKauppalehtiData from "../utils/kauppalehtiParser";
 
 const errorMessages: Record<ErrorCode, string> = {
-  INVALID_BUSINESS_ID_FORMAT: "The business ID format is invalid.",
-  INVALID_BUSINESS_ID_CHECK_DIGIT: "The business ID check digit is incorrect.",
+  INVALID_BUSINESS_ID_FORMAT:
+    "The business ID format is invalid.",
+  INVALID_BUSINESS_ID_CHECK_DIGIT:
+    "The business ID check digit is incorrect.",
   BUSINESS_IDS_NOT_UNIQUE:
     "Each business ID must be unique within the consortium.",
   REQUESTED_FUNDING_EXCEEDS_BUDGET:
@@ -52,8 +51,7 @@ const PlaceHolderInput = () => {
 
   type Path = (string | number)[];
 
-  // key is the field path array joined by '.', value is the error message
-  type ValidationErrors = Record<string, string>;
+  type ValidationErrors = Record<string, string>; // key is the array path as string, value is the error message
 
   // Use a single form state for all inputs. This makes it way easier to integrate validation errors
   const [form, setForm] = React.useState<ProjectInput>(initialForm);
@@ -62,7 +60,6 @@ const PlaceHolderInput = () => {
   const [loading, setLoading] = React.useState(false);
   const [showOutput, setShowOutput] = React.useState(false);
   const [output, setOutput] = React.useState<ProjectOutput | null>(null);
-  const [financialFormOpen, setFinancialFormOpen] = React.useState(false);
 
   // Update validation errors whenever the form changes. Not the most optimal solution
   // performance-wise, but probably fine...
@@ -117,7 +114,7 @@ const PlaceHolderInput = () => {
   const RenderError = ({ fieldPath }: { fieldPath: Path }) => {
     const pathString = fieldPath.join(".");
     const errorMessage = errors[pathString];
-    return errorMessage && <p className="error-message">{errorMessage}</p>;
+    return errorMessage && <div className="error-message">{errorMessage}</div>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,18 +166,7 @@ const PlaceHolderInput = () => {
     return <PlaceHolderOutput output={output} />;
   }
 
-  if (financialFormOpen) {
-    return (
-      <div>
-        <h2>Financial Statement Form</h2>
-        <button onClick={() => setFinancialFormOpen(false)}>
-          Back to Input Form
-        </button>
-        {/* Financial form fields go here */}
-      </div>
-    );
-  }
-
+  // UI here is very basic, just for demonstration purposes
   return (
     <div className="form">
       <form onSubmit={handleSubmit}>
@@ -199,34 +185,34 @@ const PlaceHolderInput = () => {
             />
             <RenderError fieldPath={["generalDescription"]} />
           </div>
-        </div>
-        <div className="inputs-grid/copies-container">
-          {form.consortium.map((c, index) => (
-            <React.Fragment key={index}>
-              <div className="inputs-grid">
+          {/* Fragment with a key -> React can track each mapped group without adding an extra DOM node.
+           (Move the key to the ".inputs-grid-copy" div to keep DOM simpler?)*/}
+          {form.consortium.map((c, idx) => (
+            <React.Fragment key={idx}>
+              <div className="inputs-grid-copy">
                 <div className="input-box memberID">
                   <input
                     value={c.businessId}
                     onChange={(e) =>
                       updateForm(
-                        ["consortium", index, "businessId"],
+                        ["consortium", idx, "businessId"],
                         e.target.value
                       )
                     }
                     type="text"
                     name="business-id"
-                    placeholder="Member Business ID"
+                    placeholder={
+                      idx === 0 ? "Lead Business ID" : "Member Business ID"
+                    }
                   />
-                  <RenderError
-                    fieldPath={["consortium", index, "businessId"]}
-                  />
+                  <RenderError fieldPath={["consortium", idx, "businessId"]} />
                 </div>
                 <div className="input-box">
                   <input
                     value={c.budget}
                     onChange={(e) =>
                       updateForm(
-                        ["consortium", index, "budget"],
+                        ["consortium", idx, "budget"],
                         Number(e.target.value)
                       )
                     }
@@ -234,14 +220,14 @@ const PlaceHolderInput = () => {
                     name="budget-id"
                     placeholder="Project Budget"
                   />
-                  <RenderError fieldPath={["consortium", index, "budget"]} />
+                  <RenderError fieldPath={["consortium", idx, "budget"]} />
                 </div>
                 <div className="input-box">
                   <input
                     value={c.requestedFunding}
                     onChange={(e) =>
                       updateForm(
-                        ["consortium", index, "requestedFunding"],
+                        ["consortium", idx, "requestedFunding"],
                         Number(e.target.value)
                       )
                     }
@@ -250,15 +236,15 @@ const PlaceHolderInput = () => {
                     placeholder="Requested Funding"
                   />
                   <RenderError
-                    fieldPath={["consortium", index, "requestedFunding"]}
+                    fieldPath={["consortium", idx, "requestedFunding"]}
                   />
                 </div>
-                <div className="input-box desc-box">
+                <div className="input-box member-desc">
                   <textarea
                     value={c.projectRoleDescription}
                     onChange={(e) =>
                       updateForm(
-                        ["consortium", index, "projectRoleDescription"],
+                        ["consortium", idx, "projectRoleDescription"],
                         e.target.value
                       )
                     }
@@ -267,72 +253,14 @@ const PlaceHolderInput = () => {
                     className="desc-textarea"
                   />
                   <RenderError
-                    fieldPath={["consortium", index, "projectRoleDescription"]}
+                    fieldPath={["consortium", idx, "projectRoleDescription"]}
                   />
                 </div>
-                <div className="input-box desc-box">
-                  <textarea
-                    value={
-                      c.financialData
-                        ? `Revenues: ${c.financialData.revenues.join(
-                            ", "
-                          )}\nProfits: ${c.financialData.profits.join(", ")}`
-                        : ""
-                    }
-                    readOnly={
-                      !validateInput(c.financialData, FinancialDataSchema)
-                        .errors
-                    }
-                    // The field can only ever be empty or contain valid data and be readOnly
-                    onChange={(e) =>
-                      updateForm(
-                        ["consortium", index, "financialData"],
-                        parseKauppalehtiData(e.target.value)
-                      )
-                    }
-                    name="financial-id"
-                    placeholder="Paste financial data from Kauppalehti taloustiedot table."
-                    className="desc-textarea"
-                  />
-                </div>
-                <div className="kauppalehti-container">
-                  {/* Show the button only if the businessId can at least formatwise be valid */}
-                  {!validateInput(c.businessId, businessIdSchema).errors &&
-                    !c.financialData && (
-                      <button className="kauppalehti-button">
-                        <a
-                          className="kauppalehti-link"
-                          href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
-                            /-/g,
-                            ""
-                          )}#taloustiedot`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Open kauppalehti
-                        </a>
-                      </button>
-                    )}
-                  {!validateInput(c.financialData, FinancialDataSchema)
-                    .errors && (
-                    <button
-                      className="clear-financial-button"
-                      onClick={() =>
-                        updateForm(
-                          ["consortium", index, "financialData"],
-                          undefined
-                        )
-                      }
-                    >
-                      Clear Financial Data
-                    </button>
-                  )}
-                </div>
-                {index === 0 ? null : (
+                {idx === 0 ? null : (
                   <button
                     id="del-btn"
                     type="button"
-                    onClick={() => deleteCompany(index)}
+                    onClick={() => deleteCompany(idx)}
                   >
                     -
                   </button>
@@ -345,9 +273,13 @@ const PlaceHolderInput = () => {
           <button type="button" id="add-btn" onClick={addCompany}>
             +
           </button>
-          <button id="submit-btn" type="submit">
+            <button
+            id="submit-btn"
+            type="submit"
+            disabled={Object.keys(errors).length > 0}
+            >
             Submit
-          </button>
+            </button>
         </div>
       </form>
     </div>
