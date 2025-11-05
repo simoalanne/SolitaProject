@@ -7,6 +7,7 @@ import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/inputPage.css";
 import { buildConsortium2} from "../utils/BuildInput";
+import parseKauppalehtiData from "../utils/kauppalehtiParser";
 
 
 const PlaceHolderInput = () => {
@@ -21,6 +22,7 @@ const PlaceHolderInput = () => {
     budget: string;
     grant: string;
     desc: string;
+    financialData: string;
   };
 
 
@@ -36,6 +38,8 @@ const PlaceHolderInput = () => {
   const [leadDesc, setLeadDesc] = React.useState("");
   const [copies, setCopies] = React.useState<Copy[]>([]);
   const [output, setOutput] = React.useState<ProjectOutput | null>(null);
+  const [financialData, setFinancialData] = React.useState<string>("");
+  const [financialFormOpen, setFinancialFormOpen] = React.useState(false);
 
 
   // makeId needed for react only
@@ -49,7 +53,8 @@ const PlaceHolderInput = () => {
       businessID: "",
       budget: "",
       grant: "",
-      desc: ""
+      desc: "",
+      financialData: ""
     };
     //returns new array
     setCopies(prev => [...prev, newCopy]); 
@@ -69,37 +74,6 @@ const PlaceHolderInput = () => {
          c.id === id ? { ...c, [field]: value } : c));
   };
 
-  /*
-  const placeHolderOutput: ProjectOutput = {
-  companyEvaluations: [
-    {
-      businessId: "company-123",
-      financialRisk: "medium",
-      businessFinlandFundingHistory: "none",
-      trafficLight: "yellow",
-    },
-    {
-      businessId: "company-456",
-      financialRisk: "low",
-      businessFinlandFundingHistory: "high",
-      trafficLight: "green",
-    },
-    {
-      businessId: "company-789",
-      financialRisk: "high",
-      businessFinlandFundingHistory: "low",
-      trafficLight: "red",
-    },
-  ],
-  llmProjectAssessment: {
-    innovationTrafficLight: "green",
-    strategicFitTrafficLight: "yellow",
-    feedback: "This is a placeholder feedback for the project.",
-    feedbackFi: "",
-  },
-  overallTrafficLight: "yellow",
-  }; */
-
   /**
    * Will be used to send input to backend API in the future
    * Currently simulates loading state and then shows placeholder output
@@ -107,12 +81,24 @@ const PlaceHolderInput = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Parse the financial data field by using the kauppalehti parser utility function
+    const leadParsedFinancialData = parseKauppalehtiData(financialData);
+    const memberParsedFinancialData = copies.map(c => ({
+      id: c.id,
+      financials: parseKauppalehtiData(c.financialData)
+    }));
+    console.log("Lead Applicant Parsed Financial Data:", leadParsedFinancialData);
+    console.log("Member Companies Parsed Financial Data:", memberParsedFinancialData);
+
+
     // Build lead applicant data object
     const leadApplicantData: Company = {
       businessId: applicantID,
       budget: Number(budget),
       requestedFunding: Number(grant),
       projectRoleDescription: leadDesc,
+      financialData: leadParsedFinancialData
+
     };
 
     // Map the copies to Company objects
@@ -121,6 +107,7 @@ const PlaceHolderInput = () => {
       budget: Number(c.budget),
       requestedFunding: Number(c.grant),
       projectRoleDescription: c.desc,
+      financialData: memberParsedFinancialData.find(m => m.id === c.id)?.financials || { revenues: [], profits: [] }
     }));
 
     console.log("Lead Applicant Data:", leadApplicantData);
@@ -179,6 +166,16 @@ const PlaceHolderInput = () => {
     return <PlaceHolderOutput output={output} />;
   }
 
+  if (financialFormOpen) {
+    return (
+      <div><h2>Financial Statement Form</h2>
+        <button onClick={() => setFinancialFormOpen(false)}>Back to Input Form</button>
+        {/* Financial form fields go here */}
+        
+      </div>
+    );
+  }
+
   // UI here is very basic, just for demonstration purposes
   return (
     <div className="form">
@@ -225,11 +222,36 @@ const PlaceHolderInput = () => {
               placeholder="Lead Applicant Description"
               className="desc-textarea" />
           </div>
+          {/* A button to open a financial form where user can paste the info from kauppalehti*/}
+          <div className="input-box desc-box">
+            <textarea onChange={(e) => setFinancialData(e.target.value)}
+              id="financial-input"
+              name="financial-data"
+              value={financialData}
+              placeholder="Paste financial data from Kauppalehti Taloustiedot table"
+              className="desc-textarea" />
+          </div>
+          <div className="kauppalehti-container">
+            <button className="kauppalehti-button">
+              <a
+                className="kauppalehti-link"
+                href={`https://www.kauppalehti.fi/yritykset/yritys/${applicantID.replace(/-/g, "")}#taloustiedot`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open kauppalehti
+              </a>
+            </button>
+            <p className="para">Please enter your business id before <strong>opening Kauppalehti</strong></p>
+          </div>
+        </div>
+        <br />
+        <div className="inputs-grid/copies-container">
           {/* Fragment with a key -> React can track each mapped group without adding an extra DOM node.
            (Move the key to the ".inputs-grid-copy" div to keep DOM simpler?)*/}
           {copies.map((c) => (
             <React.Fragment key={c.id}>
-              <div className="inputs-grid-copy">
+              <div className="inputs-grid">
                 <div className="input-box memberID">
                   <input value={c.businessID} onChange={(e) => updateField(c.id, "businessID", e.target.value)}
                     type="text"
@@ -251,12 +273,32 @@ const PlaceHolderInput = () => {
                     name="grant-id"
                     placeholder="Requested Funding" />
                 </div>
-                <div className="input-box member-desc">
+                <div className="input-box desc-box">
                   <textarea value={c.desc} onChange={(e) => updateField(c.id, "desc", e.target.value)}
                     id={`desc-${c.id}`}
                     name="desc-id"
                     placeholder="description"
                     className="desc-textarea"/>
+                </div>
+                <div className="input-box desc-box">
+                  <textarea value={c.financialData} onChange={(e) => updateField(c.id, "financialData", e.target.value)}
+                    id={`financial-${c.id}`}
+                    name="financial-id"
+                    placeholder="Paste financial data from Kauppalehti taloustiedot table"
+                    className="desc-textarea"/>
+                </div>
+                <div className="kauppalehti-container">
+                  <button className="kauppalehti-button">
+                    <a
+                      className="kauppalehti-link"
+                      href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessID.replace(/-/g, "")}#taloustiedot`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open kauppalehti
+                    </a>
+                  </button>
+                  <p className="para">Please enter the business id before <strong>opening Kauppalehti</strong></p>
                 </div>
                 <button id="del-btn" type="button"
                   onClick={() => deleteInputCopy(c.id)}

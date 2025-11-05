@@ -21,7 +21,7 @@
 .inputs-grid-copy {
     background-color: rgb(65, 60, 60);
     display: grid;
-    grid-column: span 2;
+    grid-column: span 1.5;
     grid-template-columns: repeat(2, 1fr);
 }
 
@@ -111,6 +111,36 @@ input {
     /*placement:*/
     align-self: center;
     margin-right: 10px;
+}
+
+.kauppalehti-link {
+    color:black;
+    font-size: medium;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.kauppalehti-button {
+    font-size: medium;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 5px;
+    align-self: center;
+    justify-self: center;
+}
+.para {
+    font-size: small;
+    color: white;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: center;
+    justify-self: center;
+}
+.kauppalehti-container {
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    grid-column: 1/-1;
+    width: 100%;
 }
 
 @media only screen and (min-width: 600px) {
