@@ -1,0 +1,90 @@
+// kauppalehti-extractor.ts for future perhaps
+
+import { chromium } from "playwright";
+import { writeFile } from "fs/promises";
+
+
+async function getTableData(ytunnus: string) {
+  const url = `https://www.kauppalehti.fi/yritykset/yritys/${ytunnus}#taloustiedot`;
+  // use a selector that matches your <tbody>. Example: contains part of the class
+  //const tbodySelector = 'tbody[class*=tmcl-__sc-k5be18-0"]'; // The table class (not needed for now)
+  const tabButtonText = 'Taloustieto';    
+
+  const tableClassSubstring = 'sc-3vva9d'; // substring from the table's generated class
+  const headless = false;                  // set true to hide browser once stable
+  const maxWaitMs = 20000;                // max wait for table rows
+
+  const browser = await chromium.launch({ headless });
+  const page = await browser.newPage({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    viewport: { width: 1280, height: 900 },
+  });
+
+  try {
+    console.log("-> Opening:", url);
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+
+    // optional: dismiss cookie banner if it blocks clicks (uncomment + adjust selector)
+    // try { await page.click('button:has-text("Hyväksy")', { timeout: 3000 }); } catch(e){}
+
+    // try to click the "Taloustieto" tab/button
+    try {
+      const btn = page.locator(`button:has-text("${tabButtonText}")`);
+      if ((await btn.count()) > 0) {
+        console.log(`-> Clicking tab/button "${tabButtonText}"`);
+        await btn.first().click();
+        await page.waitForTimeout(600); // small wait to allow content to render
+      } else {
+        // fallback: click any element that contains the text (covers divs/links)
+        const anyBtn = page.locator(`:text("${tabButtonText}")`);
+        if ((await anyBtn.count()) > 0) {
+          console.log(`-> Clicking element with text "${tabButtonText}"`);
+          await anyBtn.first().click();
+          await page.waitForTimeout(600);
+        } else {
+          console.warn(`-> No element found with text "${tabButtonText}", continuing`);
+        }
+      }
+    } catch (e) {
+      console.warn("-> Error clicking tab:", (e as Error).message);
+    }
+
+    const rowSelector = `table[class*="${tableClassSubstring}"] tbody tr`;
+    console.log("-> Waiting for rows using selector:", rowSelector);
+
+    try {
+      await page.waitForSelector(rowSelector, { timeout: maxWaitMs });
+    } catch {
+      console.warn("-> Timeout waiting for rows. Trying to extract whatever is present.");
+    }
+
+    // extract rows: array of arrays (each inner array = cells)
+    const rows = await page.$$eval(
+      `table[class*="${tableClassSubstring}"] tr`,
+      (trs) =>
+        trs.map((tr) =>
+          Array.from(tr.querySelectorAll("th,td")).map((td) => td.textContent?.trim() ?? "")
+        )
+    );
+
+    // If first row looks like headers, convert to objects
+    let output: unknown;
+    if (rows.length > 0 && rows[0].some(Boolean)) {
+      const headers = rows[0];
+      output =
+        rows.length > 1
+          ? rows.slice(1).map((r) =>
+            Object.fromEntries(headers.map((h, i) => [h || `col${i}`, r[i] ?? ""]))
+          )
+          : [];
+    } else {
+      output = rows;
+    }
+
+    await writeFile(`table_${ytunnus}.json`, JSON.stringify(output, null, 2), "utf-8");
+    console.log(`✅ Saved table_${ytunnus}.json with`, rows.length, "rows");
+  } finally {
+    await browser.close();
+  }
+}
