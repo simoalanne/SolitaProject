@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-     "noEmit": true,
-     "target": "esnext",
-     "module": "nodenext",
-     "rewriteRelativeImportExtensions": true,
-     "erasableSyntaxOnly": true,
-     "verbatimModuleSyntax": true,
-     "strictNullChecks": true,
+    "outDir": "dist",
+    "rootDir": "../",
+    "target": "esnext",
+    "module": "nodenext",
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "strictNullChecks": true,
   }
 } 
