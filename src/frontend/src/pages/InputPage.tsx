@@ -10,6 +10,7 @@ import {
   type ErrorCode,
   FinancialDataSchema,
   businessIdSchema,
+  fieldsMetadata,
 } from "@myorg/shared";
 import React from "react";
 import Loader from "../components/Loader";
@@ -204,24 +205,32 @@ const PlaceHolderInput = () => {
               id="desc-input"
               name="project-desc"
               value={form.generalDescription}
-              placeholder="Project Description (min 20 characters)"
-              className={hasError(["generalDescription"]) ? "desc-textarea input-error" : "desc-textarea"}
+              placeholder={`Project Description (min ${fieldsMetadata.generalDescription.min} characters)`}
+              className={
+                hasError(["generalDescription"])
+                  ? "desc-textarea input-error"
+                  : "desc-textarea"
+              }
               onFocus={() => setIsFocused("generalDescription")}
               onBlur={() => setIsFocused(null)}
             />
-            {isFocused === "generalDescription" && hasError(["generalDescription"]) && (
-              <p className="error-text">{errors["generalDescription"]}</p>
-            )}
+            {isFocused === "generalDescription" &&
+              hasError(["generalDescription"]) && (
+                <p className="error-text">{errors["generalDescription"]}</p>
+              )}
           </div>
         </div>
         <div className="inputs-grid/copies-container">
           {form.consortium.map((c, index) => (
             <React.Fragment key={index}>
               <div className="inputs-grid">
-
                 <div className="input-box memberID">
                   <input
-                    className={hasError(["consortium", index, "businessId"]) ? "input-error" : ""}
+                    className={
+                      hasError(["consortium", index, "businessId"])
+                        ? "input-error"
+                        : ""
+                    }
                     value={c.businessId}
                     onChange={(e) =>
                       updateForm(
@@ -234,16 +243,25 @@ const PlaceHolderInput = () => {
                     onBlur={() => setIsFocused(null)}
                     type="text"
                     name="business-id"
-                    placeholder="Member Business ID e.g. XXXXXXX-X"
+                    placeholder={`${
+                      index === 0 ? "Lead" : "Member"
+                    } Business ID e.g. XXXXXXX-X`}
                   />
                   {isFocused === fieldKey(index, "businessId") &&
                     hasError(["consortium", index, "businessId"]) && (
-                      <p className="error-text">{getError(errors, index, "businessId")}</p>
+                      <p className="error-text">
+                        {getError(errors, index, "businessId")}
+                      </p>
                     )}
                 </div>
 
                 <div className="input-box">
-                  <input className={hasError(["consortium", index, "budget"]) ? "input-error" : ""}
+                  <input
+                    className={
+                      hasError(["consortium", index, "budget"])
+                        ? "input-error"
+                        : ""
+                    }
                     value={c.budget === 0 ? "" : c.budget}
                     onChange={(e) =>
                       updateForm(
@@ -256,16 +274,23 @@ const PlaceHolderInput = () => {
                     onBlur={() => setIsFocused(null)}
                     type="number"
                     name="budget-id"
-                    placeholder="Project Budget min1000"
+                    placeholder={`Project Budget (min ${fieldsMetadata.budget.min} €)`}
                   />
                   {isFocused === fieldKey(index, "budget") &&
                     hasError(["consortium", index, "budget"]) && (
-                      <p className="error-text">{getError(errors, index, "budget")}</p>
+                      <p className="error-text">
+                        {getError(errors, index, "budget")}
+                      </p>
                     )}
                 </div>
 
                 <div className="input-box">
-                  <input className={hasError(["consortium", index, "requestedFunding"]) ? "input-error" : ""}
+                  <input
+                    className={
+                      hasError(["consortium", index, "requestedFunding"])
+                        ? "input-error"
+                        : ""
+                    }
                     value={c.requestedFunding === 0 ? "" : c.requestedFunding}
                     onChange={(e) =>
                       updateForm(
@@ -274,15 +299,19 @@ const PlaceHolderInput = () => {
                       )
                     }
                     //onFocus/onBlur = when user un/selects field
-                    onFocus={() => setIsFocused(fieldKey(index, "requestedFunding"))}
+                    onFocus={() =>
+                      setIsFocused(fieldKey(index, "requestedFunding"))
+                    }
                     onBlur={() => setIsFocused(null)}
                     type="number"
                     name="grant-id"
-                    placeholder="Requested Funding min100"
+                    placeholder={`Requested Funding (min ${fieldsMetadata.requestedFunding.min} €)`}
                   />
                   {isFocused === fieldKey(index, "requestedFunding") &&
                     hasError(["consortium", index, "requestedFunding"]) && (
-                    <p className="error-text">{getError(errors, index, "requestedFunding")}</p>
+                      <p className="error-text">
+                        {getError(errors, index, "requestedFunding")}
+                      </p>
                     )}
                 </div>
 
@@ -300,7 +329,7 @@ const PlaceHolderInput = () => {
                     }
                     onBlur={() => setIsFocused(null)}
                     name="desc-id"
-                    placeholder="Description (min 20 characters)"
+                    placeholder={`Description (min ${fieldsMetadata.projectRoleDescription.min} characters)`}
                     className={
                       hasError(["consortium", index, "projectRoleDescription"])
                         ? "desc-textarea input-error"
@@ -308,7 +337,11 @@ const PlaceHolderInput = () => {
                     }
                   />
                   {isFocused === `consortium.${index}.projectRoleDescription` &&
-                    hasError(["consortium", index, "projectRoleDescription"]) && (
+                    hasError([
+                      "consortium",
+                      index,
+                      "projectRoleDescription",
+                    ]) && (
                       <p className="error-text">
                         {errors[`consortium.${index}.projectRoleDescription`]}
                       </p>
