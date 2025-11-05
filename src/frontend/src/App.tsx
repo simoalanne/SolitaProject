@@ -1,5 +1,4 @@
 import { BrowserRouter } from "react-router-dom";
-import ReactLogo from "./assets/addImportedAssetsHere.svg";
 import { NavBar } from "./components/NavBar";
 import { AppRoutes } from "./routes/AppRoutes";
 
@@ -32,7 +31,6 @@ const App = () => {
           textAlign: "center",
         }}
       >
-        <img src={ReactLogo} className="logo react" alt="React logo" />
         <AppRoutes />
       </div>
     </div>
