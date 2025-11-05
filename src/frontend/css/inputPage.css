@@ -1,13 +1,17 @@
 * {
     /*avoid clipping*/
     box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .form {
     background-color: rgb(104, 105, 110);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     width: 70vw;
     height: auto;
-    margin: 0 auto;
+    /* margin: 0 auto; */
+    margin-top: 5%;
+    margin-bottom: 5%;
     padding-bottom: 2%;
 }
 
@@ -25,6 +29,24 @@
     grid-template-columns: repeat(2, 1fr);
 }
 
+/*-------- Errors! ---------*/
+
+.input-error:focus {
+    border: 1px solid #e53935;
+    box-shadow: 0 0 0 3px rgba(246, 8, 4, 0.869);
+    outline: none;
+    border-radius: px;
+}
+
+.error-text {
+    color: #ff7674;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: small;
+}
+
+/*-------- ------ ---------*/
+
 /*bigger fields pt1*/
 /*lead applicant id field*/
 .applicantID {
@@ -39,13 +61,15 @@
 
 /*Project description*/
 .desc-box {
+    display: grid;
     grid-column: 1/-1;
     width: 100%;
 }
 
 /*bigger height for project desciption*/
 #desc-input {
-    height: 70px;
+    min-height: 70px;
+    margin-bottom: 5px;
 }
 
 /*members' description
@@ -98,6 +122,7 @@ input {
 #add-btn {
     font-size: x-large;
     display: grid;
+    margin-top: 2%;
     margin-left: 10px;
     width: 40px;
     height: auto;
@@ -105,20 +130,27 @@ input {
 
 #del-btn {
     font-size: x-large;
-    justify-self: end;
     width: 30px;
-    height: 35px;
-    /*placement:*/
-    align-self: center;
-    margin-right: 10px;
+    height: 33px;
+    margin: 10px;
+}
+
+.kauppalehti-container {
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    padding-bottom: 10px;
+    grid-column: 1/-1;
+    width: 100%;
 }
 
 .kauppalehti-link {
-    color:black;
+    color: black;
     font-size: medium;
     margin-top: 5px;
     margin-bottom: 5px;
 }
+
 .kauppalehti-button {
     font-size: medium;
     margin-top: 5px;
@@ -127,20 +159,17 @@ input {
     align-self: center;
     justify-self: center;
 }
+
 .para {
     font-size: small;
     color: white;
     margin-top: 0px;
     margin-bottom: 0px;
+    display: flex;
     text-align: center;
     justify-self: center;
-}
-.kauppalehti-container {
-    display: grid;
-    justify-items: center;
     align-items: center;
-    grid-column: 1/-1;
-    width: 100%;
+    flex-direction: row;
 }
 
 @media only screen and (min-width: 600px) {
@@ -158,20 +187,17 @@ input {
     }
 
     .inputs-grid {
-        max-width: 80%;
+        max-width: 85%;
         margin: 0 auto;
     }
 
     #add-btn {
+        margin-top: 1%;
         margin-left: 10%;
     }
 
     #submit-btn {
         width: 10vw;
-    }
-
-    #del-btn {
-        margin-right: 2px;
     }
 
     /*copy's desc*/

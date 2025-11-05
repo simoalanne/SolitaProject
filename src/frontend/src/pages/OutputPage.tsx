@@ -22,10 +22,10 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
 
   return (
   <div className="output-form">
-      <h2>Project Assessment</h2>
+      <h2>Project Assessment Results</h2>
       <div className="innovation result-box">
         <p>
-          <strong>Innovation traffic light:</strong>{" "}
+          <strong>Innovation:</strong>{" "}
           {output.llmProjectAssessment?.innovationTrafficLight}
         </p>
         <div className="trafficlight">
@@ -36,7 +36,7 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
       </div>
       <div className="strategy result-box">
         <p>
-          <strong>Strategic fit traffic light:</strong>{" "}
+          <strong>Strategic fit:</strong>{" "}
           {output.llmProjectAssessment?.strategicFitTrafficLight}
         </p>
         <div className="trafficlight">
@@ -60,8 +60,6 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
         <h3>LLM Feedback</h3>
         <p>{output.llmProjectAssessment?.feedback}</p>
       </div>
-      <h3>Is output data valid?</h3>
-      <p>{ProjectOutputSchema.safeParse(output).success.toString()}</p>
     </div>
   );
 };

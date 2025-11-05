@@ -1,6 +1,6 @@
 // Moved from src/frontend/src/components/PlaceHolderInput.tsx
 // It will be decided later whether InputPage and OutputPage remain in pages/ or move to components/
-
+import { useState } from "react";
 import {
   type ProjectOutput,
   type ProjectInput,
@@ -38,6 +38,8 @@ const errorMessages: Record<ErrorCode, string> = {
 };
 
 const PlaceHolderInput = () => {
+  const [isFocused, setIsFocused] = useState(null);
+
   const defaultCompany: Company = {
     businessId: "",
     budget: 0,
@@ -120,6 +122,14 @@ const PlaceHolderInput = () => {
     return errorMessage && <p className="error-message">{errorMessage}</p>;
   };
 
+  //Error function for input/textarea fields
+  const hasError = (fieldPath: Path) => {
+    return !!errors[fieldPath.join(".")];
+  };
+  //Functions to help with error messages
+  const fieldKey = (index, name) => `consortium.${index}.${name}`;
+  const getError = (errors, index, name) => errors[fieldKey(index, name)];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -194,18 +204,24 @@ const PlaceHolderInput = () => {
               id="desc-input"
               name="project-desc"
               value={form.generalDescription}
-              placeholder="Project Description"
-              className="desc-textarea"
+              placeholder="Project Description (min 20 characters)"
+              className={hasError(["generalDescription"]) ? "desc-textarea input-error" : "desc-textarea"}
+              onFocus={() => setIsFocused("generalDescription")}
+              onBlur={() => setIsFocused(null)}
             />
-            <RenderError fieldPath={["generalDescription"]} />
+            {isFocused === "generalDescription" && hasError(["generalDescription"]) && (
+              <p className="error-text">{errors["generalDescription"]}</p>
+            )}
           </div>
         </div>
         <div className="inputs-grid/copies-container">
           {form.consortium.map((c, index) => (
             <React.Fragment key={index}>
               <div className="inputs-grid">
+
                 <div className="input-box memberID">
                   <input
+                    className={hasError(["consortium", index, "businessId"]) ? "input-error" : ""}
                     value={c.businessId}
                     onChange={(e) =>
                       updateForm(
@@ -213,46 +229,63 @@ const PlaceHolderInput = () => {
                         e.target.value
                       )
                     }
+                    //onFocus/onBlur = when user un/selects field
+                    onFocus={() => setIsFocused(fieldKey(index, "businessId"))}
+                    onBlur={() => setIsFocused(null)}
                     type="text"
                     name="business-id"
-                    placeholder="Member Business ID"
+                    placeholder="Member Business ID e.g. XXXXXXX-X"
                   />
-                  <RenderError
-                    fieldPath={["consortium", index, "businessId"]}
-                  />
+                  {isFocused === fieldKey(index, "businessId") &&
+                    hasError(["consortium", index, "businessId"]) && (
+                      <p className="error-text">{getError(errors, index, "businessId")}</p>
+                    )}
                 </div>
+
                 <div className="input-box">
-                  <input
-                    value={c.budget}
+                  <input className={hasError(["consortium", index, "budget"]) ? "input-error" : ""}
+                    value={c.budget === 0 ? "" : c.budget}
                     onChange={(e) =>
                       updateForm(
                         ["consortium", index, "budget"],
                         Number(e.target.value)
                       )
                     }
+                    //onFocus/onBlur = when user un/selects field
+                    onFocus={() => setIsFocused(fieldKey(index, "budget"))}
+                    onBlur={() => setIsFocused(null)}
                     type="number"
                     name="budget-id"
-                    placeholder="Project Budget"
+                    placeholder="Project Budget min1000"
                   />
-                  <RenderError fieldPath={["consortium", index, "budget"]} />
+                  {isFocused === fieldKey(index, "budget") &&
+                    hasError(["consortium", index, "budget"]) && (
+                      <p className="error-text">{getError(errors, index, "budget")}</p>
+                    )}
                 </div>
+
                 <div className="input-box">
-                  <input
-                    value={c.requestedFunding}
+                  <input className={hasError(["consortium", index, "requestedFunding"]) ? "input-error" : ""}
+                    value={c.requestedFunding === 0 ? "" : c.requestedFunding}
                     onChange={(e) =>
                       updateForm(
                         ["consortium", index, "requestedFunding"],
                         Number(e.target.value)
                       )
                     }
+                    //onFocus/onBlur = when user un/selects field
+                    onFocus={() => setIsFocused(fieldKey(index, "requestedFunding"))}
+                    onBlur={() => setIsFocused(null)}
                     type="number"
                     name="grant-id"
-                    placeholder="Requested Funding"
+                    placeholder="Requested Funding min100"
                   />
-                  <RenderError
-                    fieldPath={["consortium", index, "requestedFunding"]}
-                  />
+                  {isFocused === fieldKey(index, "requestedFunding") &&
+                    hasError(["consortium", index, "requestedFunding"]) && (
+                    <p className="error-text">{getError(errors, index, "requestedFunding")}</p>
+                    )}
                 </div>
+
                 <div className="input-box desc-box">
                   <textarea
                     value={c.projectRoleDescription}
@@ -262,13 +295,24 @@ const PlaceHolderInput = () => {
                         e.target.value
                       )
                     }
+                    onFocus={() =>
+                      setIsFocused(`consortium.${index}.projectRoleDescription`)
+                    }
+                    onBlur={() => setIsFocused(null)}
                     name="desc-id"
-                    placeholder="description"
-                    className="desc-textarea"
+                    placeholder="Description (min 20 characters)"
+                    className={
+                      hasError(["consortium", index, "projectRoleDescription"])
+                        ? "desc-textarea input-error"
+                        : "desc-textarea"
+                    }
                   />
-                  <RenderError
-                    fieldPath={["consortium", index, "projectRoleDescription"]}
-                  />
+                  {isFocused === `consortium.${index}.projectRoleDescription` &&
+                    hasError(["consortium", index, "projectRoleDescription"]) && (
+                      <p className="error-text">
+                        {errors[`consortium.${index}.projectRoleDescription`]}
+                      </p>
+                    )}
                 </div>
                 <div className="input-box desc-box">
                   <textarea
