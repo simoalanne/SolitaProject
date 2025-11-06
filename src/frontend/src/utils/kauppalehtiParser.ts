@@ -28,7 +28,7 @@ const parseKauppalehtiData = (copyPastedFinancialStats: string) => {
   };
 
   const validation = validateInput(data, FinancialDataSchema);
-  return validation.errors ? "" : data;
+  return validation.errors ? undefined : data; 
 };
 
 export default parseKauppalehtiData;

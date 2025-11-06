@@ -71,20 +71,16 @@ const openApiDoc = {
                 schema: {
                   type: "object",
                   properties: {
-                    name: { type: "string", description: "Company name" },
-                  },
-                },
-              },
-            },
-          },
-          "404": {
-            description: "Company not found",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    error: { type: "string" },
+                    companies: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { $ref: "#/components/schemas/BusinessId" },
+                          name: { type: "string" },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -122,7 +118,7 @@ const openApiDoc = {
                 schema: {
                   type: "object",
                   properties: {
-                    suggestions: {
+                    companies: {
                       type: "array",
                       items: {
                         type: "object",
@@ -132,19 +128,6 @@ const openApiDoc = {
                         },
                       },
                     },
-                  },
-                },
-              },
-            },
-          },
-          "404": {
-            description: "No companies found",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    error: { type: "string" },
                   },
                 },
               },

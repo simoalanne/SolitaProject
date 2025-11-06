@@ -17,6 +17,8 @@ import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/inputPage.css";
 import parseKauppalehtiData from "../utils/kauppalehtiParser";
+import { useDebouncedCallback } from "use-debounce";
+import AutoCompleteInput from "../components/AutoCompleteInput";
 
 const errorMessages: Record<ErrorCode, string> = {
   INVALID_BUSINESS_ID_FORMAT: "The business ID format is invalid.",
@@ -39,7 +41,7 @@ const errorMessages: Record<ErrorCode, string> = {
 };
 
 const PlaceHolderInput = () => {
-  const [isFocused, setIsFocused] = useState(null);
+  const [isFocused, setIsFocused] = useState<string | null>(null);
 
   const defaultCompany: Company = {
     businessId: "",
@@ -65,7 +67,49 @@ const PlaceHolderInput = () => {
   const [loading, setLoading] = React.useState(false);
   const [showOutput, setShowOutput] = React.useState(false);
   const [output, setOutput] = React.useState<ProjectOutput | null>(null);
-  const [financialFormOpen, setFinancialFormOpen] = React.useState(false);
+
+  type CompanySuggestions = { businessId: string; name: string }[];
+
+  const [companySuggestions, setCompanySuggestions] =
+    React.useState<CompanySuggestions>([]);
+
+  const [validatedBusinessIds, setValidatedBusinessIds] = React.useState<
+    { businessId: string; name: string }[]
+  >([]);
+
+  // DONT use directly
+  const queryForCompanySuggestions = async (inputValue: string) => {
+    const minLength = 3;
+    const limit = 5;
+    if (inputValue.length < minLength) return setCompanySuggestions([]);
+
+    const inputIsBusinessId = !validateInput(inputValue, businessIdSchema)
+      .errors;
+    const base = "/api/companies";
+    const fullUrl = inputIsBusinessId
+      ? `${base}/by-business-id?businessId=${encodeURIComponent(inputValue)}`
+      : `${base}/autocomplete?partialName=${encodeURIComponent(
+          inputValue
+        )}&limit=${limit}`;
+
+    const response = await fetch(fullUrl);
+
+    if (!response.ok) {
+      console.error("Failed to fetch company suggestions");
+      return setCompanySuggestions([]);
+    }
+
+    const data: CompanySuggestions = (await response.json()).companies;
+    setCompanySuggestions(data);
+  };
+
+  // Wait this many ms after user stops typing before querying
+  const debounceMs = 300;
+
+  const debouncedQueryForCompanySuggestions = useDebouncedCallback(
+    queryForCompanySuggestions,
+    debounceMs
+  );
 
   // Update validation errors whenever the form changes. Not the most optimal solution
   // performance-wise, but probably fine...
@@ -117,23 +161,26 @@ const PlaceHolderInput = () => {
       consortium: prevForm.consortium.filter((_, i) => i !== index && i >= 0),
     }));
 
-  const RenderError = ({ fieldPath }: { fieldPath: Path }) => {
-    const pathString = fieldPath.join(".");
-    const errorMessage = errors[pathString];
-    return errorMessage && <p className="error-message">{errorMessage}</p>;
+  //Error function for input/textarea fields
+  const hasError = (fieldPath: Path, specificErrorCode?: ErrorCode) => {
+    const error = !!errors[fieldPath.join(".")];
+    const specificError = specificErrorCode
+      ? errors[fieldPath.join(".")] ===
+        errorMessages[specificErrorCode as ErrorCode]
+      : true;
+    return error && specificError;
   };
 
-  //Error function for input/textarea fields
-  const hasError = (fieldPath: Path) => {
-    return !!errors[fieldPath.join(".")];
-  };
   //Functions to help with error messages
-  const fieldKey = (index, name) => `consortium.${index}.${name}`;
-  const getError = (errors, index, name) => errors[fieldKey(index, name)];
+  const fieldKey = (index: number, name: string) =>
+    `consortium.${index}.${name}`;
+  const getError = (index: number, name: string) =>
+    errors[fieldKey(index, name) as keyof typeof errors];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("Submitting form:", form);
     const validationErrors = validateInput(form, ProjectInputSchema);
 
     if (validationErrors.errors && validationErrors.errors.length > 0) {
@@ -180,18 +227,6 @@ const PlaceHolderInput = () => {
     return <PlaceHolderOutput output={output} />;
   }
 
-  if (financialFormOpen) {
-    return (
-      <div>
-        <h2>Financial Statement Form</h2>
-        <button onClick={() => setFinancialFormOpen(false)}>
-          Back to Input Form
-        </button>
-        {/* Financial form fields go here */}
-      </div>
-    );
-  }
-
   return (
     <div className="form">
       <form onSubmit={handleSubmit}>
@@ -225,34 +260,48 @@ const PlaceHolderInput = () => {
             <React.Fragment key={index}>
               <div className="inputs-grid">
                 <div className="input-box memberID">
-                  <input
-                    className={
-                      hasError(["consortium", index, "businessId"])
-                        ? "input-error"
-                        : ""
-                    }
+                  <AutoCompleteInput
                     value={c.businessId}
-                    onChange={(e) =>
+                    onChange={(value) => {
+                      updateForm(["consortium", index, "businessId"], value);
+                      debouncedQueryForCompanySuggestions(value);
+                    }}
+                    onSuggestionClick={(suggestionIndex) => {
+                      const selectedCompany =
+                        companySuggestions[suggestionIndex];
                       updateForm(
                         ["consortium", index, "businessId"],
-                        e.target.value
-                      )
-                    }
-                    //onFocus/onBlur = when user un/selects field
-                    onFocus={() => setIsFocused(fieldKey(index, "businessId"))}
-                    onBlur={() => setIsFocused(null)}
-                    type="text"
-                    name="business-id"
-                    placeholder={`${
-                      index === 0 ? "Lead" : "Member"
-                    } Business ID e.g. XXXXXXX-X`}
-                  />
-                  {isFocused === fieldKey(index, "businessId") &&
-                    hasError(["consortium", index, "businessId"]) && (
-                      <p className="error-text">
-                        {getError(errors, index, "businessId")}
-                      </p>
+                        selectedCompany.businessId
+                      );
+                      setValidatedBusinessIds((prev) => [
+                        ...prev,
+                        selectedCompany,
+                      ]);
+                      setCompanySuggestions([]);
+                    }}
+                    suggestions={companySuggestions.map(
+                      (cs) => `${cs.businessId} - ${cs.name}`
                     )}
+                    placeholder="Business ID or Company Name"
+                    valueValidated={validatedBusinessIds.some(
+                      (v) => v.businessId === c.businessId
+                    )}
+                    companyNameSuffix={
+                      validatedBusinessIds.find(
+                        (v) => v.businessId === c.businessId
+                      )?.name
+                    }
+                  />
+                  {hasError(
+                    ["consortium", index, "businessId"],
+                    // this is the only useful error to show here because of the
+                    // autocomplete input
+                    "BUSINESS_IDS_NOT_UNIQUE"
+                  ) && (
+                    <p className="error-text">
+                      {getError(index, "businessId")}
+                    </p>
+                  )}
                 </div>
 
                 <div className="input-box">
@@ -278,9 +327,7 @@ const PlaceHolderInput = () => {
                   />
                   {isFocused === fieldKey(index, "budget") &&
                     hasError(["consortium", index, "budget"]) && (
-                      <p className="error-text">
-                        {getError(errors, index, "budget")}
-                      </p>
+                      <p className="error-text">{getError(index, "budget")}</p>
                     )}
                 </div>
 
@@ -310,7 +357,7 @@ const PlaceHolderInput = () => {
                   {isFocused === fieldKey(index, "requestedFunding") &&
                     hasError(["consortium", index, "requestedFunding"]) && (
                       <p className="error-text">
-                        {getError(errors, index, "requestedFunding")}
+                        {getError(index, "requestedFunding")}
                       </p>
                     )}
                 </div>
@@ -347,31 +394,31 @@ const PlaceHolderInput = () => {
                       </p>
                     )}
                 </div>
-                <div className="input-box desc-box">
-                  <textarea
-                    value={
-                      c.financialData
-                        ? `Revenues: ${c.financialData.revenues.join(
-                            ", "
-                          )}\nProfits: ${c.financialData.profits.join(", ")}`
-                        : ""
-                    }
-                    readOnly={
-                      !validateInput(c.financialData, FinancialDataSchema)
-                        .errors
-                    }
-                    // The field can only ever be empty or contain valid data and be readOnly
-                    onChange={(e) =>
-                      updateForm(
-                        ["consortium", index, "financialData"],
-                        parseKauppalehtiData(e.target.value)
-                      )
-                    }
-                    name="financial-id"
-                    placeholder="Paste financial data from Kauppalehti taloustiedot table."
-                    className="desc-textarea"
-                  />
-                </div>
+                  <div className="input-box desc-box">
+                    <textarea
+                      value={
+                        c.financialData
+                          ? `Revenues: ${c.financialData.revenues.join(
+                              ", "
+                            )}\nProfits: ${c.financialData.profits.join(", ")}`
+                          : ""
+                      }
+                      readOnly={
+                        !validateInput(c.financialData, FinancialDataSchema)
+                          .errors
+                      }
+                      // The field can only ever be undefined or contain valid data and be readOnly
+                      onChange={(e) =>
+                        updateForm(
+                          ["consortium", index, "financialData"],
+                          parseKauppalehtiData(e.target.value)
+                        )
+                      }
+                      name="financial-id"
+                      placeholder="Paste financial data from Kauppalehti taloustiedot table."
+                      className="desc-textarea"
+                    />
+                  </div>
                 <div className="kauppalehti-container">
                   {/* Show the button only if the businessId can at least formatwise be valid */}
                   {!validateInput(c.businessId, businessIdSchema).errors &&

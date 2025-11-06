@@ -2,7 +2,7 @@
 // Moved from src/frontend/src/components/PlaceHolderOutput.tsx
 // It will be decided later whether InputPage and OutputPage remain in pages/ or move to components/
 import "../../css/outputPage.css";
-import { type ProjectOutput, ProjectOutputSchema } from "@myorg/shared";
+import { type ProjectOutput } from "@myorg/shared";
 
 const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
 
