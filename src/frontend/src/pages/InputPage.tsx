@@ -228,252 +228,254 @@ const PlaceHolderInput = () => {
   }
 
   return (
-    <div className="form">
-      <form onSubmit={handleSubmit}>
-        <h2>Project Input</h2>
-        <div className="inputs-grid">
-          <div className="input-box desc-box">
-            <textarea
-              onChange={(e) =>
-                updateForm(["generalDescription"], e.target.value)
-              }
-              id="desc-input"
-              name="project-desc"
-              value={form.generalDescription}
-              placeholder={`Project Description (min ${fieldsMetadata.generalDescription.min} characters)`}
-              className={
-                hasError(["generalDescription"])
-                  ? "desc-textarea input-error"
-                  : "desc-textarea"
-              }
-              onFocus={() => setIsFocused("generalDescription")}
-              onBlur={() => setIsFocused(null)}
-            />
-            {isFocused === "generalDescription" &&
-              hasError(["generalDescription"]) && (
-                <p className="error-text">{errors["generalDescription"]}</p>
-              )}
-          </div>
-        </div>
-        <div className="inputs-grid/copies-container">
-          {form.consortium.map((c, index) => (
-            <React.Fragment key={index}>
-              <div className="inputs-grid">
-                <div className="input-box memberID">
-                  <AutoCompleteInput
-                    value={c.businessId}
-                    onChange={(value) => {
-                      updateForm(["consortium", index, "businessId"], value);
-                      debouncedQueryForCompanySuggestions(value);
-                    }}
-                    onSuggestionClick={(suggestionIndex) => {
-                      const selectedCompany =
-                        companySuggestions[suggestionIndex];
-                      updateForm(
-                        ["consortium", index, "businessId"],
-                        selectedCompany.businessId
-                      );
-                      setValidatedBusinessIds((prev) => [
-                        ...prev,
-                        selectedCompany,
-                      ]);
-                      setCompanySuggestions([]);
-                    }}
-                    suggestions={companySuggestions.map(
-                      (cs) => `${cs.businessId} - ${cs.name}`
-                    )}
-                    placeholder="Business ID or Company Name"
-                    valueValidated={validatedBusinessIds.some(
-                      (v) => v.businessId === c.businessId
-                    )}
-                    companyNameSuffix={
-                      validatedBusinessIds.find(
-                        (v) => v.businessId === c.businessId
-                      )?.name
-                    }
-                  />
-                  {hasError(
-                    ["consortium", index, "businessId"],
-                    // this is the only useful error to show here because of the
-                    // autocomplete input
-                    "BUSINESS_IDS_NOT_UNIQUE"
-                  ) && (
-                    <p className="error-text">
-                      {getError(index, "businessId")}
-                    </p>
+    <div className="form-wrapper">
+      <h2>Project Input</h2>
+      <div className="form">
+        <form onSubmit={handleSubmit}>
+          <div className="scroll-container">
+            <div className="inputs-grid scroll-container">
+              <div className="input-box desc-box">
+                <textarea
+                  onChange={(e) =>
+                    updateForm(["generalDescription"], e.target.value)
+                  }
+                  id="desc-input"
+                  name="project-desc"
+                  value={form.generalDescription}
+                  placeholder={`Project Description (min ${fieldsMetadata.generalDescription.min} characters)`}
+                  className={
+                    hasError(["generalDescription"])
+                      ? "desc-textarea input-error"
+                      : "desc-textarea"
+                  }
+                  onFocus={() => setIsFocused("generalDescription")}
+                  onBlur={() => setIsFocused(null)}
+                />
+                {isFocused === "generalDescription" &&
+                  hasError(["generalDescription"]) && (
+                    <p className="error-text">{errors["generalDescription"]}</p>
                   )}
-                </div>
+              </div>
+            </div>
+            <div className="inputs-grid-copies-container">
+              {form.consortium.map((c, index) => (
+                <React.Fragment key={index}>
+                  <div className="inputs-grid">
+                    <div className="input-box memberID">
+                      <AutoCompleteInput
+                        value={c.businessId}
+                        onChange={(value) => {
+                          updateForm(["consortium", index, "businessId"], value);
+                          debouncedQueryForCompanySuggestions(value);
+                        }}
+                        onSuggestionClick={(suggestionIndex) => {
+                          const selectedCompany =
+                            companySuggestions[suggestionIndex];
+                          updateForm(
+                            ["consortium", index, "businessId"],
+                            selectedCompany.businessId
+                          );
+                          setValidatedBusinessIds((prev) => [
+                            ...prev,
+                            selectedCompany,
+                          ]);
+                          setCompanySuggestions([]);
+                        }}
+                        suggestions={companySuggestions.map(
+                          (cs) => `${cs.businessId} - ${cs.name}`
+                        )}
+                        placeholder="Business ID or Company Name"
+                        valueValidated={validatedBusinessIds.some(
+                          (v) => v.businessId === c.businessId
+                        )}
+                        companyNameSuffix={
+                          validatedBusinessIds.find(
+                            (v) => v.businessId === c.businessId
+                          )?.name
+                        }
+                      />
+                      {hasError(
+                        ["consortium", index, "businessId"],
+                        // this is the only useful error to show here because of the
+                        // autocomplete input
+                        "BUSINESS_IDS_NOT_UNIQUE"
+                      ) && (
+                          <p className="error-text">
+                            {getError(index, "businessId")}
+                          </p>
+                        )}
+                    </div>
 
-                <div className="input-box">
-                  <input
-                    className={
-                      hasError(["consortium", index, "budget"])
-                        ? "input-error"
-                        : ""
-                    }
-                    value={c.budget === 0 ? "" : c.budget}
-                    onChange={(e) =>
-                      updateForm(
-                        ["consortium", index, "budget"],
-                        Number(e.target.value)
-                      )
-                    }
-                    //onFocus/onBlur = when user un/selects field
-                    onFocus={() => setIsFocused(fieldKey(index, "budget"))}
-                    onBlur={() => setIsFocused(null)}
-                    type="number"
-                    name="budget-id"
-                    placeholder={`Project Budget (min ${fieldsMetadata.budget.min} €)`}
-                  />
-                  {isFocused === fieldKey(index, "budget") &&
-                    hasError(["consortium", index, "budget"]) && (
-                      <p className="error-text">{getError(index, "budget")}</p>
-                    )}
-                </div>
+                    <div className="input-box">
+                      <input
+                        className={
+                          hasError(["consortium", index, "budget"])
+                            ? "input-error"
+                            : ""
+                        }
+                        value={c.budget === 0 ? "" : c.budget}
+                        onChange={(e) =>
+                          updateForm(
+                            ["consortium", index, "budget"],
+                            Number(e.target.value)
+                          )
+                        }
+                        //onFocus/onBlur = when user un/selects field
+                        onFocus={() => setIsFocused(fieldKey(index, "budget"))}
+                        onBlur={() => setIsFocused(null)}
+                        type="number"
+                        name="budget-id"
+                        placeholder={`Project Budget (min ${fieldsMetadata.budget.min} €)`}
+                      />
+                      {isFocused === fieldKey(index, "budget") &&
+                        hasError(["consortium", index, "budget"]) && (
+                          <p className="error-text">{getError(index, "budget")}</p>
+                        )}
+                    </div>
 
-                <div className="input-box">
-                  <input
-                    className={
-                      hasError(["consortium", index, "requestedFunding"])
-                        ? "input-error"
-                        : ""
-                    }
-                    value={c.requestedFunding === 0 ? "" : c.requestedFunding}
-                    onChange={(e) =>
-                      updateForm(
-                        ["consortium", index, "requestedFunding"],
-                        Number(e.target.value)
-                      )
-                    }
-                    //onFocus/onBlur = when user un/selects field
-                    onFocus={() =>
-                      setIsFocused(fieldKey(index, "requestedFunding"))
-                    }
-                    onBlur={() => setIsFocused(null)}
-                    type="number"
-                    name="grant-id"
-                    placeholder={`Requested Funding (min ${fieldsMetadata.requestedFunding.min} €)`}
-                  />
-                  {isFocused === fieldKey(index, "requestedFunding") &&
-                    hasError(["consortium", index, "requestedFunding"]) && (
-                      <p className="error-text">
-                        {getError(index, "requestedFunding")}
-                      </p>
-                    )}
-                </div>
+                    <div className="input-box">
+                      <input
+                        className={
+                          hasError(["consortium", index, "requestedFunding"])
+                            ? "input-error"
+                            : ""
+                        }
+                        value={c.requestedFunding === 0 ? "" : c.requestedFunding}
+                        onChange={(e) =>
+                          updateForm(
+                            ["consortium", index, "requestedFunding"],
+                            Number(e.target.value)
+                          )
+                        }
+                        //onFocus/onBlur = when user un/selects field
+                        onFocus={() =>
+                          setIsFocused(fieldKey(index, "requestedFunding"))
+                        }
+                        onBlur={() => setIsFocused(null)}
+                        type="number"
+                        name="grant-id"
+                        placeholder={`Requested Funding (min ${fieldsMetadata.requestedFunding.min} €)`}
+                      />
+                      {isFocused === fieldKey(index, "requestedFunding") &&
+                        hasError(["consortium", index, "requestedFunding"]) && (
+                          <p className="error-text">
+                            {getError(index, "requestedFunding")}
+                          </p>
+                        )}
+                    </div>
 
-                <div className="input-box desc-box">
-                  <textarea
-                    value={c.projectRoleDescription}
-                    onChange={(e) =>
-                      updateForm(
-                        ["consortium", index, "projectRoleDescription"],
-                        e.target.value
-                      )
-                    }
-                    onFocus={() =>
-                      setIsFocused(`consortium.${index}.projectRoleDescription`)
-                    }
-                    onBlur={() => setIsFocused(null)}
-                    name="desc-id"
-                    placeholder={`Description (min ${fieldsMetadata.projectRoleDescription.min} characters)`}
-                    className={
-                      hasError(["consortium", index, "projectRoleDescription"])
-                        ? "desc-textarea input-error"
-                        : "desc-textarea"
-                    }
-                  />
-                  {isFocused === `consortium.${index}.projectRoleDescription` &&
-                    hasError([
-                      "consortium",
-                      index,
-                      "projectRoleDescription",
-                    ]) && (
-                      <p className="error-text">
-                        {errors[`consortium.${index}.projectRoleDescription`]}
-                      </p>
-                    )}
-                </div>
-                  <div className="input-box desc-box">
-                    <textarea
-                      value={
-                        c.financialData
-                          ? `Revenues: ${c.financialData.revenues.join(
+                    <div className="input-box desc-box">
+                      <textarea
+                        value={c.projectRoleDescription}
+                        onChange={(e) =>
+                          updateForm(
+                            ["consortium", index, "projectRoleDescription"],
+                            e.target.value
+                          )
+                        }
+                        onFocus={() =>
+                          setIsFocused(`consortium.${index}.projectRoleDescription`)
+                        }
+                        onBlur={() => setIsFocused(null)}
+                        name="desc-id"
+                        placeholder={`Description (min ${fieldsMetadata.projectRoleDescription.min} characters)`}
+                        className={
+                          hasError(["consortium", index, "projectRoleDescription"])
+                            ? "desc-textarea input-error"
+                            : "desc-textarea"
+                        }
+                      />
+                      {isFocused === `consortium.${index}.projectRoleDescription` &&
+                        hasError([
+                          "consortium",
+                          index,
+                          "projectRoleDescription",
+                        ]) && (
+                          <p className="error-text">
+                            {errors[`consortium.${index}.projectRoleDescription`]}
+                          </p>
+                        )}
+                    </div>
+                    <div className="input-box desc-box">
+                      <textarea
+                        value={
+                          c.financialData
+                            ? `Revenues: ${c.financialData.revenues.join(
                               ", "
                             )}\nProfits: ${c.financialData.profits.join(", ")}`
-                          : ""
-                      }
-                      readOnly={
-                        !validateInput(c.financialData, FinancialDataSchema)
-                          .errors
-                      }
-                      // The field can only ever be undefined or contain valid data and be readOnly
-                      onChange={(e) =>
-                        updateForm(
-                          ["consortium", index, "financialData"],
-                          parseKauppalehtiData(e.target.value)
-                        )
-                      }
-                      name="financial-id"
-                      placeholder="Paste financial data from Kauppalehti taloustiedot table."
-                      className="desc-textarea"
-                    />
-                  </div>
-                <div className="kauppalehti-container">
-                  {/* Show the button only if the businessId can at least formatwise be valid */}
-                  {!validateInput(c.businessId, businessIdSchema).errors &&
-                    !c.financialData && (
-                      <button className="kauppalehti-button">
-                        <a
-                          className="kauppalehti-link"
-                          href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
-                            /-/g,
-                            ""
-                          )}#taloustiedot`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Open kauppalehti
-                        </a>
+                            : ""
+                        }
+                        readOnly={
+                          !validateInput(c.financialData, FinancialDataSchema)
+                            .errors
+                        }
+                        // The field can only ever be undefined or contain valid data and be readOnly
+                        onChange={(e) =>
+                          updateForm(
+                            ["consortium", index, "financialData"],
+                            parseKauppalehtiData(e.target.value)
+                          )
+                        }
+                        name="financial-id"
+                        placeholder="Paste financial data from Kauppalehti taloustiedot table."
+                        className="desc-textarea"
+                      />
+                    </div>
+                    <div className="kauppalehti-container">
+                      {/* Show the button only if the businessId can at least formatwise be valid */}
+                      {!validateInput(c.businessId, businessIdSchema).errors &&
+                        !c.financialData && (
+                          <button className="kauppalehti-button">
+                            <a
+                              className="kauppalehti-link"
+                              href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
+                                /-/g,
+                                ""
+                              )}#taloustiedot`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Open kauppalehti
+                            </a>
+                          </button>
+                        )}
+                      {!validateInput(c.financialData, FinancialDataSchema)
+                        .errors && (
+                          <button
+                            className="clear-financial-button"
+                            onClick={() =>
+                              updateForm(
+                                ["consortium", index, "financialData"],
+                                undefined
+                              )
+                            }
+                          >
+                            Clear Financial Data
+                          </button>
+                        )}
+                    </div>
+                    {index === 0 ? null : (
+                      <button
+                        id="del-btn"
+                        type="button"
+                        onClick={() => deleteCompany(index)}
+                      >
+                        -
                       </button>
                     )}
-                  {!validateInput(c.financialData, FinancialDataSchema)
-                    .errors && (
-                    <button
-                      className="clear-financial-button"
-                      onClick={() =>
-                        updateForm(
-                          ["consortium", index, "financialData"],
-                          undefined
-                        )
-                      }
-                    >
-                      Clear Financial Data
-                    </button>
-                  )}
-                </div>
-                {index === 0 ? null : (
-                  <button
-                    id="del-btn"
-                    type="button"
-                    onClick={() => deleteCompany(index)}
-                  >
-                    -
-                  </button>
-                )}
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="buttons">
-          <button type="button" id="add-btn" onClick={addCompany}>
-            +
-          </button>
+                  </div>
+                </React.Fragment>
+              ))}
+              <button type="button" id="add-btn" onClick={addCompany}>
+                +
+              </button>
+            </div>
+          </div>
           <button id="submit-btn" type="submit">
             Submit
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
