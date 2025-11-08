@@ -12,8 +12,8 @@ const App = () => {
         flexDirection: "column",
         minHeight: "100vh",
         width: "100%",
-        backgroundColor: "#333",
-        color: "#f1f1f1",
+        backgroundColor: "#ecececff",
+        color: "#000000ff",
       }}
     >
       

@@ -15,7 +15,8 @@ import {
 import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
-import "../../css/inputPage.css";
+import "../../css/base.css";
+import "../../css/inputPage.css"
 import parseKauppalehtiData from "../utils/kauppalehtiParser";
 import { useDebouncedCallback } from "use-debounce";
 import AutoCompleteInput from "../components/AutoCompleteInput";
@@ -232,7 +233,6 @@ const PlaceHolderInput = () => {
       <h2>Project Input</h2>
       <div className="form">
         <form onSubmit={handleSubmit}>
-          <div className="scroll-container">
             <div className="inputs-grid scroll-container">
               <div className="input-box desc-box">
                 <textarea
@@ -439,6 +439,15 @@ const PlaceHolderInput = () => {
                             </a>
                           </button>
                         )}
+                      {index === 0 ? null : (
+                        <button
+                          id="del-btn"
+                          type="button"
+                          onClick={() => deleteCompany(index)}
+                        >
+                          -
+                        </button>
+                      )}
                       {!validateInput(c.financialData, FinancialDataSchema)
                         .errors && (
                           <button
@@ -454,15 +463,6 @@ const PlaceHolderInput = () => {
                           </button>
                         )}
                     </div>
-                    {index === 0 ? null : (
-                      <button
-                        id="del-btn"
-                        type="button"
-                        onClick={() => deleteCompany(index)}
-                      >
-                        -
-                      </button>
-                    )}
                   </div>
                 </React.Fragment>
               ))}
@@ -470,7 +470,6 @@ const PlaceHolderInput = () => {
                 +
               </button>
             </div>
-          </div>
           <button id="submit-btn" type="submit">
             Submit
           </button>
