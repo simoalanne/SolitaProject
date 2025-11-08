@@ -1,89 +1,18 @@
-* {
-    /*avoid clipping*/
-    box-sizing: border-box;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-.form-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: rgb(104, 105, 110);
-
-    min-width: 80vw;
-    min-height: 60vh;
-    max-height: 85vh;
-    padding-bottom: 5%;
-}
-
-.form {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-    min-width: 70vw;
-    border-radius: 2px;
-}
-
+/*----------Input spesific css-----------------------*/
 .inputs-grid {
     max-width: 100%;
     max-height: 100%;
-    background-color: rgb(65, 60, 60);
+    background-color: #c3df8e;
 
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    padding: 2px;
+    grid-auto-rows: min-content;
 }
 
-/* unneeded ? */
-/* .inputs-grid-copy {
-    background-color: rgb(65, 60, 60);
-    display: grid;
-    grid-column: span 1.5;
-    grid-template-columns: repeat(2, 1fr);
-} */
-
-/*-------- Errors! ---------*/
-
-.input-error:focus {
-    border: 1px solid #e53935;
-    box-shadow: 0 0 0 3px rgba(246, 8, 4, 0.869);
-    outline: none;
-    border-radius: px;
-}
-
-.error-text {
-    color: #ff7674;
-    font-weight: bold;
-    letter-spacing: 1px;
-    font-size: small;
-}
-
-/*-------- ------ ---------*/
-
-/*bigger fields pt1*/
-/* lead applicant id field// Unneeded ?*/
-/* .applicantID {
-    grid-column: 1/-1;
-} */
-
-/*member id field*/
-.memberID {
-    grid-column: 1/-1;
+/*size up all text boxes*/
+input {
+    height: 40px;
     width: 100%;
-}
-
-/*Project description*/
-.desc-box {
-    display: grid;
-    grid-column: 1/-1;
-    width: 100%;
-}
-
-/*bigger height for project desciption*/
-#desc-input {
-    min-height: 70px;
-    margin: 0;
 }
 
 /* All textareas, unless spesified elsewhere*/
@@ -99,20 +28,56 @@
     box-sizing: border-box;
 }
 
-/*size up all text boxes*/
-input {
-    height: 40px;
+/*bigger height for project desciption*/
+#desc-input {
+    min-height: 70px;
+}
+
+.desc-box {
+    display: grid;
+    grid-column: 1/-1;
     width: 100%;
 }
 
-/* .buttons {
-    gap: 20px;
-} */
+.input-box {
+    margin: 0;
+    padding: 0;
+}
+
+/*member id field*/
+.memberID {
+    grid-column: 1/-1;
+    width: 100%;
+    margin-top: 3%;
+}
+
+/*--------Input Errors! ---------*/
+
+.input-error:focus {
+    border: 1px solid #e53935;
+    box-shadow: 0 0 0 3px rgba(246, 8, 4, 0.869);
+    outline: none;
+    border-radius: px;
+}
+
+.error-text {
+    color: #ff7674;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: small;
+}
+
+/*-------- input buttons ---------*/
+
+button {
+    text-align: center;
+}
 
 #submit-btn {
-    margin-top: 10px;
+    margin: 5%;
     border: 2px solid black;
     border-radius: 5px;
+    position: sticky;
 
     background-color: rgb(185, 176, 193);
     color: black;
@@ -139,11 +104,23 @@ input {
     font-size: x-large;
     width: 30px;
     height: 33px;
-    margin: 10px;
+    grid-column: 2;
+    margin-right: -100px;
+    margin-top: 10px;
 }
 
+.kauppalehti-button {
+    font-size: medium;
+    margin-top: 10px;
+    padding: 5px;
+    align-self: center;
+    justify-self: center;
+}
+
+/*-----input kauppalehti------*/
 .kauppalehti-container {
     display: grid;
+    grid-template-columns: repeat(2, 1fr);
     justify-items: center;
     align-items: center;
     padding-bottom: 10px;
@@ -156,15 +133,6 @@ input {
     font-size: medium;
     margin-top: 5px;
     margin-bottom: 5px;
-}
-
-.kauppalehti-button {
-    font-size: medium;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    padding: 5px;
-    align-self: center;
-    justify-self: center;
 }
 
 .para {
@@ -181,42 +149,17 @@ input {
 
 @media only screen and (min-width: 600px) {
 
-    .form-wrapper {
-        min-width: 70vw;
-        min-height: 60vh;
-        max-height: 85vh;
-    }
-
-    /*justify items + align items and inputs-grid's margin
-    makes centering items possible! 
-    'place-items: center' limits inputs-grid too much*/
-    .form {
-        min-width: 80%;
-        padding-top: 5vh;
-    }
-
-    .inputs-grid {
-        max-width: 100%;
-    }
-
-    #add-btn {
-        margin-top: 1%;
-        margin-left: 10%;
+    #desc-input {
+        height: 100px;
     }
 
     #submit-btn {
-        width: 10vw;
-    }
-
-    /*copy's desc*/
-    .member-desc {
-        width: 170%;
+        width: 15vw;
     }
 }
 
 @media only screen and (min-width: 1000px) {
-
-    .form {
-        min-width: 80%;
+    #submit-btn {
+        width: 10vw;
     }
 }

@@ -89,7 +89,7 @@
 
 .nav-link {
   text-decoration: none;
-  color: #ddd;
+  color: #000000;
   padding: 0.5rem 0.6rem;
   border-radius: 6px;
   transition: background 120ms, color 120ms;
