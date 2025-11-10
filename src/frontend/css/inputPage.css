@@ -7,6 +7,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: min-content;
+    box-shadow: 0 0 2px #000000;
 }
 
 /*size up all text boxes*/
@@ -57,7 +58,7 @@ input {
     border: 1px solid #e53935;
     box-shadow: 0 0 0 3px rgba(246, 8, 4, 0.869);
     outline: none;
-    border-radius: px;
+    border-radius: 2px;
 }
 
 .error-text {
@@ -161,5 +162,7 @@ button {
 @media only screen and (min-width: 1000px) {
     #submit-btn {
         width: 10vw;
+        margin: 0;
+        margin-bottom: 5%;
     }
 }
