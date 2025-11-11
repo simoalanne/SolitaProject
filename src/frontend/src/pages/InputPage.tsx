@@ -17,32 +17,33 @@ import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/base.css";
 import "../../css/inputPage.css"
+import { useTranslation } from "../i18n/useTranslation";
 import parseKauppalehtiData from "../utils/kauppalehtiParser";
 import { useDebouncedCallback } from "use-debounce";
 import AutoCompleteInput from "../components/AutoCompleteInput";
 
-const errorMessages: Record<ErrorCode, string> = {
-  INVALID_BUSINESS_ID_FORMAT: "The business ID format is invalid.",
-  INVALID_BUSINESS_ID_CHECK_DIGIT: "The business ID check digit is incorrect.",
-  BUSINESS_IDS_NOT_UNIQUE:
-    "Each business ID must be unique within the consortium.",
-  REQUESTED_FUNDING_EXCEEDS_BUDGET:
-    "Requested funding cannot exceed the project budget.",
-  TOO_SMALL: "The entered value is too small.",
-  TOO_BIG: "The entered value is too large.",
-  TOO_SHORT: "The entered text is too short.",
-  TOO_LONG: "The entered text is too long.",
-  // These should not be needed with current form but are here for completeness
-  INVALID_REVENUE_ENTRIES_COUNT:
-    "Please provide the correct number of revenue entries.",
-  INVALID_PROFIT_ENTRIES_COUNT:
-    "Please provide the correct number of profit entries.",
-  REQUIRED_FIELD_MISSING: "This field is required.",
-  UNKNOWN_ERROR: "An unknown error occurred. Please check your input.",
+// We'll use translations for common error messages. The translation keys are
+// prefixed with `error_` + the ErrorCode name.
+const makeErrorMessages = (t: (key: any) => string) => {
+  return {
+    INVALID_BUSINESS_ID_FORMAT: t("INVALID_BUSINESS_ID_FORMAT"),
+    INVALID_BUSINESS_ID_CHECK_DIGIT: t("INVALID_BUSINESS_ID_CHECK_DIGIT"),
+    BUSINESS_IDS_NOT_UNIQUE: t("BUSINESS_IDS_NOT_UNIQUE"),
+    REQUESTED_FUNDING_EXCEEDS_BUDGET: t("REQUESTED_FUNDING_EXCEEDS_BUDGET"),
+    TOO_SMALL: t("TOO_SMALL"),
+    TOO_BIG: t("TOO_BIG"),
+    TOO_SHORT: t("TOO_SHORT"),
+    TOO_LONG: t("TOO_LONG"),
+    INVALID_REVENUE_ENTRIES_COUNT: t("INVALID_REVENUE_ENTRIES_COUNT"),
+    INVALID_PROFIT_ENTRIES_COUNT: t("INVALID_PROFIT_ENTRIES_COUNT"),
+    REQUIRED_FIELD_MISSING: t("REQUIRED_FIELD_MISSING"),
+    UNKNOWN_ERROR: t("UNKNOWN_ERROR"),
+  } as Record<ErrorCode, string>;
 };
 
 const PlaceHolderInput = () => {
   const [isFocused, setIsFocused] = useState<string | null>(null);
+  const { t, language } = useTranslation();
 
   const defaultCompany: Company = {
     businessId: "",
@@ -126,7 +127,7 @@ const PlaceHolderInput = () => {
         return acc;
       }, {} as ValidationErrors) || {};
     setErrors(newErrors);
-  }, [form]);
+  }, [form, language]);
 
   const updateForm = (fieldPath: Path, value: any) => {
     setForm((prev) => {
@@ -219,7 +220,7 @@ const PlaceHolderInput = () => {
   };
 
   if (loading) {
-    return <Loader message="Processing your input..." />;
+    return <Loader message={t("processing_input")} />;
   }
   if (showOutput) {
     if (output === null) {
@@ -228,9 +229,12 @@ const PlaceHolderInput = () => {
     return <PlaceHolderOutput output={output} />;
   }
 
+  // Prepare localized error messages
+  const errorMessages = makeErrorMessages((k: string) => t((`error_${k}` as any) as any));
+
   return (
     <div className="form-wrapper">
-      <h2>Project Input</h2>
+      <h2>{t("project_input")}</h2>
       <div className="form">
         <form onSubmit={handleSubmit}>
             <div className="inputs-grid scroll-container">
@@ -242,7 +246,7 @@ const PlaceHolderInput = () => {
                   id="desc-input"
                   name="project-desc"
                   value={form.generalDescription}
-                  placeholder={`Project Description (min ${fieldsMetadata.generalDescription.min} characters)`}
+                  placeholder={t("project_description_placeholder", { min: fieldsMetadata.generalDescription.min })}
                   className={
                     hasError(["generalDescription"])
                       ? "desc-textarea input-error"
@@ -284,7 +288,7 @@ const PlaceHolderInput = () => {
                         suggestions={companySuggestions.map(
                           (cs) => `${cs.businessId} - ${cs.name}`
                         )}
-                        placeholder="Business ID or Company Name"
+                        placeholder={t("business_id_or_company_name")}
                         valueValidated={validatedBusinessIds.some(
                           (v) => v.businessId === c.businessId
                         )}
@@ -325,7 +329,7 @@ const PlaceHolderInput = () => {
                         onBlur={() => setIsFocused(null)}
                         type="number"
                         name="budget-id"
-                        placeholder={`Project Budget (min ${fieldsMetadata.budget.min} €)`}
+                        placeholder={t("project_budget_placeholder", { min: fieldsMetadata.budget.min })}
                       />
                       {isFocused === fieldKey(index, "budget") &&
                         hasError(["consortium", index, "budget"]) && (
@@ -354,7 +358,7 @@ const PlaceHolderInput = () => {
                         onBlur={() => setIsFocused(null)}
                         type="number"
                         name="grant-id"
-                        placeholder={`Requested Funding (min ${fieldsMetadata.requestedFunding.min} €)`}
+                        placeholder={t("requested_funding_placeholder", { min: fieldsMetadata.requestedFunding.min })}
                       />
                       {isFocused === fieldKey(index, "requestedFunding") &&
                         hasError(["consortium", index, "requestedFunding"]) && (
@@ -378,7 +382,7 @@ const PlaceHolderInput = () => {
                         }
                         onBlur={() => setIsFocused(null)}
                         name="desc-id"
-                        placeholder={`Description (min ${fieldsMetadata.projectRoleDescription.min} characters)`}
+                        placeholder={t("description_placeholder", { min: fieldsMetadata.projectRoleDescription.min })}
                         className={
                           hasError(["consortium", index, "projectRoleDescription"])
                             ? "desc-textarea input-error"
@@ -403,12 +407,9 @@ const PlaceHolderInput = () => {
                             ? `Revenues: ${c.financialData.revenues.join(
                               ", "
                             )}\nProfits: ${c.financialData.profits.join(", ")}`
-                            : ""
+                            : c.financialData
                         }
-                        readOnly={
-                          !validateInput(c.financialData, FinancialDataSchema)
-                            .errors
-                        }
+                        readOnly={validateInput(c.financialData, FinancialDataSchema).errors == null}
                         // The field can only ever be undefined or contain valid data and be readOnly
                         onChange={(e) =>
                           updateForm(
@@ -417,7 +418,7 @@ const PlaceHolderInput = () => {
                           )
                         }
                         name="financial-id"
-                        placeholder="Paste financial data from Kauppalehti taloustiedot table."
+                        placeholder={t("paste_financial_data")}
                         className="desc-textarea"
                       />
                     </div>
@@ -428,14 +429,11 @@ const PlaceHolderInput = () => {
                           <button className="kauppalehti-button">
                             <a
                               className="kauppalehti-link"
-                              href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
-                                /-/g,
-                                ""
-                              )}#taloustiedot`}
+                              href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(/-/g, "")}#taloustiedot`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              Open kauppalehti
+                              {t("open_kauppalehti")}
                             </a>
                           </button>
                         )}
@@ -452,14 +450,9 @@ const PlaceHolderInput = () => {
                         .errors && (
                           <button
                             className="clear-financial-button"
-                            onClick={() =>
-                              updateForm(
-                                ["consortium", index, "financialData"],
-                                undefined
-                              )
-                            }
+                            onClick={() => updateForm(["consortium", index, "financialData"], undefined)}
                           >
-                            Clear Financial Data
+                            {t("clear_financial_data")}
                           </button>
                         )}
                     </div>
@@ -471,7 +464,7 @@ const PlaceHolderInput = () => {
               </button>
             </div>
           <button id="submit-btn" type="submit">
-            Submit
+            {t("submit")}
           </button>
         </form>
       </div>

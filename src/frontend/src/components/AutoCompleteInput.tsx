@@ -75,8 +75,8 @@ const AutoCompleteInput = ({
           margin: 0,
           padding: 0,
           listStyle: "none",
-          backgroundColor: "#222",
-          color: "#fff",
+          backgroundColor: "gray",
+          color: "var(--text-color)",
           width: "100%",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -95,7 +95,7 @@ const AutoCompleteInput = ({
               cursor: "pointer",
               transition: "background 0.2s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#333")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "white")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "")}
           >
             {s}

@@ -1,0 +1,58 @@
+.settings-page {
+  max-width: 640px;
+  width: 100%;
+  padding: 50px;
+  color: var(--text-color);
+  background: transparent;
+  border: 1px solid var(--muted-color);
+  border-radius: 8px;
+  box-shadow: 0 6px 12px rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 10rem;
+}
+
+h1, p, label, span {
+  color: var(--text-color);
+}
+
+.settings-section {
+  margin-top: 24px;
+}
+
+.toggle-label {
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #0195da;
+}
+
+.select-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.language-select {
+  color: var(--text-color);
+  background: transparent;
+  border: 1px solid var(--muted-color);
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.language-select:focus {
+  outline: 2px solid rgba(1, 149, 218, 0.25);
+  outline-offset: 2px;
+}
+
+/* smooth theme transitions */
+.settings-page,
+.language-select,
+.toggle-checkbox {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
