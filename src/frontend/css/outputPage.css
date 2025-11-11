@@ -7,6 +7,11 @@
     color: #000000;
 }
 
+span, h1, h2, h3, h4, h5, h6, p, label {
+    font-weight: bold;
+    color: black;
+}
+
 /*without this straffic lishts wont be shown as row*/
 .trafficlights-container {
     display: flex;

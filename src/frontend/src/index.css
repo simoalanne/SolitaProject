@@ -1,6 +1,41 @@
-body, html {
+body, html, #root {
   /* This file should contain global CSS variables and resets. Majority of styles should be inline in components or in component-specific CSS files. */
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+/* Global resets and theme variables */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Default (light) theme variables */
+:root {
+  --bg-color: #ecececff;
+  --text-color: #000000;
+  --muted-color: #666666;
+}
+
+/* Dark theme overrides */
+html[data-theme="dark"], :root[data-theme="dark"] {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --muted-color: #bbbbbb;
+}
+
+/* Apply text color globally, components may override locally */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; }

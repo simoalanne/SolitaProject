@@ -6,8 +6,10 @@ import "../../css/base.css";
 import "../../css/outputPage.css"
 
 import { type ProjectOutput } from "@myorg/shared";
+import { useTranslation } from "../i18n/useTranslation";
 
 const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
+  const { t } = useTranslation();
 
   const trafficLight = (color?: string) => {
     if (!color) return 'white';
@@ -24,12 +26,12 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
 
 return(
   <div className="form-wrapper">
-    <h2>Project Assessment Results</h2>
+    <h2>{t("project_assessment_results")}</h2>
       <div className="form">
         <div className="trafficlights-container">
           <div className="trafficlight-items">
-            <p>
-              <strong>Innovation:</strong>{" "}<br/>
+            <p style={{color: strategyKey}}>
+              <strong>{t("innovation")}: </strong>{" "}<br/>
             {output.llmProjectAssessment?.innovationTrafficLight}
             </p>
             <div className="trafficlights">
@@ -39,8 +41,8 @@ return(
             </div>
           </div>
           <div className="trafficlight-items">
-            <p>
-            <strong>Strategic fit:</strong>{" "}<br />
+            <p style={{color: strategyKey}}>
+            <strong>{t("strategic_fit")}: </strong>{" "}<br />
               {output.llmProjectAssessment?.strategicFitTrafficLight}
             </p>
            <div className="trafficlights">
@@ -52,23 +54,22 @@ return(
            </div>
         <div className="result-container">
            <div className="eval-container">
-             <h3>Company Evaluation</h3>
+             <h3>{t("company_evaluation")}</h3>
              <ul>
                {output.companyEvaluations.map((evaluation) => (
                  <li key={evaluation.businessId}>
-                   <strong>{evaluation.businessId}:</strong> Financial Risk - {evaluation.financialRisk},{" "}
-                   Funding History - {evaluation.businessFinlandFundingHistory}
+                   <strong>{evaluation.businessId}:</strong> {t("financial_risk")} {evaluation.financialRisk},{" "}
+                   {t("funding_history")} {evaluation.businessFinlandFundingHistory}
                  </li>
                ))}
              </ul>
            </div>
            <div className="feedback-container">
-             <h3>LLM Feedback</h3>
-             <p>{output.llmProjectAssessment?.feedback}</p>
+             <h3>{t("llm_feedback")}</h3>
+             <p style={{color: "black"}}>{output.llmProjectAssessment?.feedback}</p>
            </div>
          </div>
       </div>
-
   </div>
 ) 
 }

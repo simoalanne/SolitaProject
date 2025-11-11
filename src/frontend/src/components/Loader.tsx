@@ -1,5 +1,6 @@
 // Place holder loader component
 import React from "react";
+import { useTranslation } from "../i18n/useTranslation";
 
 interface LoaderProps {
   message?: string;
@@ -7,7 +8,10 @@ interface LoaderProps {
 }
 
 // Message and size are hardcoded for simplicity, but can be made customizable via props
-const Loader: React.FC<LoaderProps> = ({ message = "Loading...", size = 50 }) => {
+const Loader: React.FC<LoaderProps> = ({ message, size = 50 }) => {
+  const { t } = useTranslation();
+  const displayMessage = message ?? t("loading");
+
   return (
     <div style={{ textAlign: "center", padding: "20px" }}>
       <div
@@ -15,7 +19,7 @@ const Loader: React.FC<LoaderProps> = ({ message = "Loading...", size = 50 }) =>
         style={{
           width: size,
           height: size,
-          border: `${size / 10}px solid #f3f3f3`,
+          border: `${size / 10}px solid var(--text-color)`,
           borderTop: `${size / 10}px solid #3498db`,
           borderRadius: "50%",
           animation: "spin 2s linear infinite",
@@ -23,7 +27,7 @@ const Loader: React.FC<LoaderProps> = ({ message = "Loading...", size = 50 }) =>
           justifySelf: "center",
         }}
       ></div>
-      <p>{message}</p>  
+      <p>{displayMessage}</p>  
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

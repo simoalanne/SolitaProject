@@ -10,6 +10,10 @@
     box-shadow: 0 0 2px #000000;
 }
 
+h2 {
+    color: black;
+}
+
 /*size up all text boxes*/
 input {
     height: 40px;
