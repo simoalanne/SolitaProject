@@ -1,12 +1,46 @@
 import React from "react";
 import { useTranslation } from "../i18n/useTranslation";
+import { ThemeContext } from "../ThemeContext";
+import { useContext } from "react";
+import "../../css/aboutPage.css";
 
 export const AboutPage: React.FC = () => {
     const { t } = useTranslation();
+    const { theme } = useContext(ThemeContext);
+
     return (
-        <div>
-            <h1>{t("about")}</h1>
-            <p>{t("about_description")}</p>
+        <div className={`about-page ${theme === "dark" ? "dark" : "light"}`}>
+            <h1>{t("about_title")}</h1>
+
+            <section>
+                <h2>{t("about_overview_title")}</h2>
+                <p>{t("about_overview")}</p>
+            </section>
+
+            <section>
+                <h2>{t("about_criteria_title")}</h2>
+                <p>{t("about_criteria")}</p>
+                <ul>
+                    <li>{t("about_criterialist_profit")}</li>
+                    <li>{t("about_criterialist_capital")}</li>
+                    <li>{t("about_criterialist_strategic")}</li>
+                    <li>{t("about_criterialist_skills")}</li>
+                </ul>
+                <p>{t("about_submitting")}</p>
+            </section>
+
+            <section>
+                <h2>{t("about_usage_title")}</h2>
+                <ol>
+                    <li>{t("about_usagelist_projectdesc")}</li>
+                    <li>{t("about_usagelist_businessID")}</li>
+                    <li>{t("about_usagelist_budget")}</li>
+                    <li>{t("about_usagelist_companydesc")}</li>
+                    <li>{t("about_usagelist_kauppalehti")}</li>
+                    <li>{t("about_usagelist_financials")}</li>
+                    <li>{t("about_usagelist_plus")}</li>
+                </ol>
+            </section>
         </div>
     );
 };
