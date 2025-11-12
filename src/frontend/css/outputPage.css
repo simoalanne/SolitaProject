@@ -1,15 +1,38 @@
 /*----------Output spesific-----------------------*/
 
+/*--- themes ---*/
+:root {
+    --inputsgrid-bg: #c3df8e;
+    --text-color: #000000;
+}
+
+/*--- Dark theme ---*/
+[data-theme="dark"] {
+    --inputsgrid-bg: #4a4a4a;
+    --text-color: #efefef;
+}
+
+/*-------------------------*/
+
 * {
     /*avoid clipping*/
     box-sizing: border-box;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    color: #000000;
+    color: var(--text-color);
 }
 
-span, h1, h2, h3, h4, h5, h6, p, label {
-    font-weight: bold;
-    color: black;
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+label {
+    /* font-weight: bold; */
+    letter-spacing: 0.5px;
+    color: var(--text-color);
 }
 
 /*without this straffic lishts wont be shown as row*/
@@ -29,7 +52,7 @@ span, h1, h2, h3, h4, h5, h6, p, label {
 }
 
 .eval-container {
-    background-color: #c3df8e;
+    background-color: var(--inputsgrid-bg);
     width: 95%;
     align-self: center;
     border-radius: 3px;
@@ -37,7 +60,8 @@ span, h1, h2, h3, h4, h5, h6, p, label {
 }
 
 .feedback-container {
-    background-color: #c3df8e;
+    background-color: var(--inputsgrid-bg);
+    color: var(--text-color);
     width: 95%;
     align-self: center;
     border-radius: 3px;
@@ -63,7 +87,7 @@ span, h1, h2, h3, h4, h5, h6, p, label {
     gap: 5px;
     padding: 10%;
     width: 50px;
-    background-color: #303030;
+    background-color: #282828;
 
 }
 

@@ -12,12 +12,11 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
   const { t } = useTranslation();
 
   const trafficLight = (color?: string) => {
-    if (!color) return 'white';
+    if (!color) return undefined;
     const col = color?.toLowerCase().trim();
     if (col?.includes('green')) return 'green';
     if (col?.includes('yellow')) return 'yellow';
     if (col?.includes('red')) return 'red';
-    return 'white';
   };
 
   //color keys 
@@ -30,9 +29,9 @@ return(
       <div className="form">
         <div className="trafficlights-container">
           <div className="trafficlight-items">
-            <p style={{color: strategyKey}}>
+            <p style={{color: innovationKey}}>
               <strong>{t("innovation")}: </strong>{" "}<br/>
-            {output.llmProjectAssessment?.innovationTrafficLight}
+            {/* {output.llmProjectAssessment?.innovationTrafficLight} */}
             </p>
             <div className="trafficlights">
               <span className={`dot red ${innovationKey === "red" ? "active" : ""}`} />
@@ -43,7 +42,7 @@ return(
           <div className="trafficlight-items">
             <p style={{color: strategyKey}}>
             <strong>{t("strategic_fit")}: </strong>{" "}<br />
-              {output.llmProjectAssessment?.strategicFitTrafficLight}
+              {/* {output.llmProjectAssessment?.strategicFitTrafficLight} */}
             </p>
            <div className="trafficlights">
               <span className={`dot red ${strategyKey === "red" ? "active" : ""}`} />
@@ -66,65 +65,12 @@ return(
            </div>
            <div className="feedback-container">
              <h3>{t("llm_feedback")}</h3>
-             <p style={{color: "black"}}>{output.llmProjectAssessment?.feedback}</p>
+             <p>{output.llmProjectAssessment?.feedback}</p>
            </div>
          </div>
       </div>
   </div>
 ) 
 }
-
-//   return (
-//   <div className="form-wrapper">
-//       <h2>Project Assessment Results</h2>
-//       <div className="form scroll-container">
-//         <div className="trafficlights-container">
-//           <div className="result-container">
-//             <p>
-//               <strong>Innovation:</strong>{" "}
-//               {output.llmProjectAssessment?.innovationTrafficLight}
-//             </p>
-//             <div className="trafficlight">
-//               <span className={`dot red ${innovationKey === "red" ? "active" : ""}`} />
-//               <span className={`dot yellow ${innovationKey === "yellow" ? "active" : ""}`} />
-//               <span className={`dot green ${innovationKey === "green" ? "active" : ""}`} />
-//             </div>
-//           </div>
-
-//           <div className="result-container">
-//             <p>
-//               <strong>Strategic fit:</strong>{" "}
-//               {output.llmProjectAssessment?.strategicFitTrafficLight}
-//             </p>
-
-//             <div className="trafficlight">
-//               <span className={`dot red ${strategyKey === "red" ? "active" : ""}`} />
-//               <span className={`dot yellow ${strategyKey === "yellow" ? "active" : ""}`} />
-//               <span className={`dot green ${strategyKey === "green" ? "active" : ""}`} />
-//             </div>
-//           </div>
-//         </div>
-
-//         <div className="result-container">
-//           <div className="eval-container">
-//             <h3>Company Evaluation</h3>
-//             <ul>
-//               {output.companyEvaluations.map((evaluation) => (
-//                 <li key={evaluation.businessId}>
-//                   <strong>{evaluation.businessId}:</strong> Financial Risk - {evaluation.financialRisk},{" "}
-//                   Funding History - {evaluation.businessFinlandFundingHistory}
-//                 </li>
-//               ))}
-//             </ul>
-//           </div>
-//           <div className="feedback-container">
-//             <h3>LLM Feedback</h3>
-//             <p>{output.llmProjectAssessment?.feedback}</p>
-//           </div>
-//         </div>
-//       </div>
-//   </div>
-//   );
-// };
 
 export default PlaceHolderOutput;
