@@ -1,7 +1,12 @@
 .about-page {
   color: var(--text-color);
-  background: transparent;
   padding: 2rem;
+  border: 2px solid var(--muted-color);
+  border-radius: 8px;
+  box-shadow: 0 6px 12px rgba(255, 255, 255, 0.1);
+  max-width: 800px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .about-page h1,
@@ -11,17 +16,23 @@
   color: var(--text-color);
 }
 
+.about-page h1,
+.about-page h2 {
+  font-size: xx-large;
+  padding: 1rem;
+}
+
 .about-page ol,
 .about-page li {
   list-style-position: outside;
   padding-left: 1.5em;
+  padding-bottom: 1em;
   text-align: left;
 }
 
 .about-page p {
-  max-width: 60%;
-  margin: 0 auto;
-  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
 }
 
 .listContainer {
