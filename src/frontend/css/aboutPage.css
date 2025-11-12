@@ -1,7 +1,12 @@
-.light {
-  color: #222;
+.about-page {
+  color: var(--text-color);
+  background: transparent; /* or var(--form-bg) if you want similar bg */
+  padding: 2rem;
 }
 
-.dark {
-  color: #ddd;
+.about-page h1,
+.about-page h2,
+.about-page p,
+.about-page li {
+  color: var(--text-color);
 }
