@@ -1,8 +1,25 @@
 /*----------Input spesific css-----------------------*/
+
+/*--- themes ---*/
+:root {
+    --inputsgrid-bg: #c3df8e;
+    --input-text-color: #000000;
+    --button-bg: rgb(185, 176, 193);
+}
+
+/*--- Dark theme ---*/
+[data-theme="dark"] {
+    --inputsgrid-bg: #4a4a4a;
+    --input-text-color: #000000;
+    --button-bg: #555555;
+}
+
+/*----------------------*/
+
 .inputs-grid {
     max-width: 100%;
     max-height: 100%;
-    background-color: #c3df8e;
+    background-color: var(--inputsgrid-bg);
 
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -10,18 +27,16 @@
     box-shadow: 0 0 2px #000000;
 }
 
-h2 {
-    color: black;
-}
-
 /*size up all text boxes*/
 input {
     height: 40px;
     width: 100%;
+    color: var(--input-text-color);
 }
 
 /* All textareas, unless spesified elsewhere*/
 .desc-textarea {
+    color: var(--input-text-color);
     /*dont allow rezising the box -breaks grid*/
     resize: none;
     width: 100%;
@@ -84,8 +99,8 @@ button {
     border-radius: 5px;
     position: sticky;
 
-    background-color: rgb(185, 176, 193);
-    color: black;
+    background-color: var(--button-bg);
+    color: var(--text-color);
     height: 5vh;
     width: 20vw;
 }
@@ -96,8 +111,8 @@ button {
 }
 
 #add-btn {
+    color: var(--input-text-color);
     font-size: x-large;
-    /* display: grid; */
     display: flex;
     margin-top: 2%;
     margin-left: 10px;
@@ -107,10 +122,10 @@ button {
 
 #del-btn {
     font-size: x-large;
+    color: var(--input-text-color);
     width: 30px;
     height: 33px;
     grid-column: 2;
-    margin-right: -100px;
     margin-top: 10px;
 }
 
@@ -125,7 +140,7 @@ button {
 /*-----input kauppalehti------*/
 .kauppalehti-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    /* grid-template-columns: repeat(2, 1fr); */
     justify-items: center;
     align-items: center;
     padding-bottom: 10px;
