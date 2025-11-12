@@ -1,15 +1,12 @@
 import React from "react";
 import { useTranslation } from "../i18n/useTranslation";
-import { ThemeContext } from "../ThemeContext";
-import { useContext } from "react";
 import "../../css/aboutPage.css";
 
 export const AboutPage: React.FC = () => {
     const { t } = useTranslation();
-    const { theme } = useContext(ThemeContext);
 
     return (
-        <div className={`about-page ${theme === "dark" ? "dark" : "light"}`}>
+        <div className="about-page">
             <h1>{t("about_title")}</h1>
 
             <section>
