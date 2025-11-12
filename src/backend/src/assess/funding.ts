@@ -98,7 +98,7 @@ export const getFundingHistoryForCompany = (
       weight: config.steadyFundingGrowth.weight,
       perform: config.steadyFundingGrowth.perform,
     },
-  ];
+  ].filter((ind) => ind.perform);
 
   const totalWeight = checks.reduce((sum, ind) => sum + ind.weight, 0);
   const achievedScore = checks
