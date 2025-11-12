@@ -1,17 +1,5 @@
 /*----------Output spesific-----------------------*/
 
-/*--- themes ---*/
-:root {
-    --inputsgrid-bg: #c3df8e;
-    --text-color: #000000;
-}
-
-/*--- Dark theme ---*/
-[data-theme="dark"] {
-    --inputsgrid-bg: #4a4a4a;
-    --text-color: #efefef;
-}
-
 /*-------------------------*/
 
 * {
@@ -56,7 +44,7 @@ label {
     width: 95%;
     align-self: center;
     border-radius: 3px;
-    box-shadow: 0 0 6px #000000;
+    box-shadow: 0 0 5px #000000;
 }
 
 .feedback-container {
@@ -64,7 +52,7 @@ label {
     color: var(--text-color);
     width: 95%;
     align-self: center;
-    border-radius: 3px;
+    border-radius: 5px;
     box-shadow: 0 0 3px #000000;
     margin-bottom: 5%;
 }

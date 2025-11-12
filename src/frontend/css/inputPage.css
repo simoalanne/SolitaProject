@@ -1,19 +1,5 @@
 /*----------Input spesific css-----------------------*/
 
-/*--- themes ---*/
-:root {
-    --inputsgrid-bg: #c3df8e;
-    --input-text-color: #000000;
-    --button-bg: rgb(185, 176, 193);
-}
-
-/*--- Dark theme ---*/
-[data-theme="dark"] {
-    --inputsgrid-bg: #4a4a4a;
-    --input-text-color: #000000;
-    --button-bg: #555555;
-}
-
 /*----------------------*/
 
 .inputs-grid {

@@ -10,12 +10,18 @@
 :root {
     --form-bg: #aad4c7;
     --text-color: #000000;
+    --inputsgrid-bg: #c3df8e;
+    --input-text-color: #000000;
+    --button-bg: rgb(185, 176, 193);
 }
 
 /*--- Dark theme ---*/
 [data-theme="dark"] {
     --form-bg: #464c57;
     --text-color: #efefef;
+    --inputsgrid-bg: #4a4a4a;
+    --input-text-color: #000000;
+    --button-bg: #555555;
 }
 
 /*-------------------------*/
