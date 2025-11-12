@@ -17,18 +17,22 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
+export const GetCurrentTheme = (): "light" | "dark" => {
+  return (localStorage.getItem("theme") as "light" | "dark") || "light";
+}
+
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">(GetCurrentTheme());
 
   // Load theme from localStorage if available
   useEffect(() => {
-    const savedTheme = (localStorage.getItem("theme") as "light" | "dark") || "light";
+    const savedTheme = GetCurrentTheme();
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
   }, []);
 
   const toggleTheme = () => {
-    const newTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
+    const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
     localStorage.setItem("theme", newTheme);
