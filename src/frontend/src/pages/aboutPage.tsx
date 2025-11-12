@@ -12,6 +12,7 @@ export const AboutPage: React.FC = () => {
             <section>
                 <h2>{t("about_overview_title")}</h2>
                 <p>{t("about_overview")}</p>
+                <p>{t("about_overview2")}</p>
             </section>
 
             <section>
@@ -26,6 +27,8 @@ export const AboutPage: React.FC = () => {
                     </ul>
                 </div>
                 <p>{t("about_submitting")}</p>
+                <p>{t("about_submitting2")}</p>
+                <p>{t("about_submitting3")}</p>
             </section>
 
             <section>
