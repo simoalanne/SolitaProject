@@ -1,4 +1,4 @@
-import { allSchemas, errorCodes } from "../../../shared/schema.ts";
+import { allSchemas } from "../../../shared/schema.ts";
 import { generateSchema } from "@anatine/zod-openapi";
 
 // generate OpenAPI schemas for all zod schemas defined in shared/schema.ts

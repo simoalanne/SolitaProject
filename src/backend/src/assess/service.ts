@@ -1,7 +1,6 @@
 import {
   type ProjectInput,
   type ProjectOutput,
-  type Company,
   type FinancialRisk,
   type FundingHistory,
   type TrafficLight,
@@ -11,27 +10,42 @@ import {
   generateFeedbackForCompany,
 } from "../ai/aiClient.ts";
 import { getFundingHistoryForCompany } from "../assess/funding.ts";
+import baseProjectAssessmentConfig, {
+  createOutputConfig,
+} from "../config/projectAssesmentConfig.ts";
 import { getFinancialRiskForCompany } from "./financial.ts";
 
 const assessProject = async (
   projectInput: ProjectInput
 ): Promise<ProjectOutput> => {
+  // If config is missing, use defaults
+  const config = projectInput.configuration || baseProjectAssessmentConfig;
   // Run company evaluation and feedback generation in parallel since they are independent from each other
   const [companyEvaluations, feedback] = await Promise.all([
     Promise.all(
       projectInput.consortium.map(async (company) => {
         const id = company.businessId;
-
-        const financialRisk = getFinancialRisk(company);
-        const fundingHistory = getFundingHistoryForCompany(id);
+        const avgRevenue = company.financialData
+          ? company.financialData.revenues.reduce((sum, r) => sum + r, 0) /
+            company.financialData.revenues.length
+          : null;
+        const financialRisk = getFinancialRiskForCompany(
+          company,
+          config.financialRisk
+        );
+        const fundingHistory = getFundingHistoryForCompany(
+          id,
+          avgRevenue,
+          config.fundingHistory
+        );
         const roleFeedback = await getFeedbackForRole(
           projectInput.generalDescription,
           company.projectRoleDescription
         );
 
         const trafficLight = computeTrafficLight(
-          { value: financialRisk, weight: 0.6 },
-          { value: fundingHistory, weight: 0.2 },
+          { value: financialRisk.result, weight: 0.6 },
+          { value: fundingHistory.result, weight: 0.2 },
           // assume neutral if llm feedback is missing
           { value: roleFeedback?.relevancy || "yellow", weight: 0.1 },
           { value: roleFeedback?.clarity || "yellow", weight: 0.1 }
@@ -39,8 +53,8 @@ const assessProject = async (
 
         return {
           businessId: id,
-          businessFinlandFundingHistory: fundingHistory,
-          financialRisk: financialRisk,
+          fundingHistory,
+          financialRisk,
           llmRoleAssessment: roleFeedback,
           trafficLight: trafficLight,
         };
@@ -51,14 +65,19 @@ const assessProject = async (
 
   const overallTrafficLight = computeOverallTrafficLight(
     companyEvaluations,
-    projectInput.consortium.map(c => c.budget),
+    projectInput.consortium.map((c) => c.budget),
     projectInput.consortium.reduce((sum, c) => sum + c.budget, 0)
+  );
+
+  const metadata = createOutputConfig(
+    projectInput.consortium.map((c) => ({ id: c.businessId, budget: c.budget }))
   );
 
   return {
     companyEvaluations,
     overallTrafficLight,
     llmProjectAssessment: feedback,
+    metadata,
   };
 };
 
@@ -66,7 +85,7 @@ const assessProject = async (
 const calculateWeightedScore = <
   T extends FinancialRisk | FundingHistory | TrafficLight
 >(
-  scoreMap: Record<string, number>,
+  scoreMap: Record<T, number>,
   input: WeightedInput<T>
 ): number => {
   const valueScore = scoreMap[input.value];
@@ -109,10 +128,6 @@ const computeTrafficLight = (
   return trafficLight;
 };
 
-// gets financial risk level for a company, or "n/a" if financial data is missing
-const getFinancialRisk = (company: Company) =>
-  company.financialData ? getFinancialRiskForCompany(company) : "n/a";
-
 // gets feedback for a company's role in the project from llm or null if no role description is provided
 const getFeedbackForRole = async (
   overallDescription: string,
@@ -121,7 +136,6 @@ const getFeedbackForRole = async (
   roleDescription
     ? await generateFeedbackForCompany(overallDescription, roleDescription)
     : undefined;
-
 
 const computeOverallTrafficLight = (
   companyEvaluations: ProjectOutput["companyEvaluations"],
@@ -139,11 +153,40 @@ const computeOverallTrafficLight = (
     return trafficLightScore;
   });
 
-  const overallTrafficLightScore = trafficLightScores.reduce((sum, score) => sum + score, 0);
+  const overallTrafficLightScore =
+    trafficLightScores.reduce((sum, score) => sum + score, 0) * 8; // 0-8
 
-  // TODO: give some weight to project feedback's innovation and strategic fit traffic lights as well
-  
-  const overallTrafficLight = overallTrafficLightScore >= 0.75 ? "green" : overallTrafficLightScore >= 0.4 ? "yellow" : "red";
+  const strategicFitScore = projectFeedback
+    ? calculateWeightedScore(
+        { green: 1, yellow: 0.5, red: 0 },
+        { value: projectFeedback.strategicFitTrafficLight, weight: 1 }
+      )
+    : 0.5;
+
+  const innovationScore = projectFeedback
+    ? calculateWeightedScore(
+        { green: 1, yellow: 0.5, red: 0 },
+        { value: projectFeedback.innovationTrafficLight, weight: 1 }
+      )
+    : 0.5;
+
+  console.log({
+    overallTrafficLightScore,
+    strategicFitScore,
+    innovationScore,
+  });
+
+  const combinedPercentage =
+    (overallTrafficLightScore + strategicFitScore + innovationScore) / 10;
+
+  console.log({ combinedPercentage });
+
+  const overallTrafficLight =
+    overallTrafficLightScore >= 0.75
+      ? "green"
+      : overallTrafficLightScore >= 0.4
+      ? "yellow"
+      : "red";
 
   return overallTrafficLight;
 };

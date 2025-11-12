@@ -57,8 +57,8 @@ return(
              <ul>
                {output.companyEvaluations.map((evaluation) => (
                  <li key={evaluation.businessId}>
-                   <strong>{evaluation.businessId}:</strong> {t("financial_risk")} {evaluation.financialRisk},{" "}
-                   {t("funding_history")} {evaluation.businessFinlandFundingHistory}
+                   <strong>{evaluation.businessId}:</strong> {t("financial_risk")} {evaluation.financialRisk.result},{" "}
+                   {t("funding_history")} {evaluation.fundingHistory.result},{" "}
                  </li>
                ))}
              </ul>
