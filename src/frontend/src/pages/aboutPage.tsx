@@ -17,26 +17,30 @@ export const AboutPage: React.FC = () => {
             <section>
                 <h2>{t("about_criteria_title")}</h2>
                 <p>{t("about_criteria")}</p>
-                <ul>
-                    <li>{t("about_criterialist_profit")}</li>
-                    <li>{t("about_criterialist_capital")}</li>
-                    <li>{t("about_criterialist_strategic")}</li>
-                    <li>{t("about_criterialist_skills")}</li>
-                </ul>
+                <div className="listContainer">
+                    <ul>
+                        <li>{t("about_criterialist_profit")}</li>
+                        <li>{t("about_criterialist_capital")}</li>
+                        <li>{t("about_criterialist_strategic")}</li>
+                        <li>{t("about_criterialist_skills")}</li>
+                    </ul>
+                </div>
                 <p>{t("about_submitting")}</p>
             </section>
 
             <section>
                 <h2>{t("about_usage_title")}</h2>
-                <ol>
-                    <li>{t("about_usagelist_projectdesc")}</li>
-                    <li>{t("about_usagelist_businessID")}</li>
-                    <li>{t("about_usagelist_budget")}</li>
-                    <li>{t("about_usagelist_companydesc")}</li>
-                    <li>{t("about_usagelist_kauppalehti")}</li>
-                    <li>{t("about_usagelist_financials")}</li>
-                    <li>{t("about_usagelist_plus")}</li>
-                </ol>
+                <div className="listContainer">
+                    <ol>
+                        <li>{t("about_usagelist_projectdesc")}</li>
+                        <li>{t("about_usagelist_businessID")}</li>
+                        <li>{t("about_usagelist_budget")}</li>
+                        <li>{t("about_usagelist_companydesc")}</li>
+                        <li>{t("about_usagelist_kauppalehti")}</li>
+                        <li>{t("about_usagelist_financials")}</li>
+                        <li>{t("about_usagelist_plus")}</li>
+                    </ol>
+                </div>
             </section>
         </div>
     );

@@ -1,6 +1,6 @@
 .about-page {
   color: var(--text-color);
-  background: transparent; /* or var(--form-bg) if you want similar bg */
+  background: transparent;
   padding: 2rem;
 }
 
@@ -9,4 +9,23 @@
 .about-page p,
 .about-page li {
   color: var(--text-color);
+}
+
+.about-page ol,
+.about-page li {
+  list-style-position: outside;
+  padding-left: 1.5em;
+  text-align: left;
+}
+
+.about-page p {
+  max-width: 60%;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.listContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
