@@ -26,7 +26,7 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
 return(
   <div className="form-wrapper">
     <h2>{t("project_assessment_results")}</h2>
-      <div className="form">
+      <div className="form output-form">
         <div className="trafficlights-container">
           <div className="trafficlight-items">
             <p style={{color: innovationKey}}>

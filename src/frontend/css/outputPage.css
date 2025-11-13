@@ -5,7 +5,6 @@
 * {
     /*avoid clipping*/
     box-sizing: border-box;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     color: var(--text-color);
 }
 
@@ -23,12 +22,15 @@ label {
     color: var(--text-color);
 }
 
+.output-form {
+    gap: 20px;
+}
+
 /*without this straffic lishts wont be shown as row*/
 .trafficlights-container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    /* background-color: #ff1900; */
     gap: 10%;
 }
 
@@ -63,27 +65,40 @@ label {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* justify-content: flex-start; */
+    text-align: center;
+
+    max-width: 100px;
 }
 
 .trafficlights {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
 
     gap: 5px;
-    padding: 10%;
+    padding: 10px;
     width: 50px;
+    height: 100px;
     background-color: #282828;
 
+    margin-top: 8px;
+
+}
+
+.trafficlight-items p {
+    min-height: 2.5em;
+    /* säädä, jos teksti vie enemmän rivejä */
+    margin: 0 0 8px 0;
+    /* pieni väli otsikon ja valojen väliin */
 }
 
 .dot {
     height: 20px;
     width: 20px;
     border-radius: 50%;
-    /* display: inline-block; */
+    flex-shrink: 0;
 }
 
 /*3 traffic light -base */
