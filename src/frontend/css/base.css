@@ -12,6 +12,8 @@
     --inputsgrid-bg: #c3df8e;
     --input-text-color: #000000;
     --button-bg: rgb(185, 176, 193);
+    --button-bg2: #cbeac4;
+    --button-bg2-hover: #9ac688;
 }
 
 /*--- Dark theme ---*/
@@ -21,6 +23,8 @@
     --inputsgrid-bg: #4a4a4a;
     --input-text-color: #000000;
     --button-bg: #555555;
+    --button-bg2: #5c5f60;
+    --button-bg2-hover: #323632;
 }
 
 /*-------------------------*/
