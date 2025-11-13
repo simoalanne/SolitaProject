@@ -89,7 +89,6 @@
 @media only screen and (min-width: 600px) {
     .form-wrapper {
         width: 70vw;
-        min-height: 60vh;
         max-height: 90vh;
     }
 
@@ -103,6 +102,6 @@
 @media only screen and (min-width: 1000px) {
     .form-wrapper {
         width: 60vw;
-        min-height: 80vh;
+        max-height: 80vh;
     }
 }
