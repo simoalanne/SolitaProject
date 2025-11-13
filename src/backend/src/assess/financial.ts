@@ -51,8 +51,8 @@ export const getFinancialRiskForCompany = (
     {
       check: hasManyConsecutiveLosses(
         profits,
-        config.consecutiveLosses.startingIndex,
-        config.consecutiveLosses.maxAllowedLossYears
+        config.consecutiveLosses.startingIndex.value,
+        config.consecutiveLosses.maxAllowedLossYears.value
       ),
       weight: config.consecutiveLosses.weight,
       perform: config.consecutiveLosses.perform,
@@ -61,7 +61,7 @@ export const getFinancialRiskForCompany = (
       check: hasLowProfitMargin(
         revenues,
         profits,
-        config.lowProfitMargin.minMarginPercent
+        config.lowProfitMargin.minMarginPercent.value
       ),
       weight: config.lowProfitMargin.weight,
       perform: config.lowProfitMargin.perform,
@@ -69,16 +69,16 @@ export const getFinancialRiskForCompany = (
     {
       check: hasHighVolatility(
         profits,
-        config.highProfitVolatility.maxVolatilityPercent,
+        config.highProfitVolatility.maxVolatilityPercent.value,
         "highProfitVolatility"
       ),
-      weight: 2,
+      weight: config.highProfitVolatility.weight,
       perform: config.highProfitVolatility.perform,
     },
     {
       check: hasFailedToGrow(
         profits,
-        config.profitNotGrowing.consecutiveYearsWithoutGrowth,
+        config.profitNotGrowing.consecutiveYearsWithoutGrowth.value,
         "profitNotGrowing"
       ),
       weight: config.profitNotGrowing.weight,
@@ -87,7 +87,7 @@ export const getFinancialRiskForCompany = (
     {
       check: hasHighVolatility(
         revenues,
-        config.highRevenueVolatility.maxVolatilityPercent,
+        config.highRevenueVolatility.maxVolatilityPercent.value,
         "highRevenueVolatility"
       ),
       weight: config.highRevenueVolatility.weight,
@@ -96,8 +96,8 @@ export const getFinancialRiskForCompany = (
     {
       check: hasManySwings(
         revenues,
-        config.swingsInRevenue.maxSwingsThreshold,
-        config.swingsInRevenue.consideredASwingThreshold,
+        config.swingsInRevenue.maxSwingsThreshold.value,
+        config.swingsInRevenue.consideredASwingThreshold.value,
         "swingsInRevenue"
       ),
       weight: config.swingsInRevenue.weight,
@@ -105,9 +105,9 @@ export const getFinancialRiskForCompany = (
     },
   ].filter((ind) => ind.perform);
 
-  const totalWeight = indicators.reduce((sum, ind) => sum + ind.weight, 0);
+  const totalWeight = indicators.reduce((sum, ind) => sum + ind.weight.value, 0);
   const score = indicators
-    .map((ind) => outcomeToNumber(ind.check.outcome) * ind.weight)
+    .map((ind) => outcomeToNumber(ind.check.outcome) * ind.weight.value)
     .reduce((sum, val) => sum + val, 0);
 
   const riskPercentage = 1 - score / totalWeight;

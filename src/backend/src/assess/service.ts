@@ -69,7 +69,7 @@ const assessProject = async (
     projectInput.consortium.reduce((sum, c) => sum + c.budget, 0)
   );
 
-  const metadata = createOutputConfig(
+  const usedConfiguration = createOutputConfig(
     projectInput.consortium.map((c) => ({ id: c.businessId, budget: c.budget }))
   );
 
@@ -77,7 +77,9 @@ const assessProject = async (
     companyEvaluations,
     overallTrafficLight,
     llmProjectAssessment: feedback,
-    metadata,
+    metadata: {
+      usedConfiguration,
+    },
   };
 };
 

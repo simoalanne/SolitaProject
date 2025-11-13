@@ -1,6 +1,6 @@
 // Moved from src/frontend/src/components/PlaceHolderInput.tsx
 // It will be decided later whether InputPage and OutputPage remain in pages/ or move to components/
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   type ProjectOutput,
   type ProjectInput,
@@ -16,11 +16,12 @@ import React from "react";
 import Loader from "../components/Loader";
 import PlaceHolderOutput from "./OutputPage";
 import "../../css/base.css";
-import "../../css/inputPage.css"
+import "../../css/inputPage.css";
 import { useTranslation } from "../i18n/useTranslation";
 import parseKauppalehtiData from "../utils/kauppalehtiParser";
 import { useDebouncedCallback } from "use-debounce";
 import AutoCompleteInput from "../components/AutoCompleteInput";
+import AdvancedFormConfiguration from "../components/AdvancedFormConfiguration";
 
 // We'll use translations for common error messages. The translation keys are
 // prefixed with `error_` + the ErrorCode name.
@@ -78,6 +79,23 @@ const PlaceHolderInput = () => {
   const [validatedBusinessIds, setValidatedBusinessIds] = React.useState<
     { businessId: string; name: string }[]
   >([]);
+
+  const initialConfig = useRef<ProjectInput["configuration"] | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const response = await fetch("/api/config");
+      if (!response.ok) return;
+      const data = (await response.json()) as ProjectInput["configuration"];
+      initialConfig.current = structuredClone(data);
+      setForm((prev) => {
+        return {
+          ...prev,
+          configuration: data,
+        };
+      });
+    })();
+  }, []);
 
   // DONT use directly
   const queryForCompanySuggestions = async (inputValue: string) => {
@@ -230,7 +248,9 @@ const PlaceHolderInput = () => {
   }
 
   // Prepare localized error messages
-  const errorMessages = makeErrorMessages((k: string) => t((`error_${k}` as any) as any));
+  const errorMessages = makeErrorMessages((k: string) =>
+    t(`error_${k}` as any as any)
+  );
 
   return (
     <div className="form-wrapper">
@@ -240,13 +260,15 @@ const PlaceHolderInput = () => {
           <div className="input-box desc-box">
             <textarea
               onChange={(e) =>
-              updateForm(["generalDescription"], e.target.value)
-            }
-            id="desc-input"
-            name="project-desc"
-            value={form.generalDescription}
-            placeholder={t("project_description_placeholder", { min: fieldsMetadata.generalDescription.min })}
-            className={
+                updateForm(["generalDescription"], e.target.value)
+              }
+              id="desc-input"
+              name="project-desc"
+              value={form.generalDescription}
+              placeholder={t("project_description_placeholder", {
+                min: fieldsMetadata.generalDescription.min,
+              })}
+              className={
                 hasError(["generalDescription"])
                   ? "desc-textarea input-error"
                   : "desc-textarea"
@@ -303,10 +325,10 @@ const PlaceHolderInput = () => {
                     // autocomplete input
                     "BUSINESS_IDS_NOT_UNIQUE"
                   ) && (
-                      <p className="error-text">
-                        {getError(index, "businessId")}
-                      </p>
-                    )}
+                    <p className="error-text">
+                      {getError(index, "businessId")}
+                    </p>
+                  )}
                 </div>
 
                 <div className="input-box">
@@ -316,8 +338,8 @@ const PlaceHolderInput = () => {
                         ? "input-error"
                         : ""
                     }
-                     value={c.budget === 0 ? "" : c.budget}
-                     onChange={(e) =>
+                    value={c.budget === 0 ? "" : c.budget}
+                    onChange={(e) =>
                       updateForm(
                         ["consortium", index, "budget"],
                         Number(e.target.value)
@@ -328,8 +350,11 @@ const PlaceHolderInput = () => {
                     onBlur={() => setIsFocused(null)}
                     type="number"
                     name="budget-id"
-                    placeholder={t("project_budget_placeholder", { min: fieldsMetadata.budget.min })}
-                  />                    {isFocused === fieldKey(index, "budget") &&
+                    placeholder={t("project_budget_placeholder", {
+                      min: fieldsMetadata.budget.min,
+                    })}
+                  />{" "}
+                  {isFocused === fieldKey(index, "budget") &&
                     hasError(["consortium", index, "budget"]) && (
                       <p className="error-text">{getError(index, "budget")}</p>
                     )}
@@ -355,7 +380,9 @@ const PlaceHolderInput = () => {
                     onBlur={() => setIsFocused(null)}
                     type="number"
                     name="grant-id"
-                    placeholder={t("requested_funding_placeholder", { min: fieldsMetadata.requestedFunding.min })}
+                    placeholder={t("requested_funding_placeholder", {
+                      min: fieldsMetadata.requestedFunding.min,
+                    })}
                   />
                   {isFocused === fieldKey(index, "requestedFunding") &&
                     hasError(["consortium", index, "requestedFunding"]) && (
@@ -378,7 +405,9 @@ const PlaceHolderInput = () => {
                     }
                     onBlur={() => setIsFocused(null)}
                     name="desc-id"
-                    placeholder={t("description_placeholder", { min: fieldsMetadata.projectRoleDescription.min })}
+                    placeholder={t("description_placeholder", {
+                      min: fieldsMetadata.projectRoleDescription.min,
+                    })}
                     className={
                       hasError(["consortium", index, "projectRoleDescription"])
                         ? "desc-textarea input-error"
@@ -395,19 +424,22 @@ const PlaceHolderInput = () => {
                         {errors[`consortium.${index}.projectRoleDescription`]}
                       </p>
                     )}
-                 </div>
+                </div>
                 <div className="input-box desc-box">
                   <textarea
                     value={
                       c.financialData
                         ? `Revenues: ${c.financialData.revenues.join(
-                          ", "
-                        )}\nProfits: ${c.financialData.profits.join(", ")}`
+                            ", "
+                          )}\nProfits: ${c.financialData.profits.join(", ")}`
                         : c.financialData
                     }
-                    readOnly={validateInput(c.financialData, FinancialDataSchema).errors == null}
-                      // The field can only ever be undefined or contain valid data and be readOnly
-                      onChange={(e) =>
+                    readOnly={
+                      validateInput(c.financialData, FinancialDataSchema)
+                        .errors == null
+                    }
+                    // The field can only ever be undefined or contain valid data and be readOnly
+                    onChange={(e) =>
                       updateForm(
                         ["consortium", index, "financialData"],
                         parseKauppalehtiData(e.target.value)
@@ -418,14 +450,17 @@ const PlaceHolderInput = () => {
                     className="desc-textarea"
                   />
                 </div>
-                  <div className="kauppalehti-container">
+                <div className="kauppalehti-container">
                   {/* Show the button only if the businessId can at least formatwise be valid */}
                   {!validateInput(c.businessId, businessIdSchema).errors &&
                     !c.financialData && (
                       <button className="kauppalehti-button">
                         <a
                           className="kauppalehti-link"
-                          href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(/-/g, "")}#taloustiedot`}
+                          href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
+                            /-/g,
+                            ""
+                          )}#taloustiedot`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -444,13 +479,18 @@ const PlaceHolderInput = () => {
                   )}
                   {!validateInput(c.financialData, FinancialDataSchema)
                     .errors && (
-                      <button
-                        className="clear-financial-button"
-                        onClick={() => updateForm(["consortium", index, "financialData"], undefined)}
-                      >
-                        {t("clear_financial_data")}
-                      </button>
-                    )}
+                    <button
+                      className="clear-financial-button"
+                      onClick={() =>
+                        updateForm(
+                          ["consortium", index, "financialData"],
+                          undefined
+                        )
+                      }
+                    >
+                      {t("clear_financial_data")}
+                    </button>
+                  )}
                 </div>
               </div>
             </React.Fragment>
@@ -459,11 +499,26 @@ const PlaceHolderInput = () => {
             +
           </button>
         </div>
+        <AdvancedFormConfiguration
+          updateForm={(path, value) =>
+            updateForm(["configuration", ...path], value)
+          }
+          defaults={initialConfig.current!}
+          configuration={form.configuration}
+          onResetToDefaults={() =>
+            updateForm(
+              ["configuration"],
+              structuredClone(initialConfig.current)
+            )
+          }
+        />
+      </div>
+      <div className="submit-button-container">
+        <button id="submit-btn" type="submit" onClick={handleSubmit}>
+          {t("submit")}
+        </button>
+      </div>
     </div>
-    <button id="submit-btn" type="submit" onClick={handleSubmit}>
-      {t("submit")}
-    </button>
-  </div>
   );
 };
 
