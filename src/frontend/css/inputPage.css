@@ -161,13 +161,15 @@ button {
 
     #submit-btn {
         width: 15vw;
+        min-height: 5vh;
+        max-height: 5vh;
     }
 }
 
 @media only screen and (min-width: 1000px) {
+
     #submit-btn {
-        width: 10vw;
-        margin: 0;
-        margin-bottom: 5%;
+        max-width: 8vw;
+        margin: 2%;
     }
 }

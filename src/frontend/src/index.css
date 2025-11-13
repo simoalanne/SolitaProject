@@ -1,15 +1,23 @@
-body, html, #root {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body,
+html,
+#root {
   /* This file should contain global CSS variables and resets. Majority of styles should be inline in components or in component-specific CSS files. */
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
 /* Global resets and theme variables */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -23,7 +31,8 @@ html, body {
 }
 
 /* Dark theme overrides */
-html[data-theme="dark"], :root[data-theme="dark"] {
+html[data-theme="dark"],
+:root[data-theme="dark"] {
   --bg-color: #121212;
   --text-color: #ffffff;
   --muted-color: #bbbbbb;
@@ -33,9 +42,27 @@ html[data-theme="dark"], :root[data-theme="dark"] {
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-family: sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a { color: inherit; }
+a {
+  color: inherit;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: sans-serif;
+  font-size: medium;
+}
+
+/*autoCompleteInput placeholder won't 
+share size without this*/
+::placeholder {
+  font-family: inherit;
+  font-size: medium;
+  opacity: 1;
+}
