@@ -295,136 +295,179 @@ export const LLMProjectAssessmentSchema = z
       ),
   })
   .describe("Feedback from LLM on the overall project proposal");
-
-export const FinancialRiskConfigurationSchema = z.object({
-  consecutiveLosses: z.object({
-    maxAllowedLossYears: z.number(),
-    startingIndex: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  lowProfitMargin: z.object({
-    minMarginPercent: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  highProfitVolatility: z.object({
-    maxVolatilityPercent: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  highRevenueVolatility: z.object({
-    maxVolatilityPercent: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  profitNotGrowing: z.object({
-    consecutiveYearsWithoutGrowth: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  revenueNotGrowing: z.object({
-    consecutiveYearsWithoutGrowth: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  swingsInRevenue: z.object({
-    maxSwingsThreshold: z.number(),
-    consideredASwingThreshold: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  swingsInProfit: z.object({
-    maxSwingsThreshold: z.number(),
-    consideredASwingThreshold: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  unrealisticBudget: z.object({
-    budgetToRevenueRatio: z.number().min(0.5).max(5),
-    weight: z
-      .literal(1)
-      .describe(
-        "If performed and outcome is unfavorable, final result is automatically high risk."
-      ),
-    perform: z.boolean(),
-  }),
-});
-
-export const FundingHistoryConfigurationSchema = z.object({
-  recentGrant: z.object({
-    minTimeAgo: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  multipleFundingInstances: z.object({
-    minTimes: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  mostlyGrants: z.object({
-    grantThreshold: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  oneFundingSignificantToRevenue: z.object({
-    percentageOfRevenue: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  oneFundingSignificantToTotal: z.object({
-    percentageOfTotalFunding: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-  steadyFundingGrowth: z.object({
-    growthYearsThreshold: z.number(),
-    weight: z.number().min(0).max(1),
-    perform: z.boolean(),
-  }),
-});
-
-export const FinancialRiskRulesOutputSchema =
-  FinancialRiskConfigurationSchema.extend({
-    noFinancialData: z.object({ weight: z.literal(1) }),
-    noValidRevenueData: z.object({ weight: z.literal(1) }),
-    unrealisticBudget: z.object({ weight: z.literal(1) }),
+  const InBetweenValueSchema = z.object({
+    value: z.number(),
+    min: z.number(),
+    max: z.number(),
+    step: z.number(),
   });
 
-export const FundingHistoryRulesOutputSchema =
-  FundingHistoryConfigurationSchema.extend({
-    noFundingHistory: z.object({ weight: z.literal(1) }),
+  export const FinancialRiskConfigurationSchema = z.object({
+    consecutiveLosses: z.object({
+      maxAllowedLossYears: InBetweenValueSchema,
+      startingIndex: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    lowProfitMargin: z.object({
+      minMarginPercent: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    highProfitVolatility: z.object({
+      maxVolatilityPercent: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    highRevenueVolatility: z.object({
+      maxVolatilityPercent: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    profitNotGrowing: z.object({
+      consecutiveYearsWithoutGrowth: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    revenueNotGrowing: z.object({
+      consecutiveYearsWithoutGrowth: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    swingsInRevenue: z.object({
+      maxSwingsThreshold: InBetweenValueSchema,
+      consideredASwingThreshold: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    swingsInProfit: z.object({
+      maxSwingsThreshold: InBetweenValueSchema,
+      consideredASwingThreshold: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    unrealisticBudget: z.object({
+      budgetToRevenueRatio: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    // These rules are always performed and these should not be configurable by the user
+    // Frontend can design whether it wants to show these as non editable fields or hide them completely
+    noFinancialData: z.object({
+      weight: InBetweenValueSchema,
+      readOnly: z.literal(true),
+    }),
+    noValidRevenueData: z.object({
+      weight: InBetweenValueSchema,
+      readOnly: z.literal(true),
+    }),
   });
 
-const weightSchema = z.number().min(0).max(1);
+  export const FundingHistoryConfigurationSchema = z.object({
+    recentGrant: z.object({
+      minTimeAgo: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    multipleFundingInstances: z.object({
+      minTimes: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    mostlyGrants: z.object({
+      grantThreshold: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    oneFundingSignificantToRevenue: z.object({
+      percentageOfRevenue: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    oneFundingSignificantToTotal: z.object({
+      percentageOfTotalFunding: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    steadyFundingGrowth: z.object({
+      growthYearsThreshold: InBetweenValueSchema,
+      weight: InBetweenValueSchema,
+      perform: z.boolean(),
+      readOnly: z.boolean().optional(),
+    }),
+    // These rules are always performed and these should not be configurable by the user
+    // Frontend can design whether it wants to show these as non editable fields or hide them completely
+    noFundingHistory: z.object({
+      weight: InBetweenValueSchema,
+      readOnly: z.literal(true),
+    }),
+  });
+
 
 export const WeightsSchema = z
   .object({
-    companyFinancialRisk: weightSchema.describe(
-      "Weight of financial risk in overall company evaluation."
-    ),
-    companyFundingHistory: weightSchema.describe(
-      "Weight of funding history in overall company evaluation."
-    ),
-    companyDescriptionClarity: weightSchema.describe(
-      "Weight of company description clarity in overall company evaluation."
-    ),
-    companyDescriptionRelevancy: weightSchema.describe(
-      "Weight of company description relevancy in overall company evaluation."
-    ),
-    allCompanyEvaluations: weightSchema.describe(
-      "Weight of all company evaluations in overall project evaluation."
-    ),
-    projectInnovation: weightSchema.describe(
-      "Weight of project innovation in overall project evaluation."
-    ),
-    projectStrategicFit: weightSchema.describe(
-      "Weight of project strategic fit in overall project evaluation."
-    ),
+    company: z.object({
+      financialRisk: InBetweenValueSchema.describe(
+        "Weight of financial risk in overall company evaluation."
+      ),
+      fundingHistory: InBetweenValueSchema.describe(
+        "Weight of funding history in overall company evaluation."
+      ),
+      descriptionClarity: InBetweenValueSchema.describe(
+        "Weight of company description clarity in overall company evaluation."
+      ),
+      descriptionRelevancy: InBetweenValueSchema.describe(
+        "Weight of company description relevancy in overall company evaluation."
+      ),
+    }),
+    project: z.object({
+      allCompanyEvaluations: InBetweenValueSchema.describe(
+        "Weight of all company evaluations in overall project evaluation."
+      ),
+      innovation: InBetweenValueSchema.describe(
+        "Weight of project innovation in overall project evaluation."
+      ),
+      strategicFit: InBetweenValueSchema.describe(
+        "Weight of project strategic fit in overall project evaluation."
+      ),
+    }),
+    perCompany: z
+      .record(
+        businessIdSchema,
+        // this should be between 0 and 1 unlike other weights because it's
+        // a direct percentage of the total budget
+        z.number().min(0).max(1).describe(
+          "Weight of the company in overall project evaluation based on their budget share."
+        )
+      )
+      .describe(
+        "Weights of each company in the project based on their budget shares."
+      )
+      .optional(),
   })
   .describe(
-    "Weights that were used to compute the overall traffic light for the whole project."
+    "Weights that are/were used in the project assessment calculations."
   );
+
+export const ConfigurationSchema = z.object({
+  financialRisk: FinancialRiskConfigurationSchema,
+  fundingHistory: FundingHistoryConfigurationSchema,
+  weights: WeightsSchema,
+});
 
 export const ProjectInputSchema = z.object({
   consortium: ConsortiumSchema,
@@ -433,16 +476,9 @@ export const ProjectInputSchema = z.object({
     .min(generalDecsLimits.min)
     .max(generalDecsLimits.max)
     .describe("General description of the project proposal."),
-  configuration: z
-    .object({
-      financialRisk: FinancialRiskConfigurationSchema,
-      fundingHistory: FundingHistoryConfigurationSchema,
-      weights: WeightsSchema,
-    })
-    .optional()
-    .describe(
-      "If this is sent, it overrides the default analysis configuration."
-    ),
+  configuration: ConfigurationSchema.optional().describe(
+    "If set, overrides the default configuration for project assessment."
+  ),
 });
 
 const FinancialRiskRuleSchema = z.discriminatedUnion("code", [
@@ -639,19 +675,6 @@ const FundingRuleSchema = z.discriminatedUnion("code", [
   }),
 ]);
 
-export const WeightsOutputSchema = WeightsSchema.extend({
-  perCompany: z
-    .record(
-      businessIdSchema,
-      weightSchema.describe(
-        "Weight of the company in overall project evaluation based on their budget share."
-      )
-    )
-    .describe(
-      "Weights of each company in the project based on their budget shares."
-    ),
-});
-
 export const CompanyEvaluationSchema = z
   .object({
     businessId: businessIdSchema,
@@ -685,15 +708,11 @@ export const ProjectOutputSchema = z.object({
     "Overall traffic light rating for the entire project based on weighted company evaluations based on their budget shares as well as LLM novelty and strategic fit assessments."
   ),
   llmProjectAssessment: LLMProjectAssessmentSchema.optional(),
-  metadata: z
-    .object({
-      financialRiskRules: FinancialRiskRulesOutputSchema,
-      fundingHistoryRules: FundingHistoryRulesOutputSchema,
-      weights: WeightsOutputSchema,
-    })
-    .describe(
-      "Metadata about the evaluation including weights and rule metadata."
+  metadata: z.object({
+    usedConfiguration: ConfigurationSchema.describe(
+      "The configuration that was used to perform the analysis. Either default or user provided."
     ),
+  }),
 });
 
 // This exists so backend's openapi.ts can easily add all schemas to docs
@@ -713,8 +732,9 @@ export const allSchemas = {
   FundingRule: FundingRuleSchema,
   FinancialRiskRule: FinancialRiskRuleSchema,
   Weights: WeightsSchema,
-  FinancialRiskMeta: FinancialRiskRulesOutputSchema,
-  FundingHistoryMeta: FundingHistoryRulesOutputSchema,
+  FinancialRiskMeta: FinancialRiskConfigurationSchema,
+  FundingHistoryMeta: FundingHistoryConfigurationSchema,
+  BaseConfiguration: ProjectInputSchema.shape.configuration,
 };
 
 export type BusinessId = z.infer<typeof businessIdSchema>;

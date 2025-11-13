@@ -56,27 +56,27 @@ export const getFundingHistoryForCompany = (
 
   const checks = [
     {
-      check: hasRecentGrant(fundingEntry, config.recentGrant.minTimeAgo),
+      check: hasRecentGrant(fundingEntry, config.recentGrant.minTimeAgo.value),
       weight: config.recentGrant.weight,
       perform: config.recentGrant.perform,
     },
     {
       check: hasMultipleFundingInstances(
         fundingEntry,
-        config.multipleFundingInstances.minTimes
+        config.multipleFundingInstances.minTimes.value
       ),
       weight: config.multipleFundingInstances.weight,
       perform: config.multipleFundingInstances.perform,
     },
     {
-      check: hasMostlyGrants(fundingEntry, config.mostlyGrants.grantThreshold),
+      check: hasMostlyGrants(fundingEntry, config.mostlyGrants.grantThreshold.value),
       weight: config.mostlyGrants.weight,
       perform: config.mostlyGrants.perform,
     },
     {
       check: hasOneFundingSignificantToRevenue(
         fundingEntry,
-        config.oneFundingSignificantToRevenue.percentageOfRevenue,
+        config.oneFundingSignificantToRevenue.percentageOfRevenue.value,
         averageAnnualRevenue
       ),
       weight: config.oneFundingSignificantToRevenue.weight,
@@ -85,7 +85,7 @@ export const getFundingHistoryForCompany = (
     {
       check: hasOneFundingSignificantToTotal(
         fundingEntry,
-        config.oneFundingSignificantToTotal.percentageOfTotalFunding
+        config.oneFundingSignificantToTotal.percentageOfTotalFunding.value
       ),
       weight: config.oneFundingSignificantToTotal.weight,
       perform: config.oneFundingSignificantToTotal.perform,
@@ -93,19 +93,19 @@ export const getFundingHistoryForCompany = (
     {
       check: hasSteadyFundingGrowth(
         fundingEntry,
-        config.steadyFundingGrowth.growthYearsThreshold
+        config.steadyFundingGrowth.growthYearsThreshold.value
       ),
       weight: config.steadyFundingGrowth.weight,
       perform: config.steadyFundingGrowth.perform,
     },
   ].filter((ind) => ind.perform);
 
-  const totalWeight = checks.reduce((sum, ind) => sum + ind.weight, 0);
+  const totalWeight = checks.reduce((sum, ind) => sum + ind.weight.value, 0);
   const achievedScore = checks
     .map(
       (ind) =>
         outcomeToWeight(ind.check.outcome as FundingRule["outcome"]) *
-        ind.weight
+        ind.weight.value
     )
     .reduce((sum, val) => sum + val, 0);
 

@@ -67,6 +67,19 @@ export const translations = {
     error_INVALID_PROFIT_ENTRIES_COUNT: "Please provide the correct number of profit entries.",
     error_REQUIRED_FIELD_MISSING: "This field is required.",
     error_UNKNOWN_ERROR: "An unknown error occurred. Please check your input.",
+
+    // Form configuration
+    hide_advanced_configuration: "Hide advanced options",
+    show_advanced_configuration: "Show advanced options",
+    reset_to_defaults: "Reset values to defaults",
+    financial_risk_analysis: "Financial risk analysis",
+    funding_history_analysis: "Funding history analysis",
+    weights_configuration: "Configure weighting of different analysis areas",
+    company_related_weights: "Company analysis related weights",
+    project_related_weights: "Project analysis related weights",
+    perform_analysis: "Enable rule",
+    rule_parameters: "Rule parameters",
+    rule_weight: "Rule weighting",
   },
 
   fi: {
@@ -137,6 +150,19 @@ export const translations = {
     error_INVALID_PROFIT_ENTRIES_COUNT: "Anna oikea määrä liiketulos-rivejä.",
     error_REQUIRED_FIELD_MISSING: "Kenttä on pakollinen.",
     error_UNKNOWN_ERROR: "Tuntematon virhe tapahtui. Tarkista syöte.",
+
+    // Form configuration
+    hide_advanced_configuration: "Piilota lisäasetukset",
+    show_advanced_configuration: "Näytä lisäasetukset",
+    reset_to_defaults: "Palauta oletusarvot",
+    financial_risk_analysis: "Taloudellisen riskin analyysi",
+    funding_history_analysis: "Rahoitushistorian analyysi",
+    weights_configuration: "Painotusten määrittely",
+    company_related_weights: "Yritykseen liittyvät painotukset",
+    project_related_weights: "Projektiin liittyvät painotukset",
+    perform_analysis: "Sääntö käytössä",
+    rule_parameters: "Säännön parametrit",
+    rule_weight: "Säännön painotus",
   },
 } as const;
 

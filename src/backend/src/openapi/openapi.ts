@@ -50,6 +50,22 @@ const openApiDoc = {
         },
       },
     },
+    "/api/config": {
+      get: {
+        summary:
+          "Fetches the configuration that the project assessment uses by default.",
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/BaseConfiguration" },
+              },
+            },
+          },
+        },
+      },
+    },
     "/api/companies/by-business-id": {
       get: {
         summary:

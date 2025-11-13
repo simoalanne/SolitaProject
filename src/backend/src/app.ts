@@ -3,6 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import { fileURLToPath } from "url";
 import { dirname, resolve, join } from "path";
 import assessRouter from "./assess/router.ts";
+import configRouter from "./config/configRouter.ts";
 import companiesRouter from "./companies/router.ts";
 import openApiDoc from "./openapi/openapi.ts";
 
@@ -14,6 +15,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/assess", assessRouter);
+app.use("/api/config", configRouter);
 app.use("/api/companies", companiesRouter);
 
 // Serves OpenAPI spec in localhost:port/api/docs

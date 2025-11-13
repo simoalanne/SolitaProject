@@ -1,0 +1,55 @@
+.slider-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  padding-right: 20px; /* Should ensure that value boxes won't overflow */
+  padding-block: 30px;
+  box-sizing: border-box;
+}
+
+  .slider-label {
+  font-size: 14px;
+  color: #333;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.slider-wrapper {
+  position: relative;
+  flex: 1; 
+  height: 40px;
+}
+
+.slider-value,
+.slider-default-value {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.slider-value {
+  top: 0;
+  transform: translate(-50%, -100%);
+  font-size: 12px;
+  /* Not ideal to be hardcoded but this is tested to fit 3 digits + dot + possible minus sign */
+  width: 36px;
+  height: 36px;
+  transition: left 0.05s linear;
+  color: #333;
+}
+
+.slider-default-value {
+  bottom: 0;
+  transform: translate(-50%, 100%);
+  font-size: 11px;
+  width: 30px;
+  height: 30px;
+  opacity: 0.8;
+  color: #777;
+}
