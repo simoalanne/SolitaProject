@@ -26,6 +26,10 @@ label {
     gap: 20px;
 }
 
+ul li {
+    list-style-type: none;
+}
+
 /*without this straffic lishts wont be shown as row*/
 .trafficlights-container {
     display: flex;

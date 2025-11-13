@@ -77,6 +77,8 @@ input {
 
 button {
     text-align: center;
+    background-color: var(--button-bg2);
+    border-radius: 5px;
 }
 
 #submit-btn {
@@ -91,36 +93,61 @@ button {
     width: 20vw;
 }
 
+
 #submit-btn:hover {
     background-color: aliceblue;
     color: black;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+
 }
 
 #add-btn {
     color: var(--input-text-color);
     font-size: x-large;
     display: flex;
+
     margin-top: 2%;
     margin-left: 10px;
-    width: 40px;
-    height: auto;
+
+    width: 36px;
+    height: 36px;
+    color: var(--text-color);
 }
 
 #del-btn {
     font-size: x-large;
     color: var(--input-text-color);
-    width: 30px;
-    height: 33px;
     grid-column: 2;
+
+    width: 36px;
+    height: 36px;
+
     margin-top: 10px;
+    color: var(--text-color);
+}
+
+#add-btn:hover {
+    background-color: var(--button-bg2-hover);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+#del-btn:hover {
+    background-color: var(--button-bg2-hover);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 .kauppalehti-button {
     font-size: medium;
     margin-top: 10px;
-    padding: 5px;
+    padding: 8px;
     align-self: center;
     justify-self: center;
+
+}
+
+.kauppalehti-button:hover {
+    background-color: var(--button-bg2-hover);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 /*-----input kauppalehti------*/
@@ -135,7 +162,7 @@ button {
 }
 
 .kauppalehti-link {
-    color: black;
+    color: var(--text-color);
     font-size: medium;
     margin-top: 5px;
     margin-bottom: 5px;
