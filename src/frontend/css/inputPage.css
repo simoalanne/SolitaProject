@@ -83,12 +83,15 @@ button {
 
 #submit-btn {
     margin: 5%;
+    margin-bottom: 20px;
+
     border: 2px solid black;
     border-radius: 5px;
     position: sticky;
 
     background-color: var(--button-bg);
     color: var(--text-color);
+
     height: 5vh;
     width: 20vw;
 }
@@ -200,6 +203,5 @@ button {
 
     #submit-btn {
         max-width: 8vw;
-        margin: 2%;
     }
 }
