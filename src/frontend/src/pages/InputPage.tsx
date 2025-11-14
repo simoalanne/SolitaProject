@@ -22,6 +22,7 @@ import parseKauppalehtiData from "../utils/kauppalehtiParser";
 import { useDebouncedCallback } from "use-debounce";
 import AutoCompleteInput from "../components/AutoCompleteInput";
 import AdvancedFormConfiguration from "../components/AdvancedFormConfiguration";
+import { Plus, Minus } from "lucide-react";
 
 // We'll use translations for common error messages. The translation keys are
 // prefixed with `error_` + the ErrorCode name.
@@ -474,7 +475,7 @@ const PlaceHolderInput = () => {
                       type="button"
                       onClick={() => deleteCompany(index)}
                     >
-                      -
+                      <Minus size={24} />
                     </button>
                   )}
                   {!validateInput(c.financialData, FinancialDataSchema)
@@ -496,7 +497,7 @@ const PlaceHolderInput = () => {
             </React.Fragment>
           ))}
           <button type="button" id="add-btn" onClick={addCompany}>
-            +
+            <Plus size={24} />
           </button>
         </div>
         <AdvancedFormConfiguration
