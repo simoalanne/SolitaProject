@@ -182,6 +182,26 @@ export const translations = {
     "weights.project.allCompanyEvaluations.tooltip": "Controls how strongly aggregated company evaluations (financial, funding, LLM ratings) affect the overall project score.",
     "weights.project.strategicFit.tooltip": "Controls how much the strategic-fit assessment affects the final project score.",
     "weights.project.innovation.tooltip": "Controls how much the innovation assessment affects the final project score.",
+    // per-parameter tooltips (EN)
+    "financialRisk.consecutiveLosses.maxAllowedLossYears.tooltip": "Maximum number of consecutive years with net losses allowed before this rule flags increased risk.",
+    "financialRisk.consecutiveLosses.startingIndex.tooltip": "Year index (0 = most recent year) from which consecutive loss counting starts.",
+    "financialRisk.lowProfitMargin.minMarginPercent.tooltip": "Minimum profit margin ratio (0-1). Values below this are considered low margin.",
+    "financialRisk.highProfitVolatility.maxVolatilityPercent.tooltip": "Profit volatility threshold (0-1). Volatility above this is considered high.",
+    "financialRisk.highRevenueVolatility.maxVolatilityPercent.tooltip": "Revenue volatility threshold (0-1). Volatility above this is considered high.",
+    "financialRisk.profitNotGrowing.consecutiveYearsWithoutGrowth.tooltip": "Number of consecutive years without profit growth considered as stagnation.",
+    "financialRisk.revenueNotGrowing.consecutiveYearsWithoutGrowth.tooltip": "Number of consecutive years without revenue growth considered as stagnation.",
+    "financialRisk.swingsInRevenue.maxSwingsThreshold.tooltip": "Maximum number of large up/down swings in revenue tolerated before flagging instability.",
+    "financialRisk.swingsInRevenue.consideredASwingThreshold.tooltip": "Relative change threshold (0-1) used to count a year-to-year change as a swing (e.g., 0.1 = 10%).",
+    "financialRisk.swingsInProfit.maxSwingsThreshold.tooltip": "Maximum number of large up/down swings in profit tolerated before flagging instability.",
+    "financialRisk.swingsInProfit.consideredASwingThreshold.tooltip": "Relative change threshold (0-1) used to count a profit change as a swing.",
+    "financialRisk.unrealisticBudget.budgetToRevenueRatio.tooltip": "Budget-to-revenue ratio above which the project budget is considered unrealistic (e.g., 2 means budget = 2x revenue).",
+
+    "fundingHistory.recentGrant.minTimeAgo.tooltip": "Number of years to look back when checking for recent grants (e.g., 3 = last 3 years).",
+    "fundingHistory.multipleFundingInstances.minTimes.tooltip": "Minimum number of separate funding events required to consider funding history as recurring.",
+    "fundingHistory.mostlyGrants.grantThreshold.tooltip": "Proportion threshold (0-1) above which funding is considered mostly grants rather than loans.",
+    "fundingHistory.oneFundingSignificantToRevenue.percentageOfRevenue.tooltip": "Percentage of average annual revenue that a single funding event must exceed to be considered significant (0-1).",
+    "fundingHistory.oneFundingSignificantToTotal.percentageOfTotalFunding.tooltip": "Percentage of total historical funding that a single event must represent to be considered dominant (0-1).",
+    "fundingHistory.steadyFundingGrowth.growthYearsThreshold.tooltip": "Ratio (0-1) of years with increases required to consider funding growth steady (e.g., 0.7 = 70% of years increased).",
   },
 
   fi: {
@@ -369,6 +389,26 @@ export const translations = {
     "weights.project.allCompanyEvaluations.tooltip": "Säätää, kuinka voimakkaasti yhteenlasketut yritysarvioinnit (talous, rahoitus, LLM) vaikuttavat projektin kokonaispisteeseen.",
     "weights.project.strategicFit.tooltip": "Säätää, kuinka paljon strateginen sopivuus vaikuttaa lopulliseen projektin pistemäärään.",
     "weights.project.innovation.tooltip": "Säätää, kuinka paljon innovaatio vaikuttaa lopulliseen projektin pistemäärään.",
+    // per-parameter tooltips (FI)
+    "financialRisk.consecutiveLosses.maxAllowedLossYears.tooltip": "Suurin sallittu peräkkäisten tappiovuosien määrä ennen kuin sääntö merkitsee kasvavaa riskiä.",
+    "financialRisk.consecutiveLosses.startingIndex.tooltip": "Vuoden indeksi (0 = viimeisin vuosi), josta peräkkäisten tappioiden laskenta alkaa.",
+    "financialRisk.lowProfitMargin.minMarginPercent.tooltip": "Minimikateprosentti (0-1). Alle tämän rajan olevat arvot luokitellaan matalaksi katteeksi.",
+    "financialRisk.highProfitVolatility.maxVolatilityPercent.tooltip": "Voiton volatiliteettikynnys (0-1). Tätä suurempi volatiliteetti katsotaan korkeaksi.",
+    "financialRisk.highRevenueVolatility.maxVolatilityPercent.tooltip": "Liikevaihdon volatiliteettikynnys (0-1). Tätä suurempi volatiliteetti katsotaan korkeaksi.",
+    "financialRisk.profitNotGrowing.consecutiveYearsWithoutGrowth.tooltip": "Peräkkäisten vuosien lukumäärä ilman voiton kasvua, jota pidetään kasvamattomuutena.",
+    "financialRisk.revenueNotGrowing.consecutiveYearsWithoutGrowth.tooltip": "Peräkkäisten vuosien lukumäärä ilman liikevaihdon kasvua, jota pidetään kasvamattomuutena.",
+    "financialRisk.swingsInRevenue.maxSwingsThreshold.tooltip": "Suurin sallittu liikevaihdon voimakkaiden nousu-/laskuvaihtelujen määrä ennen epävakauden merkintää.",
+    "financialRisk.swingsInRevenue.consideredASwingThreshold.tooltip": "Suhteellinen muutoskynnys (0-1), jonka ylittävä vuosi-vuoden muutoksen katsotaan olevan heilahtelu (esim. 0.1 = 10%).",
+    "financialRisk.swingsInProfit.maxSwingsThreshold.tooltip": "Suurin sallittu voiton voimakkaiden nousu-/laskuvaihtelujen määrä ennen epävakauden merkintää.",
+    "financialRisk.swingsInProfit.consideredASwingThreshold.tooltip": "Suhteellinen muutoskynnys (0-1), jonka ylittävä voiton muutos katsotaan heilahteluksi.",
+    "financialRisk.unrealisticBudget.budgetToRevenueRatio.tooltip": "Budjetin suhde liikevaihtoon, jonka yli projekti katsotaan epärealistiseksi (esim. 2 tarkoittaa budjetti = 2x liikevaihto).",
+
+    "fundingHistory.recentGrant.minTimeAgo.tooltip": "Vuosien määrä, jolta tarkistetaan äskettäiset avustukset (esim. 3 = viimeiset 3 vuotta).",
+    "fundingHistory.multipleFundingInstances.minTimes.tooltip": "Eri rahoitustapahtumien vähimmäismäärä, jonka jälkeen rahoitushistoriaa pidetään toistuvana.",
+    "fundingHistory.mostlyGrants.grantThreshold.tooltip": "Prosenttiosuus (0-1), jonka ylittäessä rahoitushistoria katsotaan pääosin avustuspainotteiseksi.",
+    "fundingHistory.oneFundingSignificantToRevenue.percentageOfRevenue.tooltip": "Prosenttiosuus keskimääräisestä vuosittaisesta liikevaihdosta, jonka yhden rahoitustapahtuman tulee ylittää ollakseen merkittävä (0-1).",
+    "fundingHistory.oneFundingSignificantToTotal.percentageOfTotalFunding.tooltip": "Prosenttiosuus kokonaishistorian rahoituksesta, jonka yhden tapahtuman tulee edustaa ollakseen dominoiva (0-1).",
+    "fundingHistory.steadyFundingGrowth.growthYearsThreshold.tooltip": "Suhde (0-1) vuosien lukumäärästä, joiden on näytettävä kasvua, jotta rahoituksen kasvu katsotaan tasaiseksi (esim. 0.7 = 70% vuosista kasvoi).",
   },
 } as const;
 
