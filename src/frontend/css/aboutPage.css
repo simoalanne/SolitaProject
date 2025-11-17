@@ -22,7 +22,10 @@
   padding: 1rem;
 }
 
-.about-page ol,
+.about-page ul li {
+  list-style-type: disc;
+}
+
 .about-page li {
   list-style-position: outside;
   padding-left: 1.5em;

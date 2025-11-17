@@ -18,7 +18,7 @@
 
 /*--- Dark theme ---*/
 [data-theme="dark"] {
-    --form-bg: #464c57;
+    --form-bg: #1f1f1f;
     --text-color: #efefef;
     --inputsgrid-bg: #4a4a4a;
     --input-text-color: #000000;
@@ -40,7 +40,8 @@
     width: 80vw;
     min-height: 50vh;
     max-height: 85vh;
-    border-radius: 3px;
+    border: 2px solid var(--muted-color);
+    border-radius: 8px;
     box-shadow: 0 0 2px #000000;
 }
 
