@@ -9,6 +9,7 @@ type SliderProps = {
   max: number;
   step?: number;
   defaultValue?: number;
+  tooltip?: string;
 };
 
 const Slider = ({
@@ -19,6 +20,7 @@ const Slider = ({
   max,
   step = 1,
   defaultValue,
+  tooltip,
 }: SliderProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(Number(e.target.value));
@@ -30,7 +32,17 @@ const Slider = ({
 
   return (
    <div className="slider-container">
-  <p className="slider-label">{label}</p>
+  <p className="slider-label">
+    {label}
+    {tooltip && (
+      <span className="slider-tooltip" tabIndex={0} aria-haspopup="true">
+        <span className="slider-tooltip-icon">ⓘ</span>
+        <div className="slider-tooltip-box" role="tooltip">
+          {tooltip}
+        </div>
+      </span>
+    )}
+  </p>
   <div className="slider-wrapper">
     <input
       type="range"
