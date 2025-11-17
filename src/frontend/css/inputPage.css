@@ -156,6 +156,13 @@ button {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
+
+.advanced-form-configuration>button {
+    /*margin doesnt work, no space in grid*/
+    position: relative;
+    top: -25px;
+}
+
 /*-----input kauppalehti------*/
 .kauppalehti-container {
     display: grid;
