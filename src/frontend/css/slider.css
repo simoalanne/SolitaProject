@@ -43,7 +43,17 @@
     margin-left: 8px;
   }
 
-  .slider-tooltip-box {
+  .slider-tooltip-button {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .slider-popover {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
@@ -58,15 +68,29 @@
     box-shadow: 0 6px 18px rgba(0,0,0,0.15);
     visibility: hidden;
     opacity: 0;
+    transform: translateY(-6px);
     transition: opacity 0.12s ease, transform 0.12s ease;
     z-index: 40;
   }
 
-  .slider-tooltip:focus-within .slider-tooltip-box,
-  .slider-tooltip:hover .slider-tooltip-box {
+  .slider-tooltip.open .slider-popover,
+  .slider-tooltip:focus-within .slider-popover,
+  .slider-tooltip:hover .slider-popover {
     visibility: visible;
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* mobile: make popover full-width at bottom */
+  @media (max-width: 600px) {
+    .slider-popover {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      top: auto;
+      max-width: none;
+    }
   }
 
   /* Rule header layout for inline label + toggle */
