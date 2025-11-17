@@ -10,7 +10,7 @@
 
   .slider-label {
   font-size: 14px;
-  color: #333;
+  color: var(--text-color);
   margin-right: 8px;
   white-space: nowrap;
 }
@@ -111,7 +111,7 @@
   }
   .rule-toggle-label {
     font-size: 13px;
-    color: #444;
+    color: var(--text-color);
   }
 
 .slider-wrapper {
