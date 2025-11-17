@@ -15,6 +15,81 @@
   white-space: nowrap;
 }
 
+  .slider-tooltip {
+    display: inline-block;
+    margin-left: 8px;
+    color: #666;
+    font-size: 12px;
+    cursor: default;
+  }
+
+  .slider-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    outline: none;
+  }
+
+  .slider-tooltip-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    background: #eef2f5;
+    color: #555;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  .slider-tooltip-box {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    transform-origin: top left;
+    background: rgba(32, 33, 36, 0.95);
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 6px;
+    max-width: 360px;
+    white-space: normal;
+    font-size: 13px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 40;
+  }
+
+  .slider-tooltip:focus-within .slider-tooltip-box,
+  .slider-tooltip:hover .slider-tooltip-box {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Rule header layout for inline label + toggle */
+  .rule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .rule-title {
+    margin: 0;
+    font-size: 16px;
+  }
+  .rule-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rule-toggle-label {
+    font-size: 13px;
+    color: #444;
+  }
+
 .slider-wrapper {
   position: relative;
   flex: 1; 

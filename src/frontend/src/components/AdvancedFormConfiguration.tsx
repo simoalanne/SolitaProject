@@ -3,10 +3,10 @@ import { useTranslation } from "../i18n/useTranslation";
 import ToggleButton from "./ToggleButton";
 import Slider from "./Slider";
 import { useState } from "react";
+import type { AdvancedFormConfigurationProps, ConfigurableRule, MappedConfiguration, Path, SliderOption, WeightsConfig, WeightsMapped } from "./AVC_form_types";
+import { RuleConfig, WeightsGroup } from "./AVC_form_utils";
 
 // TODO:
-// - Other components and types should be moved to separate files
-// - The keys created from path arrays eg. (financialRisk.consecutiveLosses.maxAllowedLossYears) should have added i18n entries for user friendly labels
 // - Styling should be improved and consistent
 
 // NICE TO HAVE:
@@ -14,159 +14,6 @@ import { useState } from "react";
 // - individual sections could be collapsible to make it easier to navigate large configurations
 // - tooltips that explain what each parameter/weight/rule or other non obvious option does
 // - anything else that could make this "better" from a UX or technical perspective
-type Path = (string | number)[];
-
-type SliderOption = {
-  path: Path;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-};
-
-type ConfigurableRule = {
-  path: Path;
-  params: SliderOption[];
-  weight: SliderOption;
-  perform: { path: Path; value: boolean };
-};
-
-type MappedConfiguration = {
-  financialRiskAnalysis: ConfigurableRule[];
-  fundingHistoryAnalysis: ConfigurableRule[];
-  weightsConfiguration: WeightsMapped;
-};
-
-type WeightConfigEntry = Omit<SliderOption, "path">;
-
-type WeightsConfig = {
-  company: Record<string, WeightConfigEntry>;
-  project: Record<string, WeightConfigEntry>;
-};
-
-type WeightsMapped = {
-  companyRelated: { path: Path; weights: SliderOption[] };
-  projectRelated: { path: Path; weights: SliderOption[] };
-};
-
-type ConfigSliderProps = {
-  param: SliderOption;
-  defaults: ProjectInput["configuration"];
-  updateForm: (path: Path, value: any) => void;
-  t: ReturnType<typeof useTranslation>["t"];
-};
-
-const ConfigSlider = ({
-  param,
-  defaults,
-  updateForm,
-  t,
-}: ConfigSliderProps) => {
-  const handleChange = (val: number) =>
-    updateForm(param.path, { ...param, value: Number(val) });
-
-  return (
-    <Slider
-      key={param.path.join(".")}
-      label={getLabel(param.path, t)}
-      value={param.value}
-      min={param.min}
-      max={param.max}
-      step={param.step}
-      defaultValue={findSliderDefault(defaults, param.path)}
-      onChange={handleChange}
-    />
-  );
-};
-
-type RuleConfigProps = {
-  rule: ConfigurableRule;
-  defaults: ProjectInput["configuration"];
-  updateForm: (path: Path, value: any) => void;
-  t: ReturnType<typeof useTranslation>["t"];
-};
-
-const RuleConfig = ({ rule, defaults, updateForm, t }: RuleConfigProps) => (
-  <div className="config-rule">
-    <h4>{getLabel(rule.path, t)}</h4>
-    <ToggleButton
-      label={t("perform_analysis")}
-      value={rule.perform.value}
-      onToggle={(val) => updateForm(rule.perform.path, val)}
-    />
-    {rule.perform.value && (
-      <div className="rule-params">
-        <p>{t("rule_parameters")}:</p>
-        {rule.params.map((param: SliderOption) => (
-          <ConfigSlider
-            key={param.path.join(".")}
-            param={param}
-            defaults={defaults}
-            updateForm={updateForm}
-            t={t}
-          />
-        ))}
-        <p>{t("rule_weight")}:</p>
-        {rule.weight && (
-          <ConfigSlider
-            key={rule.weight.path.join(".")}
-            param={rule.weight}
-            defaults={defaults}
-            updateForm={updateForm}
-            t={t}
-          />
-        )}
-      </div>
-    )}
-  </div>
-);
-
-type WeightsGroupProps = {
-  title: string;
-  weights: SliderOption[];
-  defaults: ProjectInput["configuration"];
-  updateForm: (path: Path, value: any) => void;
-  t: ReturnType<typeof useTranslation>["t"];
-};
-
-const WeightsGroup = ({
-  title,
-  weights,
-  defaults,
-  updateForm,
-  t,
-}: WeightsGroupProps) => (
-  <div className="weights-group">
-    <h4>{title}</h4>
-    {weights.map((weight) => (
-      <ConfigSlider
-        key={weight.path.join(".")}
-        param={weight}
-        defaults={defaults}
-        updateForm={updateForm}
-        t={t}
-      />
-    ))}
-  </div>
-);
-
-const findSliderDefault = (obj: any, path: Path): number | undefined => {
-  let current = obj;
-  for (const segment of path) {
-    current = current?.[segment];
-  }
-  return typeof current?.value === "number" ? current.value : undefined;
-};
-
-const getLabel = (fieldPath: Path, t: ReturnType<typeof useTranslation>["t"]) =>
-  t(fieldPath.join(".") as Parameters<typeof t>[0]);
-
-type AdvancedFormConfigurationProps = {
-  updateForm: (fieldPath: Path, value: any) => void;
-  configuration: ProjectInput["configuration"];
-  onResetToDefaults: () => void;
-  defaults?: ProjectInput["configuration"];
-};
 
 const AdvancedFormConfiguration = ({
   updateForm,
