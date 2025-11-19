@@ -1,7 +1,5 @@
 import { type ProjectInput } from "@myorg/shared";
 import { useTranslation } from "../i18n/useTranslation";
-import ToggleButton from "./ToggleButton";
-import Slider from "./Slider";
 import { useState } from "react";
 import type { AdvancedFormConfigurationProps, ConfigurableRule, MappedConfiguration, Path, SliderOption, WeightsConfig, WeightsMapped } from "./AVC_form_types";
 import { RuleConfig, WeightsGroup } from "./AVC_form_utils";
