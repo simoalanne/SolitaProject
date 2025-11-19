@@ -503,6 +503,7 @@ const PlaceHolderInput = () => {
             <Plus size={24} />
           </button>
         </div>
+        <br />
         <AdvancedFormConfiguration
           updateForm={(path, value) =>
             updateForm(["configuration", ...path], value)
@@ -516,6 +517,7 @@ const PlaceHolderInput = () => {
             )
           }
         />
+        <br />
       </div>
       <div className="submit-button-container">
         <button id="submit-btn" type="submit" onClick={handleSubmit}>
