@@ -109,14 +109,14 @@ export const validateInput = <T>(
       )
         ? (i.message as ErrorCode)
         : zodMessageToErrorCodeMap[
-            i.code as keyof typeof zodMessageToErrorCodeMap
-          ] || errorCodes.UNKNOWN_ERROR;
+        i.code as keyof typeof zodMessageToErrorCodeMap
+        ] || errorCodes.UNKNOWN_ERROR;
       const code =
         typeof codeOrCodePair === "string"
           ? codeOrCodePair
           : numericFields.includes(i.path[i.path.length - 1] as string)
-          ? codeOrCodePair.forNumber
-          : codeOrCodePair.forString;
+            ? codeOrCodePair.forNumber
+            : codeOrCodePair.forString;
 
       if (!acc[key]) acc[key] = { path: i.path, errorCodes: [] };
       acc[key].errorCodes.push(code);
@@ -177,6 +177,7 @@ export const FinancialDataSchema = z
 export const ConsortiumItemSchema = z
   .object({
     businessId: businessIdSchema,
+    displayName: z.string().optional().describe("Optional display name of the company. Will be returned in output if provided in input."),
     budget: z
       .number()
       .min(budgetLimits.min)
@@ -258,18 +259,10 @@ export const LLMCompanyRoleAssessmentSchema = z
     clarity: TrafficLightSchema.describe(
       "How clear is the company's role in the project based on the description provided. Can someone unfamiliar with the project understand what exactly will the company do in the project?"
     ),
-    feedback: z
-      .string()
-      //.max(250) the llm api does not respect max length currently so it can't be enforced here
-      .describe(
-        "Short summary feedback on how well does the company fit into the project in English."
-      ),
-    feedbackFi: z
-      .string()
-      //.max(250)
-      .describe(
-        "Short summary feedback on how well does the company fit into the project in Finnish."
-      ),
+    feedback: z.object({
+      en: z.string().describe("Short summary feedback on how well does the company fit into the project in English."),
+      fi: z.string().describe("Short summary feedback on how well does the company fit into the project in Finnish."),
+    })
   })
   .describe(
     "Feedback from LLM on a single company's fit into the project. If no description was provided this is omitted."
@@ -283,139 +276,133 @@ export const LLMProjectAssessmentSchema = z
     strategicFitTrafficLight: TrafficLightSchema.describe(
       "How well does the project align with Business Finland's goals and priorities based on the description provided. Why should Business Finland fund exactly this project?"
     ),
-    feedback: z
-      .string()
-      .describe(
-        "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in English."
-      ),
-    feedbackFi: z
-      .string()
-      .describe(
-        "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."
-      ),
+    feedback: z.object({
+      en: z.string().describe("Short few sentences feedback on why this project is or is not suitable for Business Finland funding in English."),
+      fi: z.string().describe("Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."),
+    })
   })
   .describe("Feedback from LLM on the overall project proposal");
-  const InBetweenValueSchema = z.object({
-    value: z.number(),
-    min: z.number(),
-    max: z.number(),
-    step: z.number(),
-  });
+const InBetweenValueSchema = z.object({
+  value: z.number(),
+  min: z.number(),
+  max: z.number(),
+  step: z.number(),
+});
 
-  export const FinancialRiskConfigurationSchema = z.object({
-    consecutiveLosses: z.object({
-      maxAllowedLossYears: InBetweenValueSchema,
-      startingIndex: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    lowProfitMargin: z.object({
-      minMarginPercent: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    highProfitVolatility: z.object({
-      maxVolatilityPercent: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    highRevenueVolatility: z.object({
-      maxVolatilityPercent: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    profitNotGrowing: z.object({
-      consecutiveYearsWithoutGrowth: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    revenueNotGrowing: z.object({
-      consecutiveYearsWithoutGrowth: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    swingsInRevenue: z.object({
-      maxSwingsThreshold: InBetweenValueSchema,
-      consideredASwingThreshold: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    swingsInProfit: z.object({
-      maxSwingsThreshold: InBetweenValueSchema,
-      consideredASwingThreshold: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    unrealisticBudget: z.object({
-      budgetToRevenueRatio: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    // These rules are always performed and these should not be configurable by the user
-    // Frontend can design whether it wants to show these as non editable fields or hide them completely
-    noFinancialData: z.object({
-      weight: InBetweenValueSchema,
-      readOnly: z.literal(true),
-    }),
-    noValidRevenueData: z.object({
-      weight: InBetweenValueSchema,
-      readOnly: z.literal(true),
-    }),
-  });
+export const FinancialRiskConfigurationSchema = z.object({
+  consecutiveLosses: z.object({
+    maxAllowedLossYears: InBetweenValueSchema,
+    startingIndex: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  lowProfitMargin: z.object({
+    minMarginPercent: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  highProfitVolatility: z.object({
+    maxVolatilityPercent: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  highRevenueVolatility: z.object({
+    maxVolatilityPercent: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  profitNotGrowing: z.object({
+    consecutiveYearsWithoutGrowth: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  revenueNotGrowing: z.object({
+    consecutiveYearsWithoutGrowth: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  swingsInRevenue: z.object({
+    maxSwingsThreshold: InBetweenValueSchema,
+    consideredASwingThreshold: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  swingsInProfit: z.object({
+    maxSwingsThreshold: InBetweenValueSchema,
+    consideredASwingThreshold: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  unrealisticBudget: z.object({
+    budgetToRevenueRatio: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  // These rules are always performed and these should not be configurable by the user
+  // Frontend can design whether it wants to show these as non editable fields or hide them completely
+  noFinancialData: z.object({
+    weight: InBetweenValueSchema,
+    readOnly: z.literal(true),
+  }),
+  noValidRevenueData: z.object({
+    weight: InBetweenValueSchema,
+    readOnly: z.literal(true),
+  }),
+});
 
-  export const FundingHistoryConfigurationSchema = z.object({
-    recentGrant: z.object({
-      minTimeAgo: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    multipleFundingInstances: z.object({
-      minTimes: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    mostlyGrants: z.object({
-      grantThreshold: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    oneFundingSignificantToRevenue: z.object({
-      percentageOfRevenue: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    oneFundingSignificantToTotal: z.object({
-      percentageOfTotalFunding: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    steadyFundingGrowth: z.object({
-      growthYearsThreshold: InBetweenValueSchema,
-      weight: InBetweenValueSchema,
-      perform: z.boolean(),
-      readOnly: z.boolean().optional(),
-    }),
-    // These rules are always performed and these should not be configurable by the user
-    // Frontend can design whether it wants to show these as non editable fields or hide them completely
-    noFundingHistory: z.object({
-      weight: InBetweenValueSchema,
-      readOnly: z.literal(true),
-    }),
-  });
+export const FundingHistoryConfigurationSchema = z.object({
+  recentGrant: z.object({
+    minTimeAgo: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  multipleFundingInstances: z.object({
+    minTimes: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  mostlyGrants: z.object({
+    grantThreshold: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  oneFundingSignificantToRevenue: z.object({
+    percentageOfRevenue: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  oneFundingSignificantToTotal: z.object({
+    percentageOfTotalFunding: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  steadyFundingGrowth: z.object({
+    growthYearsThreshold: InBetweenValueSchema,
+    weight: InBetweenValueSchema,
+    perform: z.boolean(),
+    readOnly: z.boolean().optional(),
+  }),
+  // These rules are always performed and these should not be configurable by the user
+  // Frontend can design whether it wants to show these as non editable fields or hide them completely
+  noFundingHistory: z.object({
+    weight: InBetweenValueSchema,
+    readOnly: z.literal(true),
+  }),
+});
 
 
 export const WeightsSchema = z
@@ -488,7 +475,7 @@ const FinancialRiskRuleSchema = z.discriminatedUnion("code", [
   }),
   z.object({
     code: z.literal("noValidRevenueData"),
-    outcome: z.literal("high"),
+    outcome: z.literal("unfavorable"),
   }),
   z.object({
     code: z.literal("unrealisticBudget"),
@@ -543,7 +530,7 @@ const FinancialRiskRuleSchema = z.discriminatedUnion("code", [
   z.object({
     code: z.literal("revenueNotGrowing"),
     params: z.object({
-      consecutiveYearsWithoutGrowth: z
+      foundYears: z
         .number()
         .describe(
           "Number of consecutive years where revenue did not grow compared to previous year."
@@ -554,7 +541,7 @@ const FinancialRiskRuleSchema = z.discriminatedUnion("code", [
   z.object({
     code: z.literal("profitNotGrowing"),
     params: z.object({
-      consecutiveYearsWithoutGrowth: z
+      foundYears: z
         .number()
         .describe(
           "Number of consecutive years where operating profit did not grow compared to previous year."
@@ -678,6 +665,7 @@ const FundingRuleSchema = z.discriminatedUnion("code", [
 export const CompanyEvaluationSchema = z
   .object({
     businessId: businessIdSchema,
+    displayName: z.string().optional().describe("Optional display name of the company. Will be returned in output if provided in input."),
     fundingHistory: z.object({
       result: FundingHistorySchema,
       rules: z

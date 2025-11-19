@@ -1,0 +1,48 @@
+.collapsible {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  background: var(--form-bg);
+  color: var(--text-color);
+  font-weight: bold;
+  border: 1px var(--text-color) solid;
+}
+
+.icon-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: .25rem;
+}
+
+.chevron {
+  transition: transform .2s ease;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows .3s ease;
+}
+
+.panel.open {
+  grid-template-rows: 1fr;
+}
+
+.content {
+  background: var(--form-bg);
+  overflow: hidden;
+}

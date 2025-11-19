@@ -27,7 +27,7 @@ export const getFinancialRiskForCompany = (
   if (latestNonZeroRevenue === 0) {
     return {
       result: "high",
-      rules: [{ code: "noValidRevenueData", outcome: "high" }],
+      rules: [{ code: "noValidRevenueData", outcome: "unfavorable" }],
     };
   }
 
@@ -289,7 +289,7 @@ const hasFailedToGrow = (
 
   return {
     code,
-    params: { consecutiveYearsWithoutGrowth },
+    params: { foundYears: consecutiveYearsWithoutGrowth },
     outcome: getOutcome(positive),
   };
 };

@@ -73,7 +73,6 @@ const PlaceHolderInput = () => {
   const [output, setOutput] = React.useState<ProjectOutput | null>(null);
 
   type CompanySuggestions = { businessId: string; name: string }[];
-
   const [companySuggestions, setCompanySuggestions] =
     React.useState<CompanySuggestions>([]);
 
@@ -110,8 +109,8 @@ const PlaceHolderInput = () => {
     const fullUrl = inputIsBusinessId
       ? `${base}/by-business-id?businessId=${encodeURIComponent(inputValue)}`
       : `${base}/autocomplete?partialName=${encodeURIComponent(
-          inputValue
-        )}&limit=${limit}`;
+        inputValue
+      )}&limit=${limit}`;
 
     const response = await fetch(fullUrl);
 
@@ -187,7 +186,7 @@ const PlaceHolderInput = () => {
     const error = !!errors[fieldPath.join(".")];
     const specificError = specificErrorCode
       ? errors[fieldPath.join(".")] ===
-        errorMessages[specificErrorCode as ErrorCode]
+      errorMessages[specificErrorCode as ErrorCode]
       : true;
     return error && specificError;
   };
@@ -238,6 +237,11 @@ const PlaceHolderInput = () => {
     setShowOutput(true);
   };
 
+  // Prepare localized error messages
+  const errorMessages = makeErrorMessages((k: string) =>
+    t(`error_${k}` as any as any)
+  );
+
   if (loading) {
     return <Loader message={t("processing_input")} />;
   }
@@ -247,11 +251,6 @@ const PlaceHolderInput = () => {
     }
     return <PlaceHolderOutput output={output} />;
   }
-
-  // Prepare localized error messages
-  const errorMessages = makeErrorMessages((k: string) =>
-    t(`error_${k}` as any as any)
-  );
 
   return (
     <div className="form-wrapper">
@@ -301,6 +300,10 @@ const PlaceHolderInput = () => {
                         ["consortium", index, "businessId"],
                         selectedCompany.businessId
                       );
+                      updateForm(
+                        ["consortium", index, "displayName"],
+                        selectedCompany.name
+                      );
                       setValidatedBusinessIds((prev) => [
                         ...prev,
                         selectedCompany,
@@ -326,10 +329,10 @@ const PlaceHolderInput = () => {
                     // autocomplete input
                     "BUSINESS_IDS_NOT_UNIQUE"
                   ) && (
-                    <p className="error-text">
-                      {getError(index, "businessId")}
-                    </p>
-                  )}
+                      <p className="error-text">
+                        {getError(index, "businessId")}
+                      </p>
+                    )}
                 </div>
 
                 <div className="input-box">
@@ -431,8 +434,8 @@ const PlaceHolderInput = () => {
                     value={
                       c.financialData
                         ? `Revenues: ${c.financialData.revenues.join(
-                            ", "
-                          )}\nProfits: ${c.financialData.profits.join(", ")}`
+                          ", "
+                        )}\nProfits: ${c.financialData.profits.join(", ")}`
                         : c.financialData
                     }
                     readOnly={
@@ -480,18 +483,18 @@ const PlaceHolderInput = () => {
                   )}
                   {!validateInput(c.financialData, FinancialDataSchema)
                     .errors && (
-                    <button
-                      className="clear-financial-button"
-                      onClick={() =>
-                        updateForm(
-                          ["consortium", index, "financialData"],
-                          undefined
-                        )
-                      }
-                    >
-                      {t("clear_financial_data")}
-                    </button>
-                  )}
+                      <button
+                        className="clear-financial-button"
+                        onClick={() =>
+                          updateForm(
+                            ["consortium", index, "financialData"],
+                            undefined
+                          )
+                        }
+                      >
+                        {t("clear_financial_data")}
+                      </button>
+                    )}
                 </div>
               </div>
             </React.Fragment>
