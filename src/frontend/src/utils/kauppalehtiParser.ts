@@ -8,6 +8,7 @@ import { FinancialDataSchema, validateInput } from "@myorg/shared";
 const parseKauppalehtiData = (copyPastedFinancialStats: string) => {
   const rows = copyPastedFinancialStats
     .split("\n")
+    .filter((row) => row.trim() !== "") // filter out empty rows
     // The kauppalehti data has non standard minus sign character (U+2212) which parseFloat cannot handle correctly
     .map((row) => row.replaceAll(" ", "").replaceAll("\u2212", "-").toLowerCase());
   const getFiveAfter = (previousRowKey: "liikevaihto" | "liiketulos") => {
