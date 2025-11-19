@@ -1,6 +1,6 @@
 import { type ProjectInput } from "@myorg/shared";
 import { useTranslation } from "../i18n/useTranslation";
-import { useState } from "react";
+import Collapsible from "./Collapsible";
 import type { AdvancedFormConfigurationProps, ConfigurableRule, MappedConfiguration, Path, SliderOption, WeightsConfig, WeightsMapped } from "./AVC_form_types";
 import { RuleConfig, WeightsGroup } from "./AVC_form_utils";
 
@@ -16,11 +16,10 @@ import { RuleConfig, WeightsGroup } from "./AVC_form_utils";
 const AdvancedFormConfiguration = ({
   updateForm,
   configuration,
-  onResetToDefaults,
+  onResetSectionToDefaults,
   defaults,
 }: AdvancedFormConfigurationProps) => {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
 
   // Config is loaded async so wait till it's available
   if (!configuration) return;
@@ -78,72 +77,64 @@ const AdvancedFormConfiguration = ({
   });
 
   const mappedConfig = mapConfig(configuration);
+
+  const ResetButton = ({ sectionKey }: { sectionKey: keyof NonNullable<ProjectInput["configuration"]> }) => (
+    <button
+      type="button"
+      onClick={() => onResetSectionToDefaults(sectionKey)}
+      style={{ marginBottom: 20 }}
+    >
+      {t("reset_to_defaults")}
+    </button>
+  );
+
   return (
     <div className="advanced-form-configuration">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ marginBottom: "20px" }}
-      >
-        {isOpen
-          ? t("hide_advanced_configuration")
-          : t("show_advanced_configuration")}
-      </button>
-      {isOpen && (
-        <div>
-          <button
-            type="button"
-            onClick={onResetToDefaults}
-            style={{ marginBottom: "20px" }}
-          >
-            {t("reset_to_defaults")}
-          </button>
-
-          <div className="config-section">
-            <h3>{t("financial_risk_analysis")}</h3>
-            {mappedConfig.financialRiskAnalysis.map((rule) => (
-              <RuleConfig
-                key={rule.path.join(".")}
-                rule={rule}
-                defaults={defaults}
-                updateForm={updateForm}
-                t={t}
-              />
-            ))}
-          </div>
-
-          <div className="config-section">
-            <h3>{t("funding_history_analysis")}</h3>
-            {mappedConfig.fundingHistoryAnalysis.map((rule) => (
-              <RuleConfig
-                key={rule.path.join(".")}
-                rule={rule}
-                defaults={defaults}
-                updateForm={updateForm}
-                t={t}
-              />
-            ))}
-          </div>
-
-          <div className="config-section">
-            <h3>{t("weights_configuration")}</h3>
-            <WeightsGroup
-              title={t("company_related_weights")}
-              weights={mappedConfig.weightsConfiguration.companyRelated.weights}
+      <Collapsible label={t("show_advanced_configuration")} defaultOpen={false}>
+        <Collapsible label={t("financial_risk_analysis")} defaultOpen={false}>
+          <ResetButton sectionKey="financialRisk" />
+          {mappedConfig.financialRiskAnalysis.map(rule => (
+            <RuleConfig
+              key={rule.path.join(".")}
+              rule={rule}
               defaults={defaults}
               updateForm={updateForm}
               t={t}
             />
-            <WeightsGroup
-              title={t("project_related_weights")}
-              weights={mappedConfig.weightsConfiguration.projectRelated.weights}
+          ))}
+        </Collapsible>
+
+        <Collapsible label={t("funding_history_analysis")} defaultOpen={false}>
+          <ResetButton sectionKey="fundingHistory" />
+          {mappedConfig.fundingHistoryAnalysis.map(rule => (
+            <RuleConfig
+              key={rule.path.join(".")}
+              rule={rule}
               defaults={defaults}
               updateForm={updateForm}
               t={t}
             />
-          </div>
-        </div>
-      )}
+          ))}
+        </Collapsible>
+
+        <Collapsible label={t("weights_configuration")} defaultOpen={false}>
+          <ResetButton sectionKey="weights" />
+          <WeightsGroup
+            title={t("company_related_weights")}
+            weights={mappedConfig.weightsConfiguration.companyRelated.weights}
+            defaults={defaults}
+            updateForm={updateForm}
+            t={t}
+          />
+          <WeightsGroup
+            title={t("project_related_weights")}
+            weights={mappedConfig.weightsConfiguration.projectRelated.weights}
+            defaults={defaults}
+            updateForm={updateForm}
+            t={t}
+          />
+        </Collapsible>
+      </Collapsible>
     </div>
   );
 };

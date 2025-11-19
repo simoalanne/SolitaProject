@@ -54,7 +54,7 @@ export type RuleConfigProps = {
 export type AdvancedFormConfigurationProps = {
   updateForm: (fieldPath: Path, value: any) => void;
   configuration: ProjectInput["configuration"];
-  onResetToDefaults: () => void;
+  onResetSectionToDefaults: (key: keyof NonNullable<ProjectInput["configuration"]>) => void;
   defaults?: ProjectInput["configuration"];
 };
 
