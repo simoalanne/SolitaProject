@@ -509,10 +509,10 @@ const PlaceHolderInput = () => {
           }
           defaults={initialConfig.current!}
           configuration={form.configuration}
-          onResetToDefaults={() =>
+          onResetSectionToDefaults={(sectionKey) =>
             updateForm(
-              ["configuration"],
-              structuredClone(initialConfig.current)
+              ["configuration", sectionKey],
+              structuredClone(initialConfig.current?.[sectionKey])
             )
           }
         />
