@@ -25,10 +25,6 @@ const Slider = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(Number(e.target.value));
   };
-  useEffect(() => {
-    console.log("Mounted", label);
-    return () => console.log("Unmounted", label);
-  }, []);
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);

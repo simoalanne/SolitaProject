@@ -1,0 +1,78 @@
+.analysis-list {
+  list-style: none;
+  padding: 1rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analysis-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s, filter 0.2s;
+  cursor: default;
+}
+
+.analysis-icon {
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.analysis-text {
+  flex: 1;
+}
+
+.analysis-outcome {
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+}
+
+.analysis-list.light .analysis-item.favorable {
+  background-color: #e6ffed;
+  color: #0a3d16;
+}
+
+.analysis-list.light .analysis-item.unfavorable {
+  background-color: #ffe6e6;
+  color: #660000;
+}
+
+.analysis-list.light .analysis-item.na {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.analysis-list.dark .analysis-item.favorable {
+  background-color: #064e2d;
+  color: #b6f2c3;
+}
+
+.analysis-list.dark .analysis-item.unfavorable {
+  background-color: #4d0000;
+  color: #ffb3b3;
+}
+
+.analysis-list.dark .analysis-item.na {
+  background-color: #333;
+  color: #ccc;
+}
+
+.analysis-list .analysis-item:hover {
+  filter: brightness(0.75);
+}
+
+.analysis-icon.favorable {
+  color: green;
+}
+
+.analysis-icon.unfavorable {
+  color: red;
+}
+
+.analysis-icon.na {
+  color: gray;
+}

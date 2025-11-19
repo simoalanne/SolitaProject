@@ -53,6 +53,7 @@ const assessProject = async (
 
         return {
           businessId: id,
+          displayName: company.displayName,
           fundingHistory,
           financialRisk,
           llmRoleAssessment: roleFeedback,

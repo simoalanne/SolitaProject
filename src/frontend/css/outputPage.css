@@ -53,6 +53,20 @@ ul li {
     box-shadow: 0 0 5px #000000;
 }
 
+.company-label {
+    background-color: var(--button-bg);
+    color: var(--input-text-color);
+    padding: 10px;
+}
+
+.company-eval-item {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding: 10px;
+    gap: 1rem;
+}
+
 .feedback-container {
     background-color: var(--inputsgrid-bg);
     color: var(--text-color);
@@ -61,6 +75,10 @@ ul li {
     border-radius: 5px;
     box-shadow: 0 0 3px #000000;
     margin-bottom: 5%;
+}
+
+.llm-role-feedback {
+    padding: 1rem;
 }
 
 /*TRAFFIC LiGHTS below*/
