@@ -92,6 +92,7 @@ const AdvancedFormConfiguration = ({
     <div className="advanced-form-configuration">
       <Collapsible label={t("show_advanced_configuration")} defaultOpen={false}>
         <Collapsible label={t("financial_risk_analysis")} defaultOpen={false}>
+          <br />
           <ResetButton sectionKey="financialRisk" />
           {mappedConfig.financialRiskAnalysis.map(rule => (
             <RuleConfig
@@ -102,9 +103,11 @@ const AdvancedFormConfiguration = ({
               t={t}
             />
           ))}
+          <br />
         </Collapsible>
 
         <Collapsible label={t("funding_history_analysis")} defaultOpen={false}>
+          <br />
           <ResetButton sectionKey="fundingHistory" />
           {mappedConfig.fundingHistoryAnalysis.map(rule => (
             <RuleConfig
@@ -115,9 +118,11 @@ const AdvancedFormConfiguration = ({
               t={t}
             />
           ))}
+          <br />
         </Collapsible>
 
         <Collapsible label={t("weights_configuration")} defaultOpen={false}>
+          <br />
           <ResetButton sectionKey="weights" />
           <WeightsGroup
             title={t("company_related_weights")}
@@ -134,6 +139,7 @@ const AdvancedFormConfiguration = ({
             t={t}
           />
         </Collapsible>
+        <br />
       </Collapsible>
     </div>
   );
