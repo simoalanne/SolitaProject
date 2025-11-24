@@ -6,15 +6,19 @@ type CollapsibleProps = {
   label: string
   children: React.ReactNode
   defaultOpen?: boolean
+  rightElement?: React.ReactNode
 }
 
-const Collapsible = ({ label, children, defaultOpen }: CollapsibleProps) => {
+const Collapsible = ({ label, children, defaultOpen, rightElement }: CollapsibleProps) => {
   const [open, setOpen] = useState(Boolean(defaultOpen))
 
   return (
     <div className="collapsible">
       <div className="header-row">
         <h5 className="label">{label}</h5>
+
+        {rightElement && <div className="right-element">{rightElement}</div>}
+
         <button
           type="button"
           className="icon-button"
