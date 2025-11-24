@@ -27,6 +27,9 @@ export const translations = {
     project_assessment_results: "Project Assessment Results",
     innovation: "Innovation",
     strategic_fit: "Strategic fit",
+    overall_assessment: "Overall assessment",
+    clarity: "Clarity",
+    relevancy: "Relevancy",
     company_evaluations: "Company Evaluations",
     llm_feedback: "LLM Project Idea Feedback",
     llm_role_feedback: "LLM Company Role Feedback",
@@ -297,7 +300,10 @@ export const translations = {
     description_placeholder: "Kuvaus (vähintään {min} merkkiä)",
     project_assessment_results: "Projektin arvioinnin tulokset",
     innovation: "Innovaatio",
+    overall_assessment: "Kokonaisarvio",
     strategic_fit: "Strateginen sopivuus",
+    clarity: "Selkeys",
+    relevancy: "Relevanssi",
     company_evaluations: "Yritysten arvioinnit",
     llm_feedback: "Palaute tekoälyltä projekti-ideasta",
     llm_role_feedback: "Palaute tekoälyltä yrityksen roolista",
@@ -537,6 +543,7 @@ export const translations = {
     "fhe.steadyFundingGrowth.n/a": "Ei tarpeeksi rahoitushistoriaa tasaisen kasvun arvioimiseksi.",
     "fhe.steadyFundingGrowth.purpose": "Johdonmukainen rahoituksen kasvu ajan myötä voi viitata siihen, että yritys on hyödyntänyt saamansa rahoituksen hyvin.",
     "fhe.noFundingHistory.n/a": "Ei rahoitushistoriaa saatavilla. Rahoitushistoriaa ei voida arvioida.",
+  
   },
 } as const;
 

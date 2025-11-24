@@ -19,20 +19,28 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
   const { language } = useContext(LanguageContext);
   const { t } = useTranslation();
 
-  const TrafficLight = ({ label, outcome }: { label: string; outcome: Outcome }) => (
+  type TrafficLightProps = {
+    label?: string;
+    outcome: Outcome;
+    scale?: number;
+  };
+
+  const TrafficLight = ({ label, outcome, scale }: TrafficLightProps) => (
     <div className="trafficlight-items">
-      <p><strong>{label}</strong></p>
-      <div className="trafficlights">
+      {label && <p><strong>{label}</strong></p>}
+      <div style={{ scale: scale ? scale : 1 }} className="trafficlights">
         {["red", "yellow", "green"].map((color) => (
           <span
-            key={color} className={`dot ${color} ${outcome === color ? "active" : ""}`} />
+            key={color}
+            className={`dot ${color} ${outcome === color ? "active" : ""}`}
+            style={{ scale: scale ? scale : 1 }}
+          />
         ))}
       </div>
     </div>
   );
 
-
-  const trafficLight = (color?: string) => {
+  const trafficLight = (color?: string): Outcome => {
     if (!color) return undefined;
     const col = color?.toLowerCase().trim();
     if (col?.includes('green')) return 'green';
@@ -43,6 +51,7 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
   //color keys 
   const innovationKey = trafficLight(output.llmProjectAssessment?.innovationTrafficLight);
   const strategyKey = trafficLight(output.llmProjectAssessment?.strategicFitTrafficLight);
+  const overallTrafficLight = trafficLight(output.overallTrafficLight);
 
   return (
     <div className="form-wrapper">
@@ -51,6 +60,10 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
         <div className="trafficlights-container">
           <div className="trafficlight-items">
             <TrafficLight outcome={innovationKey} label={t("innovation") + ":"} />
+          </div>
+          {/* Overall assessment traffic light (Made it a little bigger) */}
+          <div style={{ scale: "1.1", fontSize: "0.9em" }} className="trafficlight-items">
+            <TrafficLight outcome={overallTrafficLight} label={t("overall_assessment") + ":"} />
           </div>
           <div className="trafficlight-items">
             <TrafficLight outcome={strategyKey} label={t("strategic_fit") + ":"} />
@@ -65,36 +78,64 @@ const PlaceHolderOutput = ({ output }: { output: ProjectOutput }) => {
                   <Collapsible
                     label={evaluation.displayName ? `${evaluation.displayName} (${evaluation.businessId})` : evaluation.businessId}
                     defaultOpen={true}
+                    rightElement={
+                      <TrafficLight scale={0.9} outcome={trafficLight(evaluation.trafficLight)} label="" />
+                    }
                   >
+                    {/* Nested Collapsibles */}
                     <Collapsible label={`${t("financialRisk")} - ${t(evaluation.financialRisk.result)}`}>
-                      <AnalysisList explanations={getExplanations(
-                        evaluation.financialRisk.rules,
-                        output.metadata.usedConfiguration.financialRisk,
-                        "fre"
-                      )} />
+                      <AnalysisList
+                        explanations={getExplanations(
+                          evaluation.financialRisk.rules,
+                          output.metadata.usedConfiguration.financialRisk,
+                          "fre"
+                        )}
+                      />
                     </Collapsible>
+
                     <Collapsible label={`${t("fundingHistory")} - ${t(evaluation.fundingHistory.result)}`}>
-                      <AnalysisList explanations={getExplanations(
-                        evaluation.fundingHistory.rules,
-                        output.metadata.usedConfiguration.fundingHistory,
-                        "fhe"
-                      )} />
+                      <AnalysisList
+                        explanations={getExplanations(
+                          evaluation.fundingHistory.rules,
+                          output.metadata.usedConfiguration.fundingHistory,
+                          "fhe"
+                        )}
+                      />
                     </Collapsible>
+
                     <Collapsible label={t("llm_role_feedback")}>
-                        <p className="llm-role-feedback">{evaluation.llmRoleAssessment?.feedback[language] || t("no_feedback_available")}</p>     
+                      <p className="llm-role-feedback">
+                        {evaluation.llmRoleAssessment?.feedback[language] || t("no_feedback_available")}
+                      </p>
+                      {/* Traffic lights for clarity and relevancy */}
+                      <div style={{
+                        display: "grid",  
+                        gridTemplateColumns: "1fr 1fr",
+                        marginBottom: "1.0rem",
+                        marginLeft: "5.0rem",
+                        }}>
+                        <TrafficLight
+                          outcome={trafficLight(evaluation.llmRoleAssessment?.clarity)}
+                          label={t("clarity") + ":"}
+                        />
+                        <TrafficLight
+                          outcome={trafficLight(evaluation.llmRoleAssessment?.relevancy)}
+                          label={t("relevancy") + ":"}
+                        />
+                      </div>
                     </Collapsible>
                   </Collapsible>
                 </div>
-              ))}
-            </div>
+            ))}
           </div>
-          <div className="feedback-container">
-            <h3>{t("llm_feedback")}</h3>
-            <p>{output.llmProjectAssessment?.feedback[language] || t("no_feedback_available")}</p>
-          </div>
+        </div>
+        <div className="feedback-container">
+          <h3>{t("llm_feedback")}</h3>
+          <p>{output.llmProjectAssessment?.feedback[language] || t("no_feedback_available")}</p>
         </div>
       </div>
     </div>
+  </div>
   )
 }
 
