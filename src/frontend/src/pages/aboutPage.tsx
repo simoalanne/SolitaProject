@@ -45,6 +45,8 @@ export const AboutPage: React.FC = () => {
                     </ol>
                 </div>
             </section>
+
+            <h2>{t("about_disclaimer")}</h2>
         </div>
     );
 };
