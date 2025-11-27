@@ -5,17 +5,21 @@ export type Path = (string | number)[];
 
 export type SliderOption = {
   path: Path;
+  i18nKey?: Path
   value: number;
   min: number;
   max: number;
   step: number;
+  readonly?: boolean;
+  type: "decimal" | "integer";
 };
 
 export type ConfigurableRule = {
   path: Path;
   params: SliderOption[];
   weight: SliderOption;
-  perform: { path: Path; value: boolean };
+  perform: { path: Path; value: boolean, readonly?: boolean };
+  readonlyFields?: string[];
 };
 
 export type MappedConfiguration = {

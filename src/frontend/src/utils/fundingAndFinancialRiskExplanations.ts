@@ -11,7 +11,11 @@ type FundingHistoryRulesShared =
 
 type Outcome = "favorable" | "unfavorable" | "n/a";
 
-export type AnalysisExplanations = { key: TranslationKey; params?: Record<string, any>; outcome: Outcome }[];
+export type AnalysisExplanations = {
+  key: TranslationKey;
+  params?: Record<string, any>;
+  outcome: Outcome;
+}[];
 
 /**
  * Transforms rules and shared rules to easier to work with format
@@ -27,22 +31,21 @@ export const getExplanations = (
 ): AnalysisExplanations => {
   const explanations = rules.map((rule) => {
     const sharedRule = sharedRules[rule.code as keyof typeof sharedRules] || {};
-    const sharedParams = Object.entries(sharedRule).reduce(
-      (acc, [key, value]) => {
-        if (["weight", "perform", "readOnly"].includes(key)) return acc;
-        const valueField = (value as any).value;
-        if (valueField === undefined) return acc;
+    const sharedParams = sharedRule.params || {};
+    const ruleValues = rule.values || {};
 
-        acc[key] = valueField;
-        return acc;
-      },
-      {} as Record<string, any>
+    const params = Object.fromEntries(
+      Object.entries({ ...sharedParams, ...ruleValues }).map(([k, v]) => [
+        k,
+        v.type === "decimal" ? `${Math.round(v.value * 100)}%` : v.value,
+      ])
     );
-    const params: Record<string, number | string> = {
-      ...((rule as any).params || {}),
-      ...sharedParams,
+
+    return {
+      key: `${keyPrefix}.${rule.code}.${rule.outcome}` as TranslationKey,
+      params,
+      outcome: rule.outcome,
     };
-    return { key: `${keyPrefix}.${rule.code}.${rule.outcome}` as TranslationKey, params, outcome: rule.outcome };
   });
 
   return explanations.sort((a, b) => {

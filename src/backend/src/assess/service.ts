@@ -1,54 +1,65 @@
 import {
+  type BusinessId,
   type ProjectInput,
   type ProjectOutput,
-  type FinancialRisk,
-  type FundingHistory,
   type TrafficLight,
+  type Configuration,
 } from "../../../shared/schema.ts";
 import {
   generateFeedback,
   generateFeedbackForCompany,
 } from "../ai/aiClient.ts";
+import { type ProjectAssessmentConfig } from "../config/projectAssesmentConfig.ts";
+import deepMerge from "../utils/deepMerge.ts";
 import { getFundingHistoryForCompany } from "../assess/funding.ts";
-import baseProjectAssessmentConfig, {
-  createOutputConfig,
-} from "../config/projectAssesmentConfig.ts";
+import baseProjectAssessmentConfig from "../config/projectAssesmentConfig.ts";
 import { getFinancialRiskForCompany } from "./financial.ts";
+import {
+  avg,
+  enumToPercentage,
+  percentageToEnum,
+  roundToTwoDecimals,
+  weightedPercentage,
+} from "./common.ts";
 
 const assessProject = async (
   projectInput: ProjectInput
 ): Promise<ProjectOutput> => {
-  // If config is missing, use defaults
-  const config = projectInput.configuration || baseProjectAssessmentConfig;
+  const config = deepMerge<ProjectAssessmentConfig>(
+    baseProjectAssessmentConfig,
+    projectInput.configuration
+  );
+  const startTime = Date.now();
   // Run company evaluation and feedback generation in parallel since they are independent from each other
-  const [companyEvaluations, feedback] = await Promise.all([
+  const [companyEvaluations, projectFeedback] = await Promise.all([
     Promise.all(
       projectInput.consortium.map(async (company) => {
         const id = company.businessId;
-        const avgRevenue = company.financialData
-          ? company.financialData.revenues.reduce((sum, r) => sum + r, 0) /
-            company.financialData.revenues.length
-          : null;
+        const avgRevenue = avg(company.financialData?.revenues);
         const financialRisk = getFinancialRiskForCompany(
           company,
-          config.financialRisk
+          config.financialRisk,
+          config.thresholds.financialRisk
         );
         const fundingHistory = getFundingHistoryForCompany(
           id,
           avgRevenue,
-          config.fundingHistory
+          company.isStartupOrRDDriven,
+          config.fundingHistory,
+          config.thresholds.fundingHistory
         );
-        const roleFeedback = await getFeedbackForRole(
+        const roleFeedback = await generateFeedbackForCompany(
           projectInput.generalDescription,
           company.projectRoleDescription
         );
 
-        const trafficLight = computeTrafficLight(
-          { value: financialRisk.result, weight: 0.6 },
-          { value: fundingHistory.result, weight: 0.2 },
-          // assume neutral if llm feedback is missing
-          { value: roleFeedback?.relevancy || "yellow", weight: 0.1 },
-          { value: roleFeedback?.clarity || "yellow", weight: 0.1 }
+        const trafficLight = calculateCompanyTrafficLight(
+          config.weights.company,
+          config.thresholds.trafficLight,
+          financialRisk.rawScore,
+          fundingHistory.rawScore,
+          roleFeedback?.relevancy,
+          roleFeedback?.clarity
         );
 
         return {
@@ -57,141 +68,115 @@ const assessProject = async (
           fundingHistory,
           financialRisk,
           llmRoleAssessment: roleFeedback,
-          trafficLight: trafficLight,
+          trafficLight: trafficLight.light,
+          rawScore: trafficLight.rawScore,
         };
       })
     ),
     generateFeedback(projectInput.generalDescription),
   ]);
 
-  const overallTrafficLight = computeOverallTrafficLight(
-    companyEvaluations,
-    projectInput.consortium.map((c) => c.budget),
-    projectInput.consortium.reduce((sum, c) => sum + c.budget, 0)
-  );
+  const companyScores = companyEvaluations.map((c, idx) => ({
+    businessId: c.businessId,
+    score: c.rawScore,
+    budget: projectInput.consortium[idx].budget,
+  }));
 
-  const usedConfiguration = createOutputConfig(
-    projectInput.consortium.map((c) => ({ id: c.businessId, budget: c.budget }))
-  );
+  const companyWeights = calculateCompanyWeights(companyScores);
 
+  const overallTrafficLight = calculateOverallTrafficLight(
+    config.weights,
+    config.thresholds.trafficLight,
+    companyWeights,
+    companyScores,
+    projectFeedback?.innovationTrafficLight,
+    projectFeedback?.strategicFitTrafficLight
+  );
+  // won't mutate the imported config because deepMerge calls structuredClone internally
+  (config.weights as Configuration["weights"]).perCompany = companyWeights;
+  const endTime = Date.now();
   return {
     companyEvaluations,
-    overallTrafficLight,
-    llmProjectAssessment: feedback,
+    overallTrafficLight: overallTrafficLight.light,
+    rawOverallScore: overallTrafficLight.rawScore,
+    llmProjectAssessment: projectFeedback,
     metadata: {
-      usedConfiguration,
+      assessmentTimeMs: endTime - startTime,
+      generatedAt: new Date(endTime).toISOString(),
+      usedConfiguration: config as unknown as Configuration,
     },
   };
 };
 
-// TODO: weighted scoring used in multiple places. this logic should be centralized somewhere
-const calculateWeightedScore = <
-  T extends FinancialRisk | FundingHistory | TrafficLight
->(
-  scoreMap: Record<T, number>,
-  input: WeightedInput<T>
-): number => {
-  const valueScore = scoreMap[input.value];
-  return valueScore * input.weight;
-};
-
-type WeightedInput<T extends FinancialRisk | FundingHistory | TrafficLight> = {
-  value: T;
+type WeightedItem = {
   weight: number;
+  value?: number | TrafficLight;
 };
 
-const computeTrafficLight = (
-  financialRisk: WeightedInput<FinancialRisk>,
-  fundingHistory: WeightedInput<FundingHistory>,
-  relevancy: WeightedInput<TrafficLight>,
-  clarity: WeightedInput<TrafficLight>
-): TrafficLight => {
-  const financialRiskScore = calculateWeightedScore(
-    // Assume if no financial data was available risk is low
-    { low: 1, medium: 0.66, high: 0.33, "n/a": 1 },
-    financialRisk
+const calculateTrafficLight = (items: WeightedItem[], thresholds: ProjectAssessmentConfig["thresholds"]["trafficLight"]) => {
+  const rawScore = weightedPercentage(
+    items.map(({ weight, value }) => ({
+      weight,
+      value:
+        typeof value === "string"
+          ? enumToPercentage(value, thresholds)
+          : value,
+    }))
   );
-  const fundingHistoryScore = calculateWeightedScore(
-    { high: 1, medium: 0.66, low: 0.33, none: 0 },
-    fundingHistory
-  );
-  const relevancyScore = calculateWeightedScore(
-    { green: 1, yellow: 0.5, red: 0 },
-    relevancy
-  );
-  const clarityScore = calculateWeightedScore(
-    { green: 1, yellow: 0.5, red: 0 },
-    clarity
-  );
-  // Should be between 0 and 1
-  const totalScore =
-    financialRiskScore + fundingHistoryScore + relevancyScore + clarityScore;
-  const trafficLight =
-    totalScore >= 0.75 ? "green" : totalScore >= 0.4 ? "yellow" : "red";
-  return trafficLight;
+  return {
+    light: percentageToEnum(rawScore, thresholds),
+    rawScore,
+  };
 };
 
-// gets feedback for a company's role in the project from llm or null if no role description is provided
-const getFeedbackForRole = async (
-  overallDescription: string,
-  roleDescription: string | undefined
+const calculateCompanyTrafficLight = (
+  weights: ProjectAssessmentConfig["weights"]["company"],
+  trafficLightThresholds: ProjectAssessmentConfig["thresholds"]["trafficLight"],
+  financialRisk: number,
+  fundingHistory: number,
+  relevancy?: TrafficLight,
+  clarity?: TrafficLight
 ) =>
-  roleDescription
-    ? await generateFeedbackForCompany(overallDescription, roleDescription)
-    : undefined;
+  calculateTrafficLight([
+    { weight: weights.financialRisk, value: financialRisk },
+    { weight: weights.fundingHistory, value: fundingHistory },
+    { weight: weights.descriptionRelevancy, value: relevancy },
+    { weight: weights.descriptionClarity, value: clarity },
+  ], trafficLightThresholds);
 
-const computeOverallTrafficLight = (
-  companyEvaluations: ProjectOutput["companyEvaluations"],
-  budgets: number[],
-  totalBudget: number,
-  projectFeedback?: ProjectOutput["llmProjectAssessment"]
-): TrafficLight => {
-  // Calculate overall traffic light by weighting company traffic lights + llm project assessment
-  // Individual company traffic light should be weighted per their budget share
-  const trafficLightScores = companyEvaluations.map((evaluation, index) => {
-    const trafficLightScore = calculateWeightedScore(
-      { green: 1, yellow: 0.5, red: 0 },
-      { value: evaluation.trafficLight, weight: budgets[index] / totalBudget }
-    );
-    return trafficLightScore;
-  });
+const calculateOverallTrafficLight = (
+  weights: ProjectAssessmentConfig["weights"],
+  trafficLightThresholds: ProjectAssessmentConfig["thresholds"]["trafficLight"],
+  companyWeights: CompanyWeights,
+  companyScores: { businessId: string; score: number }[],
+  innovationScore?: TrafficLight,
+  strategicFitScore?: TrafficLight
+) => {
+  const rawCompanyScore = weightedPercentage(
+    companyScores.map((c) => ({
+      weight: companyWeights[c.businessId],
+      value: c.score,
+    }))
+  );
+  return calculateTrafficLight([
+    { weight: weights.project.allCompanyEvaluations, value: rawCompanyScore },
+    { weight: weights.project.innovation, value: innovationScore },
+    { weight: weights.project.strategicFit, value: strategicFitScore },
+  ], trafficLightThresholds);
+};
 
-  const overallTrafficLightScore =
-    trafficLightScores.reduce((sum, score) => sum + score, 0) * 8; // 0-8
+type CompanyWeights = Record<BusinessId, number>;
 
-  const strategicFitScore = projectFeedback
-    ? calculateWeightedScore(
-        { green: 1, yellow: 0.5, red: 0 },
-        { value: projectFeedback.strategicFitTrafficLight, weight: 1 }
-      )
-    : 0.5;
-
-  const innovationScore = projectFeedback
-    ? calculateWeightedScore(
-        { green: 1, yellow: 0.5, red: 0 },
-        { value: projectFeedback.innovationTrafficLight, weight: 1 }
-      )
-    : 0.5;
-
-  console.log({
-    overallTrafficLightScore,
-    strategicFitScore,
-    innovationScore,
-  });
-
-  const combinedPercentage =
-    (overallTrafficLightScore + strategicFitScore + innovationScore) / 10;
-
-  console.log({ combinedPercentage });
-
-  const overallTrafficLight =
-    overallTrafficLightScore >= 0.75
-      ? "green"
-      : overallTrafficLightScore >= 0.4
-      ? "yellow"
-      : "red";
-
-  return overallTrafficLight;
+const calculateCompanyWeights = (
+  companyScores: { businessId: string; score: number; budget: number }[]
+): CompanyWeights => {
+  const totalBudget = companyScores.reduce((a, c) => a + c.budget, 0);
+  return Object.fromEntries(
+    companyScores.map((c) => [
+      c.businessId,
+      roundToTwoDecimals(c.budget / totalBudget),
+    ])
+  );
 };
 
 export default assessProject;

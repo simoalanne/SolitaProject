@@ -109,14 +109,14 @@ export const validateInput = <T>(
       )
         ? (i.message as ErrorCode)
         : zodMessageToErrorCodeMap[
-        i.code as keyof typeof zodMessageToErrorCodeMap
-        ] || errorCodes.UNKNOWN_ERROR;
+            i.code as keyof typeof zodMessageToErrorCodeMap
+          ] || errorCodes.UNKNOWN_ERROR;
       const code =
         typeof codeOrCodePair === "string"
           ? codeOrCodePair
           : numericFields.includes(i.path[i.path.length - 1] as string)
-            ? codeOrCodePair.forNumber
-            : codeOrCodePair.forString;
+          ? codeOrCodePair.forNumber
+          : codeOrCodePair.forString;
 
       if (!acc[key]) acc[key] = { path: i.path, errorCodes: [] };
       acc[key].errorCodes.push(code);
@@ -177,7 +177,17 @@ export const FinancialDataSchema = z
 export const ConsortiumItemSchema = z
   .object({
     businessId: businessIdSchema,
-    displayName: z.string().optional().describe("Optional display name of the company. Will be returned in output if provided in input."),
+    displayName: z
+      .string()
+      .optional()
+      .describe(
+        "Optional display name of the company. Will be returned in output if provided in input."
+      ),
+    isStartupOrRDDriven: z
+      .boolean()
+      .describe(
+        "Indicates whether the company is a startup or R&D driven enterprise. If true certain rules will work differently."
+      ),
     budget: z
       .number()
       .min(budgetLimits.min)
@@ -190,8 +200,7 @@ export const ConsortiumItemSchema = z
       .string()
       .min(projectRoleDescLimits.min)
       .max(projectRoleDescLimits.max)
-      .describe("Small summary on what is the company's role in the project.")
-      .optional(),
+      .describe("Small summary on what is the company's role in the project."),
     financialData: FinancialDataSchema.optional(),
   })
   .superRefine((item, ctx) => {
@@ -260,9 +269,17 @@ export const LLMCompanyRoleAssessmentSchema = z
       "How clear is the company's role in the project based on the description provided. Can someone unfamiliar with the project understand what exactly will the company do in the project?"
     ),
     feedback: z.object({
-      en: z.string().describe("Short summary feedback on how well does the company fit into the project in English."),
-      fi: z.string().describe("Short summary feedback on how well does the company fit into the project in Finnish."),
-    })
+      en: z
+        .string()
+        .describe(
+          "Short summary feedback on how well does the company fit into the project in English."
+        ),
+      fi: z
+        .string()
+        .describe(
+          "Short summary feedback on how well does the company fit into the project in Finnish."
+        ),
+    }),
   })
   .describe(
     "Feedback from LLM on a single company's fit into the project. If no description was provided this is omitted."
@@ -277,169 +294,74 @@ export const LLMProjectAssessmentSchema = z
       "How well does the project align with Business Finland's goals and priorities based on the description provided. Why should Business Finland fund exactly this project?"
     ),
     feedback: z.object({
-      en: z.string().describe("Short few sentences feedback on why this project is or is not suitable for Business Finland funding in English."),
-      fi: z.string().describe("Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."),
-    })
+      en: z
+        .string()
+        .describe(
+          "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in English."
+        ),
+      fi: z
+        .string()
+        .describe(
+          "Short few sentences feedback on why this project is or is not suitable for Business Finland funding in Finnish."
+        ),
+    }),
   })
   .describe("Feedback from LLM on the overall project proposal");
-const InBetweenValueSchema = z.object({
-  value: z.number(),
-  min: z.number(),
-  max: z.number(),
-  step: z.number(),
-});
 
-export const FinancialRiskConfigurationSchema = z.object({
-  consecutiveLosses: z.object({
-    maxAllowedLossYears: InBetweenValueSchema,
-    startingIndex: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  lowProfitMargin: z.object({
-    minMarginPercent: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  highProfitVolatility: z.object({
-    maxVolatilityPercent: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  highRevenueVolatility: z.object({
-    maxVolatilityPercent: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  profitNotGrowing: z.object({
-    consecutiveYearsWithoutGrowth: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  revenueNotGrowing: z.object({
-    consecutiveYearsWithoutGrowth: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  swingsInRevenue: z.object({
-    maxSwingsThreshold: InBetweenValueSchema,
-    consideredASwingThreshold: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  swingsInProfit: z.object({
-    maxSwingsThreshold: InBetweenValueSchema,
-    consideredASwingThreshold: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  unrealisticBudget: z.object({
-    budgetToRevenueRatio: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  // These rules are always performed and these should not be configurable by the user
-  // Frontend can design whether it wants to show these as non editable fields or hide them completely
-  noFinancialData: z.object({
-    weight: InBetweenValueSchema,
-    readOnly: z.literal(true),
-  }),
-  noValidRevenueData: z.object({
-    weight: InBetweenValueSchema,
-    readOnly: z.literal(true),
-  }),
-});
+const ValueTypeSchema = z.enum(["decimal", "integer"]);
 
-export const FundingHistoryConfigurationSchema = z.object({
-  recentGrant: z.object({
-    minTimeAgo: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
+export const RuleConfigurationSchema = z.record(
+  z.string(),
+  z.object({
+    weight: z.number(), // the weights slider data should be shared and not duplicated by every single rule
     perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  multipleFundingInstances: z.object({
-    minTimes: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  mostlyGrants: z.object({
-    grantThreshold: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  oneFundingSignificantToRevenue: z.object({
-    percentageOfRevenue: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  oneFundingSignificantToTotal: z.object({
-    percentageOfTotalFunding: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  steadyFundingGrowth: z.object({
-    growthYearsThreshold: InBetweenValueSchema,
-    weight: InBetweenValueSchema,
-    perform: z.boolean(),
-    readOnly: z.boolean().optional(),
-  }),
-  // These rules are always performed and these should not be configurable by the user
-  // Frontend can design whether it wants to show these as non editable fields or hide them completely
-  noFundingHistory: z.object({
-    weight: InBetweenValueSchema,
-    readOnly: z.literal(true),
-  }),
-});
-
+    // For now all params are numbers so no need to over-engineer to support other types
+    params: z
+      .record(
+        z.string(),
+        z.object({
+          value: z.number(),
+          type: ValueTypeSchema,
+          slider: z.object({
+            min: z.number(),
+            max: z.number(),
+            step: z.number(),
+          }),
+        })
+      )
+      .optional(),
+    // Again since the structure is simple no need to over-engineer
+    readonlyFields: z
+      .array(z.enum(["weight", "perform", "params.0", "params.1", "params.2"]))
+      .optional(),
+  })
+);
 
 export const WeightsSchema = z
   .object({
     company: z.object({
-      financialRisk: InBetweenValueSchema.describe(
-        "Weight of financial risk in overall company evaluation."
-      ),
-      fundingHistory: InBetweenValueSchema.describe(
-        "Weight of funding history in overall company evaluation."
-      ),
-      descriptionClarity: InBetweenValueSchema.describe(
-        "Weight of company description clarity in overall company evaluation."
-      ),
-      descriptionRelevancy: InBetweenValueSchema.describe(
-        "Weight of company description relevancy in overall company evaluation."
-      ),
+      financialRisk: z.number(),
+      fundingHistory: z.number(),
+      descriptionClarity: z.number(),
+      descriptionRelevancy: z.number(),
     }),
     project: z.object({
-      allCompanyEvaluations: InBetweenValueSchema.describe(
-        "Weight of all company evaluations in overall project evaluation."
-      ),
-      innovation: InBetweenValueSchema.describe(
-        "Weight of project innovation in overall project evaluation."
-      ),
-      strategicFit: InBetweenValueSchema.describe(
-        "Weight of project strategic fit in overall project evaluation."
-      ),
+      allCompanyEvaluations: z.number(),
+      innovation: z.number(),
+      strategicFit: z.number(),
     }),
     perCompany: z
       .record(
         businessIdSchema,
         // this should be between 0 and 1 unlike other weights because it's
         // a direct percentage of the total budget
-        z.number().min(0).max(1).describe(
-          "Weight of the company in overall project evaluation based on their budget share."
-        )
+        z
+          .number()
+          .min(0)
+          .max(1)
+          .describe(
+            "Weight of the company in overall project evaluation based on their budget share."
+          )
       )
       .describe(
         "Weights of each company in the project based on their budget shares."
@@ -451,9 +373,16 @@ export const WeightsSchema = z
   );
 
 export const ConfigurationSchema = z.object({
-  financialRisk: FinancialRiskConfigurationSchema,
-  fundingHistory: FundingHistoryConfigurationSchema,
+  financialRisk: RuleConfigurationSchema,
+  fundingHistory: RuleConfigurationSchema,
   weights: WeightsSchema,
+  shared: z.object({
+    weightSlider: z.object({
+      min: z.number(),
+      max: z.number(),
+      step: z.number(),
+    }),
+  }),
 });
 
 export const ProjectInputSchema = z.object({
@@ -468,219 +397,47 @@ export const ProjectInputSchema = z.object({
   ),
 });
 
-const FinancialRiskRuleSchema = z.discriminatedUnion("code", [
-  z.object({
-    code: z.literal("noFinancialData"),
-    outcome: z.literal("n/a"),
-  }),
-  z.object({
-    code: z.literal("noValidRevenueData"),
-    outcome: z.literal("unfavorable"),
-  }),
-  z.object({
-    code: z.literal("unrealisticBudget"),
-    params: z.object({
-      projectBudget: z.number().describe("Project budget amount."),
-      latestRevenue: z
-        .number()
-        .describe("Revenue amount against which the budget was compared."),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("consecutiveLosses"),
-    params: z.object({
-      lossYears: z
-        .number()
-        .describe(
-          "Number of consecutive years where operating profit was negative."
-        ),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("lowProfitMargin"),
-    params: z.object({
-      averageMarginPercent: z
-        .string()
-        .describe(
-          "Calculated average profit margin percentage in format XX.XX%."
-        ),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("highProfitVolatility"),
-    params: z.object({
-      volatilityPercent: z
-        .string()
-        .describe("Calculated profit volatility percentage in format XX.XX%."),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("highRevenueVolatility"),
-    params: z.object({
-      volatilityPercent: z
-        .string()
-        .describe("Calculated revenue volatility percentage in format XX.XX%."),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("revenueNotGrowing"),
-    params: z.object({
-      foundYears: z
-        .number()
-        .describe(
-          "Number of consecutive years where revenue did not grow compared to previous year."
-        ),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("profitNotGrowing"),
-    params: z.object({
-      foundYears: z
-        .number()
-        .describe(
-          "Number of consecutive years where operating profit did not grow compared to previous year."
-        ),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("swingsInRevenue"),
-    params: z.object({
-      swingsCount: z
-        .number()
-        .describe(
-          "Number of direction changes in revenue growth over the years."
-        ),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("swingsInProfit"),
-    params: z.object({
-      swingsCount: z
-        .number()
-        .describe(
-          "Number of direction changes in profit growth over the years."
-        ),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-]);
-
-const FundingRuleSchema = z.discriminatedUnion("code", [
-  z.object({
-    code: z.literal("noFundingHistory"),
-    outcome: z.literal("n/a"),
-  }),
-  z.object({
-    code: z.literal("recentGrant"),
-    params: z.object({
-      mostRecentYear: z
-        .number()
-        .describe("Year of the most recent grant received."),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("multipleFundingInstances"),
-    params: z.object({
-      times: z.number().describe("Number of funding instances found."),
-    }),
-    outcome: z.enum(["favorable", "unfavorable"]),
-  }),
-  z.object({
-    code: z.literal("mostlyGrants"),
-    params: z.object({
-      percentage: z
-        .string()
-        .describe(
-          "Percentage of funding entries that are grants in format XX.X%."
-        ),
-    }),
+const RuleSchema = z
+  .object({
+    code: z
+      .string()
+      .describe("This should match the code in the configuration."),
     outcome: z.enum(["favorable", "unfavorable", "n/a"]),
-  }),
-  z.object({
-    code: z.literal("oneFundingSignificantToRevenue"),
-    params: z
-      .object({
-        largestFundingAmount: z
-          .number()
-          .describe("amount of the largest single funding entry."),
-        receivedYear: z
-          .number()
-          .describe("Year when the largest funding was received."),
-        isLoan: z
-          .boolean()
-          .describe("Whether the largest funding entry was a loan."),
-        averageAnnualRevenue: z
-          .number()
-          .describe("Average annual revenue of the company."),
-      })
+    values: z
+      .record(
+        z.string(),
+        z.object({
+          value: z.number(),
+          type: ValueTypeSchema,
+        })
+      )
       .optional(),
-    outcome: z
-      .enum(["favorable", "unfavorable", "n/a"])
-      .describe(
-        '"n/a" outcome can happen if less than 2 funding entries exist'
-      ),
-  }),
-  z.object({
-    code: z.literal("oneFundingSignificantToTotal"),
-    params: z
-      .object({
-        largestFundingAmount: z
-          .number()
-          .describe("Amount of the largest single funding entry."),
-        totalFundingAmount: z
-          .number()
-          .describe("Total funding amount received from Business Finland."),
-      })
-      .optional(),
-    outcome: z.enum(["favorable", "unfavorable", "n/a"]),
-  }),
-  z.object({
-    code: z.literal("steadyFundingGrowth"),
-    params: z
-      .object({
-        growthYearsPercent: z
-          .string()
-          .describe(
-            "Percentage of years where funding amount grew compared to previous year in format XX.XX%."
-          ),
-      })
-      .optional(),
-    outcome: z
-      .enum(["favorable", "unfavorable", "n/a"])
-      .describe(
-        '"n/a" outcome can happen if less than 2 funding entries exist'
-      ),
-  }),
-]);
+  })
+  .describe("List of rules that were used to determine the outcome.");
 
 export const CompanyEvaluationSchema = z
   .object({
     businessId: businessIdSchema,
-    displayName: z.string().optional().describe("Optional display name of the company. Will be returned in output if provided in input."),
+    displayName: z
+      .string()
+      .optional()
+      .describe(
+        "Optional display name of the company. Will be returned in output if provided in input."
+      ),
+    rawScore: z
+      .number()
+      .describe(
+        "Raw score for the company as a decimal between 0 and 1 before mapping to traffic light."
+      ),
     fundingHistory: z.object({
       result: FundingHistorySchema,
-      rules: z
-        .array(FundingRuleSchema)
-        .describe(
-          "List of rules that were used to determine the funding history."
-        ),
+      rawScore: z.number(),
+      rules: z.array(RuleSchema),
     }),
     financialRisk: z.object({
       result: FinancialRiskSchema,
-      rules: z
-        .array(FinancialRiskRuleSchema)
-        .describe(
-          "List of rules that were used to determine the financial risk."
-        ),
+      rawScore: z.number(),
+      rules: z.array(RuleSchema),
     }),
     llmRoleAssessment: LLMCompanyRoleAssessmentSchema.optional(),
     trafficLight: TrafficLightSchema,
@@ -695,8 +452,19 @@ export const ProjectOutputSchema = z.object({
   overallTrafficLight: TrafficLightSchema.describe(
     "Overall traffic light rating for the entire project based on weighted company evaluations based on their budget shares as well as LLM novelty and strategic fit assessments."
   ),
+  rawOverallScore: z
+    .number()
+    .describe(
+      "Raw overall score for the project as a decimal between 0 and 1 before mapping to traffic light."
+    ),
   llmProjectAssessment: LLMProjectAssessmentSchema.optional(),
   metadata: z.object({
+    generatedAt: z
+      .string()
+      .describe("Timestamp when the assessment was generated."),
+    assessmentTimeMs: z
+      .number()
+      .describe("Time taken to generate the assessment in milliseconds."),
     usedConfiguration: ConfigurationSchema.describe(
       "The configuration that was used to perform the analysis. Either default or user provided."
     ),
@@ -717,11 +485,8 @@ export const allSchemas = {
   CompanyEvaluation: CompanyEvaluationSchema,
   ProjectOutput: ProjectOutputSchema,
   ValidationErrors: ValidationErrorsSchema,
-  FundingRule: FundingRuleSchema,
-  FinancialRiskRule: FinancialRiskRuleSchema,
+  Configuration: ConfigurationSchema,
   Weights: WeightsSchema,
-  FinancialRiskMeta: FinancialRiskConfigurationSchema,
-  FundingHistoryMeta: FundingHistoryConfigurationSchema,
   BaseConfiguration: ProjectInputSchema.shape.configuration,
 };
 
@@ -739,6 +504,5 @@ export type LLMCompanyRoleAssessment = z.infer<
 export type CompanyEvaluation = z.infer<typeof CompanyEvaluationSchema>;
 export type FinancialRisk = z.infer<typeof FinancialRiskSchema>;
 export type FundingHistory = z.infer<typeof FundingHistorySchema>;
-export type FinancialRiskRule = z.infer<typeof FinancialRiskRuleSchema>;
-export type FundingRule = z.infer<typeof FundingRuleSchema>;
-export type ProjectAssesmentConfiguration = ProjectInput["configuration"];
+export type Configuration = z.infer<typeof ConfigurationSchema>;
+export type Rule = z.infer<typeof RuleSchema>;
