@@ -1,0 +1,67 @@
+.fdi-container {
+  max-width: 40vw; /* Stupid fix because for some reason when the manual tab is open the entire form gets wider */
+}
+
+.fdi-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.fdi-tab-btn {
+  text-align: center;
+  background-color: var(--button-bg2);
+  color: var(--text-color);
+  border-radius: 5px;
+  padding: 6px 12px;
+}
+
+.fdi-manual-tab {
+  max-width: 400px;
+}
+
+.fdi-tab-btn:hover {
+  background-color: var(--button-bg2-hover);
+}
+
+.fdi-tab-btn.active {
+  background-color: var(--button-bg2-hover);
+}
+
+.fdi-valid-synced {
+  margin-left: auto;
+  color: green;
+  font-weight: 600;
+}
+
+.fdi-grid {
+  display: grid;
+  grid-template-columns: 120px repeat(5, 1fr);
+  gap: 6px;
+}
+
+.fdi-input {
+  padding: 4px;
+}
+
+.fdi-save-btn {
+  margin-top: 12px;
+  padding: 8px 14px;
+}
+
+.fdi-paste-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fdi-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 8px;
+}
+
+.fdi-link {
+  color: #0077cc;
+}

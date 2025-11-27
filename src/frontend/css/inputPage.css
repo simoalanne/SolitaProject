@@ -142,6 +142,22 @@ button {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
+.delete-company-button-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.financial-data-container {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1/-1;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-top: 1rem;
+    background-color: var(--financial-data-bg);
+}
+
 .kauppalehti-button {
     font-size: medium;
     margin-top: 10px;
@@ -165,11 +181,10 @@ button {
 
 /*-----input kauppalehti------*/
 .kauppalehti-container {
-    display: grid;
-    /* grid-template-columns: repeat(2, 1fr); */
-    justify-items: center;
-    align-items: center;
-    padding-bottom: 10px;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 2rem;
+    padding-bottom: 1rem;
     grid-column: 1/-1;
     width: 100%;
 }

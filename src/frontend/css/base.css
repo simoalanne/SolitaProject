@@ -36,10 +36,6 @@
     align-items: center;
 
     background-color: var(--form-bg);
-
-    width: 80vw;
-    min-height: 50vh;
-    max-height: 85vh;
     border: 2px solid var(--muted-color);
     border-radius: 8px;
     box-shadow: 0 0 2px #000000;

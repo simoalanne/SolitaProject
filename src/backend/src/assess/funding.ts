@@ -1,11 +1,15 @@
-import {
-  type FundingHistory,
-  type FundingRule,
-  type ProjectAssesmentConfiguration,
-} from "@myorg/shared";
+import { type FundingHistory, type Rule } from "@myorg/shared";
+import type { ProjectAssessmentConfig } from "../config/projectAssesmentConfig.ts";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  makeAssessment,
+  makeRule,
+  outcomeFromBool,
+  roundToTwoDecimals,
+  type Assessment,
+} from "./common.ts";
 
 export type FundingEntry = { year: number; amount: number; isLoan: boolean };
 export type FundingData = Record<string, FundingEntry[]>;
@@ -43,88 +47,44 @@ const fundingData = await loadFundingData();
 export const getFundingHistoryForCompany = (
   businessId: string,
   averageAnnualRevenue: number | null,
-  config: NonNullable<ProjectAssesmentConfiguration>["fundingHistory"]
-): { result: FundingHistory; rules: FundingRule[] } => {
+  // Not used currently but maybe in the future
+  isStartupOrRDDriven: boolean,
+  config: ProjectAssessmentConfig["fundingHistory"],
+  fundingHistoryThresholds: ProjectAssessmentConfig["thresholds"]["fundingHistory"]
+): Assessment<FundingHistory> => {
   const fundingEntry = fundingData[businessId];
 
   if (!fundingEntry) {
     return {
       result: "none",
+      rawScore: 0,
       rules: [{ code: "noFundingHistory", outcome: "n/a" }],
     };
   }
 
-  const checks = [
-    {
-      check: hasRecentGrant(fundingEntry, config.recentGrant.minTimeAgo.value),
-      weight: config.recentGrant.weight,
-      perform: config.recentGrant.perform,
-    },
-    {
-      check: hasMultipleFundingInstances(
-        fundingEntry,
-        config.multipleFundingInstances.minTimes.value
-      ),
-      weight: config.multipleFundingInstances.weight,
-      perform: config.multipleFundingInstances.perform,
-    },
-    {
-      check: hasMostlyGrants(fundingEntry, config.mostlyGrants.grantThreshold.value),
-      weight: config.mostlyGrants.weight,
-      perform: config.mostlyGrants.perform,
-    },
-    {
-      check: hasOneFundingSignificantToRevenue(
-        fundingEntry,
-        config.oneFundingSignificantToRevenue.percentageOfRevenue.value,
-        averageAnnualRevenue
-      ),
-      weight: config.oneFundingSignificantToRevenue.weight,
-      perform: config.oneFundingSignificantToRevenue.perform,
-    },
-    {
-      check: hasOneFundingSignificantToTotal(
-        fundingEntry,
-        config.oneFundingSignificantToTotal.percentageOfTotalFunding.value
-      ),
-      weight: config.oneFundingSignificantToTotal.weight,
-      perform: config.oneFundingSignificantToTotal.perform,
-    },
-    {
-      check: hasSteadyFundingGrowth(
-        fundingEntry,
-        config.steadyFundingGrowth.growthYearsThreshold.value
-      ),
-      weight: config.steadyFundingGrowth.weight,
-      perform: config.steadyFundingGrowth.perform,
-    },
-  ].filter((ind) => ind.perform);
+  const rules = [
+    makeRule(hasRecentGrant, config.recentGrant, fundingEntry),
+    makeRule(
+      hasMultipleFundingInstances,
+      config.multipleFundingInstances,
+      fundingEntry
+    ),
+    makeRule(
+      hasOneFundingSignificantToRevenue,
+      config.oneFundingSignificantToRevenue,
+      fundingEntry,
+      averageAnnualRevenue
+    ),
+    makeRule(
+      hasOneFundingSignificantToTotal,
+      config.oneFundingSignificantToTotal,
+      fundingEntry
+    ),
+    makeRule(hasSteadyFundingGrowth, config.steadyFundingGrowth, fundingEntry),
+  ];
 
-  const totalWeight = checks.reduce((sum, ind) => sum + ind.weight.value, 0);
-  const achievedScore = checks
-    .map(
-      (ind) =>
-        outcomeToWeight(ind.check.outcome as FundingRule["outcome"]) *
-        ind.weight.value
-    )
-    .reduce((sum, val) => sum + val, 0);
-
-  const percentage = achievedScore / totalWeight;
-
-  const rules = checks.map((ind) => ind.check);
-
-  if (percentage === 0) return { result: "none", rules };
-  if (percentage <= 0.33) return { result: "low", rules };
-  if (percentage <= 0.66) return { result: "medium", rules };
-  return { result: "high", rules };
+  return makeAssessment(rules, fundingHistoryThresholds);
 };
-
-const outcomeToWeight = (outcome: FundingRule["outcome"]): number =>
-  ({ "n/a": 0.5, unfavorable: 0, favorable: 1 }[outcome]);
-
-// helper for mapping boolean -> outcome enum
-const getOutcome = (positive: boolean) =>
-  positive ? "favorable" : "unfavorable";
 
 /**
  * Checks if funding includes a grant received within the specified number of years.
@@ -132,16 +92,13 @@ const getOutcome = (positive: boolean) =>
  * @param minTimeAgo - Number of years to look back for recent grants.
  * @returns A rule indicating whether a recent grant was found.
  */
-const hasRecentGrant = (
-  funding: FundingEntry[],
-  minTimeAgo: number
-): Extract<FundingRule, { code: "recentGrant" }> => {
+const hasRecentGrant = (funding: FundingEntry[], minTimeAgo: number): Rule => {
   const mostRecentYear = funding.at(-1)!.year;
-  const favorable = mostRecentYear >= new Date().getFullYear() - minTimeAgo;
+  const favorable = mostRecentYear <= new Date().getFullYear() - minTimeAgo;
   return {
     code: "recentGrant",
-    params: { mostRecentYear },
-    outcome: getOutcome(favorable),
+    values: { mostRecentYear: { value: mostRecentYear, type: "integer" } },
+    outcome: outcomeFromBool(favorable),
   };
 };
 
@@ -154,35 +111,12 @@ const hasRecentGrant = (
 const hasMultipleFundingInstances = (
   funding: FundingEntry[],
   minTimes: number
-): Extract<FundingRule, { code: "multipleFundingInstances" }> => {
-  const favorable = funding.length >= minTimes;
+): Rule => {
+  const favorable = funding.length <= minTimes;
   return {
     code: "multipleFundingInstances",
-    params: { times: funding.length },
-    outcome: getOutcome(favorable),
-  };
-};
-
-const formatPercentage = (value: number, decimals = 1) =>
-  `${value.toFixed(decimals)}%`;
-
-/**
- * Checks if the majority of funding entries are grants (not loans).
- * @param funding - Array of funding entries.
- * @param grantThreshold - threshold ratio to consider majority as grants.
- * @returns A rule indicating whether the majority of funding entries are grants.
- */
-const hasMostlyGrants = (
-  funding: FundingEntry[],
-  grantThreshold: number
-): Extract<FundingRule, { code: "mostlyGrants" }> => {
-  const grantCount = funding.filter((f) => !f.isLoan).length;
-  const total = funding.length;
-  const favorable = grantCount / total >= grantThreshold;
-  return {
-    code: "mostlyGrants",
-    params: { percentage: formatPercentage((grantCount / total) * 100) },
-    outcome: getOutcome(favorable),
+    values: { times: { value: funding.length, type: "integer" } },
+    outcome: outcomeFromBool(favorable),
   };
 };
 
@@ -195,9 +129,9 @@ const hasMostlyGrants = (
  */
 const hasOneFundingSignificantToRevenue = (
   funding: FundingEntry[],
-  percentageOfRevenue: number,
-  averageAnnualRevenue: number | null = null
-): Extract<FundingRule, { code: "oneFundingSignificantToRevenue" }> => {
+  averageAnnualRevenue: number | null = null,
+  percentageOfRevenue: number
+): Rule => {
   if (!averageAnnualRevenue)
     return {
       code: "oneFundingSignificantToRevenue",
@@ -212,13 +146,15 @@ const hasOneFundingSignificantToRevenue = (
   const favorable = maxFundingEntry.amount >= threshold;
   return {
     code: "oneFundingSignificantToRevenue",
-    params: {
-      largestFundingAmount: maxFundingEntry.amount,
-      averageAnnualRevenue,
-      receivedYear: maxFundingEntry.year,
-      isLoan: maxFundingEntry.isLoan,
+    values: {
+      percentage: {
+        value: roundToTwoDecimals(
+          maxFundingEntry.amount / averageAnnualRevenue
+        ),
+        type: "decimal",
+      },
     },
-    outcome: getOutcome(favorable),
+    outcome: outcomeFromBool(favorable),
   };
 };
 
@@ -231,7 +167,7 @@ const hasOneFundingSignificantToRevenue = (
 const hasOneFundingSignificantToTotal = (
   funding: FundingEntry[],
   ratio: number
-): Extract<FundingRule, { code: "oneFundingSignificantToTotal" }> => {
+): Rule => {
   if (funding.length < 2)
     return { code: "oneFundingSignificantToTotal", outcome: "n/a" };
   const total = funding.reduce((sum, f) => sum + f.amount, 0);
@@ -239,8 +175,13 @@ const hasOneFundingSignificantToTotal = (
   const favorable = largest / total >= ratio;
   return {
     code: "oneFundingSignificantToTotal",
-    outcome: getOutcome(favorable),
-    params: { largestFundingAmount: largest, totalFundingAmount: total },
+    outcome: outcomeFromBool(favorable),
+    values: {
+      percentage: {
+        value: roundToTwoDecimals(largest / total),
+        type: "decimal",
+      },
+    },
   };
 };
 
@@ -253,7 +194,7 @@ const hasOneFundingSignificantToTotal = (
 const hasSteadyFundingGrowth = (
   funding: FundingEntry[],
   threshold: number
-): Extract<FundingRule, { code: "steadyFundingGrowth" }> => {
+): Rule => {
   if (funding.length < 2)
     return {
       code: "steadyFundingGrowth",
@@ -268,7 +209,9 @@ const hasSteadyFundingGrowth = (
 
   return {
     code: "steadyFundingGrowth",
-    params: { growthYearsPercent: formatPercentage(ratio * 100) },
-    outcome: getOutcome(favorable),
+    values: {
+      growthYearsPercent: { value: roundToTwoDecimals(ratio), type: "decimal" },
+    },
+    outcome: outcomeFromBool(favorable),
   };
 };

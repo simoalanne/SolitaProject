@@ -6,7 +6,7 @@
 
 .toggle-button-label {
   font-size: 14px;
-  color: #333;
+  color: var(--text-color);
 }
 
 .toggle-button {
@@ -54,4 +54,9 @@
 
 .toggle-button.on .toggle-thumb {
   transform: translateX(22px);
+}
+
+.toggle-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

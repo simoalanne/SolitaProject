@@ -8,7 +8,6 @@ import {
   validateInput,
   type Company,
   type ErrorCode,
-  FinancialDataSchema,
   businessIdSchema,
   fieldsMetadata,
 } from "@myorg/shared";
@@ -18,11 +17,12 @@ import PlaceHolderOutput from "./OutputPage";
 import "../../css/base.css";
 import "../../css/inputPage.css";
 import { useTranslation } from "../i18n/useTranslation";
-import parseKauppalehtiData from "../utils/kauppalehtiParser";
 import { useDebouncedCallback } from "use-debounce";
 import AutoCompleteInput from "../components/AutoCompleteInput";
 import AdvancedFormConfiguration from "../components/AdvancedFormConfiguration";
 import { Plus, Minus } from "lucide-react";
+import ToggleButton from "../components/ToggleButton";
+import FinancialDataInput from "../components/FinancialDataInput";
 
 // We'll use translations for common error messages. The translation keys are
 // prefixed with `error_` + the ErrorCode name.
@@ -52,6 +52,7 @@ const PlaceHolderInput = () => {
     budget: 0,
     requestedFunding: 0,
     projectRoleDescription: "",
+    isStartupOrRDDriven: false,
   };
 
   const initialForm: ProjectInput = {
@@ -109,8 +110,8 @@ const PlaceHolderInput = () => {
     const fullUrl = inputIsBusinessId
       ? `${base}/by-business-id?businessId=${encodeURIComponent(inputValue)}`
       : `${base}/autocomplete?partialName=${encodeURIComponent(
-        inputValue
-      )}&limit=${limit}`;
+          inputValue
+        )}&limit=${limit}`;
 
     const response = await fetch(fullUrl);
 
@@ -186,7 +187,7 @@ const PlaceHolderInput = () => {
     const error = !!errors[fieldPath.join(".")];
     const specificError = specificErrorCode
       ? errors[fieldPath.join(".")] ===
-      errorMessages[specificErrorCode as ErrorCode]
+        errorMessages[specificErrorCode as ErrorCode]
       : true;
     return error && specificError;
   };
@@ -329,10 +330,10 @@ const PlaceHolderInput = () => {
                     // autocomplete input
                     "BUSINESS_IDS_NOT_UNIQUE"
                   ) && (
-                      <p className="error-text">
-                        {getError(index, "businessId")}
-                      </p>
-                    )}
+                    <p className="error-text">
+                      {getError(index, "businessId")}
+                    </p>
+                  )}
                 </div>
 
                 <div className="input-box">
@@ -429,49 +430,31 @@ const PlaceHolderInput = () => {
                       </p>
                     )}
                 </div>
-                <div className="input-box desc-box">
-                  <textarea
-                    value={
-                      c.financialData
-                        ? `Revenues: ${c.financialData.revenues.join(
-                          ", "
-                        )}\nProfits: ${c.financialData.profits.join(", ")}`
-                        : c.financialData
-                    }
-                    readOnly={
-                      validateInput(c.financialData, FinancialDataSchema)
-                        .errors == null
-                    }
-                    // The field can only ever be undefined or contain valid data and be readOnly
-                    onChange={(e) =>
+                <div className="financial-data-container">
+                  <ToggleButton
+                    label={t("is_startup_or_rd_driven")}
+                    value={c.isStartupOrRDDriven}
+                    onToggle={(value) =>
                       updateForm(
-                        ["consortium", index, "financialData"],
-                        parseKauppalehtiData(e.target.value)
+                        ["consortium", index, "isStartupOrRDDriven"],
+                        value
                       )
                     }
-                    name="financial-id"
-                    placeholder={t("paste_financial_data")}
-                    className="desc-textarea"
+                    readonly={false}
+                  />
+                  <FinancialDataInput
+                    businessId={
+                      validateInput(c.businessId, businessIdSchema).errors
+                        ? undefined
+                        : c.businessId
+                    }
+                    isSynced={!!c.financialData}
+                    onSyncToForm={(data) =>
+                      updateForm(["consortium", index, "financialData"], data)
+                    }
                   />
                 </div>
                 <div className="kauppalehti-container">
-                  {/* Show the button only if the businessId can at least formatwise be valid */}
-                  {!validateInput(c.businessId, businessIdSchema).errors &&
-                    !c.financialData && (
-                      <button className="kauppalehti-button">
-                        <a
-                          className="kauppalehti-link"
-                          href={`https://www.kauppalehti.fi/yritykset/yritys/${c.businessId.replace(
-                            /-/g,
-                            ""
-                          )}#taloustiedot`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {t("open_kauppalehti")}
-                        </a>
-                      </button>
-                    )}
                   {index === 0 ? null : (
                     <button
                       id="del-btn"
@@ -481,20 +464,6 @@ const PlaceHolderInput = () => {
                       <Minus size={24} />
                     </button>
                   )}
-                  {!validateInput(c.financialData, FinancialDataSchema)
-                    .errors && (
-                      <button
-                        className="clear-financial-button"
-                        onClick={() =>
-                          updateForm(
-                            ["consortium", index, "financialData"],
-                            undefined
-                          )
-                        }
-                      >
-                        {t("clear_financial_data")}
-                      </button>
-                    )}
                 </div>
               </div>
             </React.Fragment>

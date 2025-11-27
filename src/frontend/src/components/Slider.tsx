@@ -10,6 +10,8 @@ type SliderProps = {
   step?: number;
   defaultValue?: number;
   tooltip?: string;
+  readonly: boolean;
+  type: "decimal" | "integer";
 };
 
 const Slider = ({
@@ -21,6 +23,8 @@ const Slider = ({
   step = 1,
   defaultValue,
   tooltip,
+  readonly,
+  type,
 }: SliderProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(Number(e.target.value));
@@ -29,6 +33,10 @@ const Slider = ({
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
+
+  const formatVal = (val: number) => {
+    return type === "decimal" ? `${Math.round(val * 100)}%` : val;
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -57,7 +65,7 @@ const Slider = ({
 
   return (
    <div className="slider-container" ref={wrapperRef}>
-  <p className="slider-label">
+  <div className="slider-label">
     {label}
     {tooltip && (
       <span className={`slider-tooltip ${open ? "open" : ""}`}>
@@ -86,12 +94,13 @@ const Slider = ({
         </div>
       </span>
     )}
-  </p>
+  </div>
   <div className="slider-wrapper">
     <input
       type="range"
       min={min}
       max={max}
+      disabled={readonly}
       step={step}
       value={value}
       onChange={handleChange}
@@ -103,7 +112,7 @@ const Slider = ({
         className="slider-default-value"
         style={{ left: `${((defaultValue - min) / (max - min)) * 100}%` }}
       >
-        {defaultValue}
+        {formatVal(defaultValue)}
       </div>
     )}
 
@@ -111,7 +120,7 @@ const Slider = ({
       className="slider-value"
       style={{ left: `${((value - min) / (max - min)) * 100}%` }}
     >
-      {value}
+      {formatVal(value)}
     </div>
   </div>
 </div>

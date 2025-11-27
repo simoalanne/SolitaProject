@@ -15,12 +15,13 @@ export const ConfigSlider = ({
   updateForm,
   t,
 }: ConfigSliderProps) => {
-  const handleChange = (val: number) =>
-    updateForm(param.path, { ...param, value: Number(val) });
+  const handleChange = (val: number) => {
+    updateForm(param.path, val);
+  };
 
   const isRuleWeight = param.path[param.path.length - 1] === "weight";
   const isGroupWeight = param.path[0] === "weights";
-  const tooltipKey = `${param.path.join(".")}.tooltip`;
+  const tooltipKey = `${param.i18nKey ? param.i18nKey.join(".") : param.path.join(".")}.tooltip`;
   // call t with a cast because key is computed at runtime
   const rawTooltip = t(tooltipKey as Parameters<typeof t>[0]);
   let tooltip: string | undefined;
@@ -38,7 +39,7 @@ export const ConfigSlider = ({
   return (
     <Slider
       key={param.path.join(".")}
-      label={getLabel(param.path, t)}
+      label={getLabel(param.i18nKey || param.path, t)}
       tooltip={tooltip}
       value={param.value}
       min={param.min}
@@ -46,12 +47,18 @@ export const ConfigSlider = ({
       step={param.step}
       defaultValue={findSliderDefault(defaults, param.path)}
       onChange={handleChange}
+      readonly={param.readonly || false}
+      type={param.type}
     />
   );
 };
 
-
-export const RuleConfig = ({ rule, defaults, updateForm, t }: RuleConfigProps) => (
+export const RuleConfig = ({
+  rule,
+  defaults,
+  updateForm,
+  t,
+}: RuleConfigProps) => (
   <div className="config-rule">
     <div className="rule-header">
       <h4 className="rule-title">{getLabel(rule.path, t)}</h4>
@@ -61,22 +68,27 @@ export const RuleConfig = ({ rule, defaults, updateForm, t }: RuleConfigProps) =
           label=""
           value={rule.perform.value}
           onToggle={(val: boolean) => updateForm(rule.perform.path, val)}
+          readonly={rule.perform.readonly || false}
         />
       </div>
     </div>
 
     {rule.perform.value && (
       <div className="rule-params">
-        <p>{t("rule_parameters")}:</p>
-        {rule.params.map((param: SliderOption) => (
-          <ConfigSlider
-            key={param.path.join(".")}
-            param={param}
-            defaults={defaults}
-            updateForm={updateForm}
-            t={t}
-          />
-        ))}
+        {rule.params.length > 0 && (
+          <>
+            <p>{t("rule_parameters")}:</p>
+            {rule.params.map((param: SliderOption) => (
+              <ConfigSlider
+                key={param.path.join(".")}
+                param={param}
+                defaults={defaults}
+                updateForm={updateForm}
+                t={t}
+              />
+            ))}
+          </>
+        )}
         <p>{t("rule_weight")}:</p>
         {rule.weight && (
           <ConfigSlider
@@ -91,7 +103,6 @@ export const RuleConfig = ({ rule, defaults, updateForm, t }: RuleConfigProps) =
     )}
   </div>
 );
-
 
 export const WeightsGroup = ({
   title,
@@ -119,7 +130,7 @@ export const findSliderDefault = (obj: any, path: Path): number | undefined => {
   for (const segment of path) {
     current = current?.[segment];
   }
-  return typeof current?.value === "number" ? current.value : undefined;
+  return typeof current === "number" ? current : undefined;
 };
 
 const humanizeSegment = (seg: string | number) => {
@@ -145,4 +156,3 @@ export const getLabel = (
   if (translated === key) return humanizePath(fieldPath);
   return translated;
 };
-

@@ -6,9 +6,10 @@ type ToggleButtonProps = {
   value: boolean;
   label: string;
   onToggle: (value: boolean) => void;
+  readonly: boolean;
 };
 
-const ToggleButton = ({ value, label, onToggle }: ToggleButtonProps) => {
+const ToggleButton = ({ value, label, onToggle, readonly }: ToggleButtonProps) => {
   const { theme } = useContext(ThemeContext);
   return (
     <div className="toggle-button-container">
@@ -18,6 +19,7 @@ const ToggleButton = ({ value, label, onToggle }: ToggleButtonProps) => {
         className={`toggle-button ${value ? "on" : "off"} ${theme}`}
         onClick={() => onToggle(!value)}
         aria-pressed={value}
+        disabled={readonly}
       >
         <div className="toggle-thumb" />
       </button>

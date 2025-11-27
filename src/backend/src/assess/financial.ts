@@ -1,123 +1,107 @@
+import { type FinancialRisk, type Consortium, type Rule } from "@myorg/shared";
+import type { ProjectAssessmentConfig } from "../config/projectAssesmentConfig.ts";
 import {
-  type FinancialRisk,
-  type Consortium,
-  type FinancialRiskRule,
-  type ProjectAssesmentConfiguration,
-} from "@myorg/shared";
+  makeAssessment,
+  makeRule,
+  roundToTwoDecimals,
+  type Assessment,
+} from "./common.ts";
+import { outcomeFromBool, avg } from "./common.ts";
 
-const getOutcome = (positive: boolean): "favorable" | "unfavorable" =>
-  positive ? "favorable" : "unfavorable";
-
-
+/**
+ * Calculates the financial risk assessment for a given company based on its financial data and budget.
+ * @param companyInfo - The company information including financial data and budget.
+ * @param config - The financial risk configuration parameters.
+ * @returns An object containing the overall financial risk and the individual rule results.
+ */
 export const getFinancialRiskForCompany = (
   companyInfo: Consortium[number],
-  config: NonNullable<ProjectAssesmentConfiguration>["financialRisk"]
-): { result: FinancialRisk; rules: FinancialRiskRule[] } => {
-  if (!companyInfo.financialData)
+  config: ProjectAssessmentConfig["financialRisk"],
+  financialRiskThresholds: ProjectAssessmentConfig["thresholds"]["financialRisk"]
+): Assessment<FinancialRisk> => {
+  const issues = sanityChecks(
+    companyInfo.isStartupOrRDDriven,
+    companyInfo.financialData,
+    companyInfo.budget,
+    config.unrealisticBudget.params.budgetToRevenueRatio.value
+  );
+
+  if (issues) return issues;
+
+  // financial data is guaranteed to exist here
+  const { revenues, profits } = companyInfo.financialData!;
+
+  const rules = [
+    makeRule(hasManyConsecutiveLosses, config.consecutiveLosses, profits),
+    makeRule(hasLowProfitMargin, config.lowProfitMargin, revenues, profits),
+    makeRule(hasHighProfitVolatility, config.highProfitVolatility, profits),
+    makeRule(hasHighRevenueVolatility, config.highRevenueVolatility, revenues),
+    makeRule(hasFailedToGrowProfit, config.profitNotGrowing, profits),
+    makeRule(hasFailedToGrowRevenue, config.revenueNotGrowing, revenues),
+  ];
+
+  return makeAssessment(rules, financialRiskThresholds);
+};
+
+/**
+ * Checks that some basic conditions such as data availability and realistic budget are met.
+ * if any of these checks fail, returns a financial risk assessment indicating why.
+ * @param financialData - The financial data of the company that may or may not actually exist.
+ * @param budget - The project budget for the company.
+ * @param budgetToRevenueThreshold - Threshold for determining unrealistic budget.
+ * @returns An object containing the financial risk and rules if checks fail, otherwise undefined.
+ */
+const sanityChecks = (
+  isStartupOrRDDriven: boolean,
+  financialData: Consortium[number]["financialData"],
+  budget: number,
+  budgetToRevenueThreshold: number
+): Assessment<FinancialRisk> | undefined => {
+  // 1. Startup or R&D driven companies are instanly marked as n/a to avoid misleading risk assessment.
+  // Analysing these companies correctly requires more context and data than what's currently available.
+  if (isStartupOrRDDriven) {
     return {
       result: "n/a",
+      rawScore: 0,
+      rules: [{ code: "startupOrRDDriven", outcome: "n/a" }],
+    };
+  }
+
+  // 2. If there's no financial data, obviously theres nothing to analyze and risk is n/a
+  if (!financialData) {
+    return {
+      result: "n/a",
+      rawScore: 0,
       rules: [{ code: "noFinancialData", outcome: "n/a" }],
     };
+  }
+  const latestNonZeroRevenue = [...financialData.revenues]
+    .reverse()
+    .find((rev) => rev !== 0);
 
-  const { revenues, profits } = companyInfo.financialData;
-
-  const latestNonZeroRevenue = [...revenues].reverse().find((rev) => rev !== 0);
-
-  // if somehow all revenue data is zero that should automatically flag high risk
-  if (latestNonZeroRevenue === 0) {
+  // 3. If the company is not generating any revenue, that is inherently high risk
+  if (!latestNonZeroRevenue) {
     return {
       result: "high",
+      rawScore: 1,
       rules: [{ code: "noValidRevenueData", outcome: "unfavorable" }],
     };
   }
 
-  const unrealisticBudget = hasUnrealisticBudgetToRevenueRatio(
-    latestNonZeroRevenue!,
-    companyInfo.budget,
-    2 // budget should be at most 2x latest revenue
+  const ruleResult = hasUnrealisticBudgetToRevenueRatio(
+    latestNonZeroRevenue,
+    budget,
+    budgetToRevenueThreshold
   );
 
-  // Unrealistic budget is an automatic high risk too, because it doesn't matter
-  // how good other indicators are if the budget is completely out of line relative
-  // to the company's financials
-  if (unrealisticBudget.outcome === "unfavorable") {
-    return {
-      result: "high",
-      rules: [{ ...unrealisticBudget }],
-    };
+  // 4. A budget thats on completely different scale than financials is also inherently high risk
+  if (ruleResult.outcome === "unfavorable") {
+    return { result: "high", rawScore: 1, rules: [ruleResult] };
   }
-
-  const indicators = [
-    {
-      check: hasManyConsecutiveLosses(
-        profits,
-        config.consecutiveLosses.startingIndex.value,
-        config.consecutiveLosses.maxAllowedLossYears.value
-      ),
-      weight: config.consecutiveLosses.weight,
-      perform: config.consecutiveLosses.perform,
-    },
-    {
-      check: hasLowProfitMargin(
-        revenues,
-        profits,
-        config.lowProfitMargin.minMarginPercent.value
-      ),
-      weight: config.lowProfitMargin.weight,
-      perform: config.lowProfitMargin.perform,
-    },
-    {
-      check: hasHighVolatility(
-        profits,
-        config.highProfitVolatility.maxVolatilityPercent.value,
-        "highProfitVolatility"
-      ),
-      weight: config.highProfitVolatility.weight,
-      perform: config.highProfitVolatility.perform,
-    },
-    {
-      check: hasFailedToGrow(
-        profits,
-        config.profitNotGrowing.consecutiveYearsWithoutGrowth.value,
-        "profitNotGrowing"
-      ),
-      weight: config.profitNotGrowing.weight,
-      perform: config.profitNotGrowing.perform,
-    },
-    {
-      check: hasHighVolatility(
-        revenues,
-        config.highRevenueVolatility.maxVolatilityPercent.value,
-        "highRevenueVolatility"
-      ),
-      weight: config.highRevenueVolatility.weight,
-      perform: config.highRevenueVolatility.perform,
-    },
-    {
-      check: hasManySwings(
-        revenues,
-        config.swingsInRevenue.maxSwingsThreshold.value,
-        config.swingsInRevenue.consideredASwingThreshold.value,
-        "swingsInRevenue"
-      ),
-      weight: config.swingsInRevenue.weight,
-      perform: config.swingsInRevenue.perform,
-    },
-  ].filter((ind) => ind.perform);
-
-  const totalWeight = indicators.reduce((sum, ind) => sum + ind.weight.value, 0);
-  const score = indicators
-    .map((ind) => outcomeToNumber(ind.check.outcome) * ind.weight.value)
-    .reduce((sum, val) => sum + val, 0);
-
-  const riskPercentage = 1 - score / totalWeight;
-
-  const rules = indicators.map((indicator) => indicator.check);
-
-  if (riskPercentage >= 0.66) return { result: "high", rules };
-  if (riskPercentage >= 0.33) return { result: "medium", rules };
-  return { result: "low", rules };
 };
+
+const returnDecimalValue = (value: number) =>
+  ({ value: roundToTwoDecimals(value), type: "decimal" } as const);
 
 /**
  * Checks if the project budget relative to latest revenue is unrealistic.
@@ -129,23 +113,15 @@ const hasUnrealisticBudgetToRevenueRatio = (
   latestRevenue: number,
   projectBudget: number,
   threshold: number
-): Extract<FinancialRiskRule, { code: "unrealisticBudget" }> => {
+): Rule => {
   const ratio = projectBudget / latestRevenue;
   const positive = ratio <= threshold;
   return {
     code: "unrealisticBudget",
-    params: { projectBudget, latestRevenue },
-    outcome: getOutcome(positive),
+    values: { ratio: returnDecimalValue(ratio) },
+    outcome: outcomeFromBool(positive),
   };
 };
-
-const outcomeToNumber = (outcome: FinancialRiskRule["outcome"]): number =>
-  ({ neutral: 0.5, unfavorable: 0, favorable: 1 }[outcome]);
-
-const avg = (numbers: number[]): number =>
-  numbers.reduce((a, b) => a + b, 0) / numbers.length;
-
-const formatPercent = (value: number): string => `${(value * 100).toFixed(2)}%`;
 
 /**
  * Checks if there are many consecutive entries with negative profit in the profits array.
@@ -158,7 +134,7 @@ const hasManyConsecutiveLosses = (
   profits: number[],
   startingIndex: number,
   maxAllowed: number
-): Extract<FinancialRiskRule, { code: "consecutiveLosses" }> => {
+): Rule => {
   let consecutive = 0;
   const manyLosses = profits
     .slice(startingIndex)
@@ -168,8 +144,8 @@ const hasManyConsecutiveLosses = (
   const positive = !manyLosses;
   return {
     code: "consecutiveLosses",
-    params: { lossYears: consecutive },
-    outcome: getOutcome(positive),
+    values: { lossYears: { value: consecutive, type: "integer" } },
+    outcome: outcomeFromBool(positive),
   };
 };
 
@@ -184,16 +160,16 @@ const hasLowProfitMargin = (
   revenues: number[],
   profits: number[],
   threshold: number
-): Extract<FinancialRiskRule, { code: "lowProfitMargin" }> => {
+): Rule => {
   const profitRevs = profits.map((profit, i) =>
     revenues[i] === 0 ? 0 : profit / revenues[i]
   );
-  const averageMargin = avg(profitRevs);
+  const averageMargin = avg(profitRevs)!;
   const positive = averageMargin >= threshold;
   return {
     code: "lowProfitMargin",
-    params: { averageMarginPercent: formatPercent(averageMargin) },
-    outcome: getOutcome(positive),
+    values: { averageMarginPercent: returnDecimalValue(averageMargin) },
+    outcome: outcomeFromBool(positive),
   };
 };
 
@@ -203,7 +179,7 @@ const hasLowProfitMargin = (
  * @returns The standard deviation of the numbers.
  */
 const stddev = (numbers: number[]): number => {
-  const mean = avg(numbers);
+  const mean = avg(numbers)!;
   const variance =
     numbers.reduce((sum, num) => sum + (num - mean) ** 2, 0) / numbers.length;
   return Math.sqrt(variance);
@@ -212,16 +188,37 @@ const stddev = (numbers: number[]): number => {
 type VolatilityRuleCode = "highRevenueVolatility" | "highProfitVolatility";
 
 /**
- * Checks if the company has high volatility in the given values.
- * @param values - Array of numerical values (e.g., revenues or profits).
- * @param threshold - Threshold for what is considered high volatility.
- * @returns A rule indicating whether the company has high volatility or not.
+ * Checks if the company's profit values have high volatility over time.
+ * @param profits - Array of profit numbers.
+ * @param threshold - Maximum allowed volatility threshold.
+ * @returns A rule indicating whether the profit volatility is high or not.
+ */
+const hasHighProfitVolatility = (profits: number[], threshold: number): Rule =>
+  hasHighVolatility(profits, threshold, "highProfitVolatility");
+
+/**
+ * Checks if the company's revenue values have high volatility over time.
+ * @param revenues - Array of revenue numbers.
+ * @param threshold - Maximum allowed volatility threshold.
+ * @returns A rule indicating whether the revenue volatility is high or not.
+ */
+const hasHighRevenueVolatility = (
+  revenues: number[],
+  threshold: number
+): Rule => hasHighVolatility(revenues, threshold, "highRevenueVolatility");
+
+/**
+ * General purpose function to check for volatility in given financial values.
+ * @param values - Array of numerical values
+ * @param threshold - Maximum allowed volatility threshold
+ * @param code - code to use in the returned Rule
+ * @returns A rule indicating whether the volatility is high or not.
  */
 const hasHighVolatility = (
   values: number[],
   threshold: number,
   code: VolatilityRuleCode
-): Extract<FinancialRiskRule, { code: VolatilityRuleCode }> => {
+): Rule => {
   const growthRates = values
     .slice(1)
     .map((val, i) => (values[i] === 0 ? 0 : (val - values[i]) / values[i]));
@@ -230,39 +227,22 @@ const hasHighVolatility = (
 
   return {
     code,
-    params: {
-      volatilityPercent: formatPercent(volatility),
+    values: {
+      volatilityPercent: returnDecimalValue(volatility),
     },
-    outcome: getOutcome(positive),
+    outcome: outcomeFromBool(positive),
   };
 };
 
-type SwingRuleCode = "swingsInRevenue" | "swingsInProfit";
+const hasFailedToGrowRevenue = (
+  revenues: number[],
+  thresholdYears: number
+): Rule => hasFailedToGrow(revenues, thresholdYears, "revenueNotGrowing");
 
-const hasManySwings = (
-  values: number[],
-  maxSwingsThreshold: number,
-  consideredASwingThreshold: number,
-  code: SwingRuleCode
-): Extract<FinancialRiskRule, { code: SwingRuleCode }> => {
-  let swings = 0;
-  values.slice(1).forEach((val, i) => {
-    const signChanged = Math.sign(val) !== Math.sign(values[i]);
-    const swingedEnough =
-      Math.abs(val - values[i]) / Math.abs(values[i]) >=
-      consideredASwingThreshold;
-    if (signChanged && swingedEnough) swings++;
-  });
-
-  const positive = swings <= maxSwingsThreshold;
-  return {
-    code,
-    params: {
-      swingsCount: swings,
-    },
-    outcome: getOutcome(positive),
-  };
-};
+const hasFailedToGrowProfit = (
+  profits: number[],
+  thresholdYears: number
+): Rule => hasFailedToGrow(profits, thresholdYears, "profitNotGrowing");
 
 type GrowthRuleCode = "revenueNotGrowing" | "profitNotGrowing";
 
@@ -276,7 +256,7 @@ const hasFailedToGrow = (
   values: number[],
   thresholdYears: number,
   code: GrowthRuleCode
-): Extract<FinancialRiskRule, { code: GrowthRuleCode }> => {
+): Rule => {
   let consecutiveYearsWithoutGrowth = 0;
   const failed = values
     .slice(1)
@@ -289,7 +269,9 @@ const hasFailedToGrow = (
 
   return {
     code,
-    params: { foundYears: consecutiveYearsWithoutGrowth },
-    outcome: getOutcome(positive),
+    values: {
+      foundYears: { value: consecutiveYearsWithoutGrowth, type: "integer" },
+    },
+    outcome: outcomeFromBool(positive),
   };
 };
