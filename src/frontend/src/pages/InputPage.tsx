@@ -263,6 +263,7 @@ const PlaceHolderInput = () => {
               onChange={(e) =>
                 updateForm(["generalDescription"], e.target.value)
               }
+              aria-label="description box"
               id="desc-input"
               name="project-desc"
               value={form.generalDescription}
@@ -338,6 +339,7 @@ const PlaceHolderInput = () => {
 
                 <div className="input-box">
                   <input
+                  aria-label="budget-input"
                     className={
                       hasError(["consortium", index, "budget"])
                         ? "input-error"
@@ -366,6 +368,7 @@ const PlaceHolderInput = () => {
                 </div>
                 <div className="input-box">
                   <input
+                  aria-label="funding-input"
                     className={
                       hasError(["consortium", index, "requestedFunding"])
                         ? "input-error"
@@ -398,6 +401,7 @@ const PlaceHolderInput = () => {
                 </div>
                 <div className="input-box desc-box">
                   <textarea
+                  aria-label="project-desc-input"
                     value={c.projectRoleDescription}
                     onChange={(e) =>
                       updateForm(
@@ -457,6 +461,7 @@ const PlaceHolderInput = () => {
                 <div className="kauppalehti-container">
                   {index === 0 ? null : (
                     <button
+                      aria-label="del-btn"
                       id="del-btn"
                       type="button"
                       onClick={() => deleteCompany(index)}
@@ -468,7 +473,7 @@ const PlaceHolderInput = () => {
               </div>
             </React.Fragment>
           ))}
-          <button type="button" id="add-btn" onClick={addCompany}>
+          <button type="button" id="add-btn" onClick={addCompany} aria-label="add-btn">
             <Plus size={24} />
           </button>
         </div>
@@ -489,7 +494,7 @@ const PlaceHolderInput = () => {
         <br />
       </div>
       <div className="submit-button-container">
-        <button id="submit-btn" type="submit" onClick={handleSubmit}>
+        <button id="submit-btn" type="submit" onClick={handleSubmit} aria-label="submit-btn">
           {t("submit")}
         </button>
       </div>

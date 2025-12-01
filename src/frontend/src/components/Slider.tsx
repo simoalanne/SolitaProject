@@ -97,6 +97,7 @@ const Slider = ({
   </div>
   <div className="slider-wrapper">
     <input
+      aria-label="slider-input"
       type="range"
       min={min}
       max={max}

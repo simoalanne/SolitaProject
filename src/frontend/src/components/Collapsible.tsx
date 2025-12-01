@@ -20,6 +20,7 @@ const Collapsible = ({ label, children, defaultOpen, rightElement }: Collapsible
         {rightElement && <div className="right-element">{rightElement}</div>}
 
         <button
+          aria-label='icon-btn'
           type="button"
           className="icon-button"
           onClick={() => setOpen(o => !o)}

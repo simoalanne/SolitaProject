@@ -15,6 +15,7 @@ const ToggleButton = ({ value, label, onToggle, readonly }: ToggleButtonProps) =
     <div className="toggle-button-container">
       <p className="toggle-button-label">{label}</p>
       <button
+        aria-label="toggle-btn"
         type="button"
         className={`toggle-button ${value ? "on" : "off"} ${theme}`}
         onClick={() => onToggle(!value)}
