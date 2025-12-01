@@ -24,18 +24,7 @@ const baseProjectAssessmentConfig = {
           slider: { min: 0, max: 1, step: 0.01 },
         },
       },
-      weight: 2,
-      perform: true,
-    },
-    highProfitVolatility: {
-      params: {
-        maxVolatilityPercent: {
-          value: 0.3,
-          type: "decimal",
-          slider: { min: 0, max: 1, step: 0.01 },
-        },
-      },
-      weight: 2,
+      weight: 1,
       perform: true,
     },
     highRevenueVolatility: {
@@ -68,7 +57,7 @@ const baseProjectAssessmentConfig = {
           slider: { min: 0, max: 5, step: 1 },
         },
       },
-      weight: 1,
+      weight: 3,
       perform: true,
     },
     unrealisticBudget: {
@@ -95,59 +84,31 @@ const baseProjectAssessmentConfig = {
     },
   },
   fundingHistory: {
-    recentGrant: {
+    tooRecentFunding: {
       params: {
         minTimeAgo: {
-          value: 3,
+          value: 2,
+          type: "integer",
+          slider: { min: 0, max: 10, step: 1 },
+        },
+        startupMinTimeAgo: {
+          value: 1,
           type: "integer",
           slider: { min: 0, max: 10, step: 1 },
         },
       },
-      weight: 3,
+      weight: 1,
       perform: true,
     },
-    multipleFundingInstances: {
+    tooManyInstances: {
       params: {
         minTimes: {
-          value: 2,
+          value: 3,
           type: "integer",
-          slider: { min: 0, max: 20, step: 1 },
-        },
-      },
-      weight: 3,
-      perform: true,
-    },
-    oneFundingSignificantToRevenue: {
-      params: {
-        percentageOfRevenue: {
-          value: 0.1,
-          type: "decimal",
-          slider: { min: 0, max: 1, step: 0.01 },
-        },
-      },
-      weight: 2,
-      perform: true,
-    },
-    oneFundingSignificantToTotal: {
-      params: {
-        percentageOfTotalFunding: {
-          value: 0.5,
-          type: "decimal",
-          slider: { min: 0, max: 1, step: 0.01 },
+          slider: { min: 0, max: 5, step: 1 },
         },
       },
       weight: 1,
-      perform: false,
-    },
-    steadyFundingGrowth: {
-      params: {
-        growthYearsThreshold: {
-          value: 0.7,
-          type: "decimal",
-          slider: { min: 0, max: 1, step: 0.01 },
-        },
-      },
-      weight: 1.5,
       perform: true,
     },
     noFundingHistory: {
@@ -170,12 +131,12 @@ const baseProjectAssessmentConfig = {
     },
   },
   thresholds: {
-    // In the future these could just share the same Trafficlight structure or 
+    // In the future these could just share the same Trafficlight structure or
     // be removed altogether and let frontend transform raw scores to whatever
     // structure it wants internally
     financialRisk: { low: 1, medium: 0.66, high: 0.33 },
     fundingHistory: { high: 1, medium: 0.66, low: 0.33, none: 0 },
-    trafficLight: { green: 1, yellow: 0.5, red: 0 },
+    trafficLight: { green: 0.75, yellow: 0.5, red: 0.25 },
   },
   shared: {
     weightSlider: { min: 0, max: 10, step: 0.5 },

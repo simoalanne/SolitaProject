@@ -7,12 +7,14 @@ import {
   makeAssessment,
   makeRule,
   outcomeFromBool,
-  roundToTwoDecimals,
   type Assessment,
 } from "./common.ts";
 
 export type FundingEntry = { year: number; amount: number; isLoan: boolean };
 export type FundingData = Record<string, FundingEntry[]>;
+type FundingHistoryCodes = keyof ProjectAssessmentConfig["fundingHistory"];
+type FundingRule = Rule & { code: FundingHistoryCodes };
+type FundingAsssementment = Assessment<FundingHistory, FundingHistoryCodes>;
 
 /**
  * Loads the funding data from the JSON file
@@ -29,10 +31,7 @@ const loadFundingData = async (): Promise<FundingData> => {
     );
     return JSON.parse(fileContent) as FundingData;
   } catch (error) {
-    console.error(
-      `Failed to load funding data. Ensure you have generated the data file by
-      running "npm run generate-funding-data at the project root. Error: ${error}`
-    );
+    console.error(`Failed to load funding data: ${error}`);
     throw error;
   }
 };
@@ -40,18 +39,18 @@ const loadFundingData = async (): Promise<FundingData> => {
 const fundingData = await loadFundingData();
 
 /**
- * Determines the funding history category for a given company based on its past funding amount.
+ * Analyzes whether a company is overfunded based on its funding history.
  * @param businessId - The Business ID of the company.
- * @returns An object containing the funding history result and the applied rules.
+ * @param config - The funding history configuration parameters.
+ * @param thresholds - The funding history thresholds for assessment.
+ * @returns An object containing the overall funding history assessment and the individual rule results.
  */
 export const getFundingHistoryForCompany = (
   businessId: string,
-  averageAnnualRevenue: number | null,
-  // Not used currently but maybe in the future
-  isStartupOrRDDriven: boolean,
   config: ProjectAssessmentConfig["fundingHistory"],
-  fundingHistoryThresholds: ProjectAssessmentConfig["thresholds"]["fundingHistory"]
-): Assessment<FundingHistory> => {
+  thresholds: ProjectAssessmentConfig["thresholds"]["fundingHistory"],
+  isStartupOrRDDriven: boolean
+): FundingAsssementment => {
   const fundingEntry = fundingData[businessId];
 
   if (!fundingEntry) {
@@ -62,156 +61,79 @@ export const getFundingHistoryForCompany = (
     };
   }
 
+  fundingEntry.sort((a, b) => a.year - b.year);
+
   const rules = [
-    makeRule(hasRecentGrant, config.recentGrant, fundingEntry),
     makeRule(
-      hasMultipleFundingInstances,
-      config.multipleFundingInstances,
-      fundingEntry
-    ),
-    makeRule(
-      hasOneFundingSignificantToRevenue,
-      config.oneFundingSignificantToRevenue,
+      hasTooRecentFunding,
+      config.tooRecentFunding,
       fundingEntry,
-      averageAnnualRevenue
+      isStartupOrRDDriven
     ),
     makeRule(
-      hasOneFundingSignificantToTotal,
-      config.oneFundingSignificantToTotal,
-      fundingEntry
+      hasTooManyInstances,
+      config.tooManyInstances,
+      fundingEntry,
+      isStartupOrRDDriven
     ),
-    makeRule(hasSteadyFundingGrowth, config.steadyFundingGrowth, fundingEntry),
   ];
 
-  return makeAssessment(rules, fundingHistoryThresholds);
+  return makeAssessment(rules, thresholds) as FundingAsssementment;
 };
 
 /**
- * Checks if funding includes a grant received within the specified number of years.
- * @param funding - Array of funding entries.
- * @param minTimeAgo - Number of years to look back for recent grants.
- * @returns A rule indicating whether a recent grant was found.
+ * Checks if company has received funding too recently.
+ * @param funding - The funding history entries of the company.
+ * @param isStartupOrRDDriven - Whether the company is a startup or R&D driven.
+ * @param minYearsAgo - Minimum number of years since last funding.
+ * @param startupMinYearsAgo - Same as above but applied when the company is a startup or R&D driven.
+ * @returns A Rule indicating whether the company has received funding too recently.
  */
-const hasRecentGrant = (funding: FundingEntry[], minTimeAgo: number): Rule => {
-  const mostRecentYear = funding.at(-1)!.year;
-  const favorable = mostRecentYear <= new Date().getFullYear() - minTimeAgo;
+const hasTooRecentFunding = (
+  funding: FundingEntry[],
+  isStartupOrRDDriven: boolean,
+  minYearsAgo: number,
+  startupMinYearsAgo: number
+): FundingRule => {
+  // The threshold should generally be configured to be lower for startups and R&D driven companies
+  const thresholdToUse = isStartupOrRDDriven ? startupMinYearsAgo : minYearsAgo;
+  const latest = funding.at(-1)!.year;
+  const currentYear = new Date().getFullYear();
+  const tooRecent = latest >= currentYear - thresholdToUse;
   return {
-    code: "recentGrant",
-    values: { mostRecentYear: { value: mostRecentYear, type: "integer" } },
-    outcome: outcomeFromBool(favorable),
+    code: "tooRecentFunding",
+    values: { latestYear: { value: latest, type: "integer" } },
+    outcome: outcomeFromBool(!tooRecent),
   };
 };
 
 /**
- * Checks if the company has received funding multiple times.
- * @param funding - Array of funding entries.
- * @param minTimes - Minimum number of times funding should be received.
- * @returns A rule indicating whether the company has received funding multiple times.
+ * Checks if company has received funding more times than allowed.
+ * @param funding - The funding history entries of the company.
+ * @param maxAllowed - Maximum allowed funding instances.
+ * @returns A Rule indicating whether the company has received too many funding instances.
  */
-const hasMultipleFundingInstances = (
+const hasTooManyInstances = (
   funding: FundingEntry[],
-  minTimes: number
-): Rule => {
-  const favorable = funding.length <= minTimes;
-  return {
-    code: "multipleFundingInstances",
-    values: { times: { value: funding.length, type: "integer" } },
-    outcome: outcomeFromBool(favorable),
-  };
-};
-
-/**
- * Checks if any single funding entry is significant compared to average annual revenue.
- * @param funding - Array of funding entries.
- * @param percentageOfRevenue - percentage threshold of average annual revenue.
- * @param averageAnnualRevenue - average annual revenue of the company.
- * @returns A rule indicating whether significant funding was found or "n/a" rule if revenue is not provided.
- */
-const hasOneFundingSignificantToRevenue = (
-  funding: FundingEntry[],
-  averageAnnualRevenue: number | null = null,
-  percentageOfRevenue: number
-): Rule => {
-  if (!averageAnnualRevenue)
+  isStartupOrRDDriven: boolean,
+  maxAllowed: number
+): FundingRule => {
+  // Startups and R&D driven companies shouldn't be punished for multiple funding instances
+  // cause how are they supposed to grow otherwise? However the funding should also then lead
+  // to growth. Right now this check just assumes that if the company is repeatedly getting funding
+  // it surely is also growing...
+  if (isStartupOrRDDriven) {
     return {
-      code: "oneFundingSignificantToRevenue",
+      code: "tooManyInstances",
       outcome: "n/a",
     };
-
-  const threshold = averageAnnualRevenue * percentageOfRevenue;
-
-  const maxFundingEntry = funding.reduce((prev, curr) =>
-    prev.amount > curr.amount ? prev : curr
-  );
-  const favorable = maxFundingEntry.amount >= threshold;
-  return {
-    code: "oneFundingSignificantToRevenue",
-    values: {
-      percentage: {
-        value: roundToTwoDecimals(
-          maxFundingEntry.amount / averageAnnualRevenue
-        ),
-        type: "decimal",
-      },
-    },
-    outcome: outcomeFromBool(favorable),
-  };
-};
-
-/**
- * Checks if there is a single funding entry that constitutes a large portion of total funding.
- * @param funding - Array of funding entries.
- * @param ratio - minimum ratio of single funding to total funding.
- * @returns A rule indicating whether such funding exists or "n/a" if less than 2 funding entries exist.
- */
-const hasOneFundingSignificantToTotal = (
-  funding: FundingEntry[],
-  ratio: number
-): Rule => {
-  if (funding.length < 2)
-    return { code: "oneFundingSignificantToTotal", outcome: "n/a" };
-  const total = funding.reduce((sum, f) => sum + f.amount, 0);
-  const largest = Math.max(...funding.map((f) => f.amount));
-  const favorable = largest / total >= ratio;
-  return {
-    code: "oneFundingSignificantToTotal",
-    outcome: outcomeFromBool(favorable),
-    values: {
-      percentage: {
-        value: roundToTwoDecimals(largest / total),
-        type: "decimal",
-      },
-    },
-  };
-};
-
-/**
- * Checks if funding has grown steadily over the years with some leniency.
- * @param funding - Array of funding entries.
- * @param threshold - minimum ratio of years with funding increases.
- * @returns A rule indicating whether funding has grown steadily or "n/a" if less than 2 funding entries exist.
- */
-const hasSteadyFundingGrowth = (
-  funding: FundingEntry[],
-  threshold: number
-): Rule => {
-  if (funding.length < 2)
-    return {
-      code: "steadyFundingGrowth",
-      outcome: "n/a",
-    };
-
-  const increases = funding
-    .slice(1)
-    .filter((amt, i) => amt.amount > funding[i].amount).length;
-  const ratio = increases / (funding.length - 1);
-  const favorable = ratio >= threshold;
+  }
+  const count = funding.length;
+  const withinLimit = count <= maxAllowed;
 
   return {
-    code: "steadyFundingGrowth",
-    values: {
-      growthYearsPercent: { value: roundToTwoDecimals(ratio), type: "decimal" },
-    },
-    outcome: outcomeFromBool(favorable),
+    code: "tooManyInstances",
+    values: { count: { value: count, type: "integer" } },
+    outcome: outcomeFromBool(withinLimit),
   };
 };

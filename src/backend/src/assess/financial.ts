@@ -8,6 +8,10 @@ import {
 } from "./common.ts";
 import { outcomeFromBool, avg } from "./common.ts";
 
+type FinancialRiskCodes = keyof ProjectAssessmentConfig["financialRisk"];
+type FinancialRiskRule = Rule & { code: FinancialRiskCodes };
+type FinancialRiskAssesment = Assessment<FinancialRisk, FinancialRiskCodes>;
+
 /**
  * Calculates the financial risk assessment for a given company based on its financial data and budget.
  * @param companyInfo - The company information including financial data and budget.
@@ -18,7 +22,7 @@ export const getFinancialRiskForCompany = (
   companyInfo: Consortium[number],
   config: ProjectAssessmentConfig["financialRisk"],
   financialRiskThresholds: ProjectAssessmentConfig["thresholds"]["financialRisk"]
-): Assessment<FinancialRisk> => {
+): FinancialRiskAssesment => {
   const issues = sanityChecks(
     companyInfo.isStartupOrRDDriven,
     companyInfo.financialData,
@@ -34,13 +38,14 @@ export const getFinancialRiskForCompany = (
   const rules = [
     makeRule(hasManyConsecutiveLosses, config.consecutiveLosses, profits),
     makeRule(hasLowProfitMargin, config.lowProfitMargin, revenues, profits),
-    makeRule(hasHighProfitVolatility, config.highProfitVolatility, profits),
     makeRule(hasHighRevenueVolatility, config.highRevenueVolatility, revenues),
-    makeRule(hasFailedToGrowProfit, config.profitNotGrowing, profits),
     makeRule(hasFailedToGrowRevenue, config.revenueNotGrowing, revenues),
   ];
 
-  return makeAssessment(rules, financialRiskThresholds);
+  return makeAssessment(
+    rules,
+    financialRiskThresholds
+  ) as FinancialRiskAssesment;
 };
 
 /**
@@ -56,14 +61,16 @@ const sanityChecks = (
   financialData: Consortium[number]["financialData"],
   budget: number,
   budgetToRevenueThreshold: number
-): Assessment<FinancialRisk> | undefined => {
+): FinancialRiskAssesment | undefined => {
   // 1. Startup or R&D driven companies are instanly marked as n/a to avoid misleading risk assessment.
   // Analysing these companies correctly requires more context and data than what's currently available.
   if (isStartupOrRDDriven) {
     return {
       result: "n/a",
       rawScore: 0,
-      rules: [{ code: "startupOrRDDriven", outcome: "n/a" }],
+      rules: [
+        { code: "startupOrRDDriven" as FinancialRiskCodes, outcome: "n/a" },
+      ],
     };
   }
 
@@ -113,7 +120,7 @@ const hasUnrealisticBudgetToRevenueRatio = (
   latestRevenue: number,
   projectBudget: number,
   threshold: number
-): Rule => {
+): FinancialRiskRule => {
   const ratio = projectBudget / latestRevenue;
   const positive = ratio <= threshold;
   return {
@@ -134,7 +141,7 @@ const hasManyConsecutiveLosses = (
   profits: number[],
   startingIndex: number,
   maxAllowed: number
-): Rule => {
+): FinancialRiskRule => {
   let consecutive = 0;
   const manyLosses = profits
     .slice(startingIndex)
@@ -160,7 +167,7 @@ const hasLowProfitMargin = (
   revenues: number[],
   profits: number[],
   threshold: number
-): Rule => {
+): FinancialRiskRule => {
   const profitRevs = profits.map((profit, i) =>
     revenues[i] === 0 ? 0 : profit / revenues[i]
   );
@@ -185,48 +192,26 @@ const stddev = (numbers: number[]): number => {
   return Math.sqrt(variance);
 };
 
-type VolatilityRuleCode = "highRevenueVolatility" | "highProfitVolatility";
-
 /**
- * Checks if the company's profit values have high volatility over time.
- * @param profits - Array of profit numbers.
- * @param threshold - Maximum allowed volatility threshold.
- * @returns A rule indicating whether the profit volatility is high or not.
- */
-const hasHighProfitVolatility = (profits: number[], threshold: number): Rule =>
-  hasHighVolatility(profits, threshold, "highProfitVolatility");
-
-/**
- * Checks if the company's revenue values have high volatility over time.
+ * Checks if the revenue volatility is higher than the given threshold.
  * @param revenues - Array of revenue numbers.
- * @param threshold - Maximum allowed volatility threshold.
- * @returns A rule indicating whether the revenue volatility is high or not.
+ * @param threshold - Maximum allowed volatility threshold
+ * @returns A rule indicating whether the volatility is high or not.
  */
 const hasHighRevenueVolatility = (
   revenues: number[],
   threshold: number
-): Rule => hasHighVolatility(revenues, threshold, "highRevenueVolatility");
-
-/**
- * General purpose function to check for volatility in given financial values.
- * @param values - Array of numerical values
- * @param threshold - Maximum allowed volatility threshold
- * @param code - code to use in the returned Rule
- * @returns A rule indicating whether the volatility is high or not.
- */
-const hasHighVolatility = (
-  values: number[],
-  threshold: number,
-  code: VolatilityRuleCode
-): Rule => {
-  const growthRates = values
+): FinancialRiskRule => {
+  const growthRates = revenues
     .slice(1)
-    .map((val, i) => (values[i] === 0 ? 0 : (val - values[i]) / values[i]));
+    .map((val, i) =>
+      revenues[i] === 0 ? 0 : (val - revenues[i]) / revenues[i]
+    );
   const volatility = stddev(growthRates);
   const positive = volatility <= threshold;
 
   return {
-    code,
+    code: "highRevenueVolatility",
     values: {
       volatilityPercent: returnDecimalValue(volatility),
     },
@@ -234,41 +219,28 @@ const hasHighVolatility = (
   };
 };
 
+/**
+ * Checks if the company has failed to grow revenue for a specified number of consecutive years.
+ * @param revenues - Array of revenue numbers.
+ * @param thresholdYears - Number of consecutive years without growth to trigger the rule.
+ * @returns A rule indicating whether the company has failed to grow revenue.
+ */
 const hasFailedToGrowRevenue = (
   revenues: number[],
   thresholdYears: number
-): Rule => hasFailedToGrow(revenues, thresholdYears, "revenueNotGrowing");
-
-const hasFailedToGrowProfit = (
-  profits: number[],
-  thresholdYears: number
-): Rule => hasFailedToGrow(profits, thresholdYears, "profitNotGrowing");
-
-type GrowthRuleCode = "revenueNotGrowing" | "profitNotGrowing";
-
-/**
- * Checks if the companys financial values have failed to grow over a specified number of years.
- * @param values - Array of numerical values (e.g., revenues or profits).
- * @param thresholdYears - Number of consecutive years without growth to consider as failure.
- * @returns A rule indicating whether the company has failed to grow or not.
- */
-const hasFailedToGrow = (
-  values: number[],
-  thresholdYears: number,
-  code: GrowthRuleCode
 ): Rule => {
   let consecutiveYearsWithoutGrowth = 0;
-  const failed = values
+  const failed = revenues
     .slice(1)
     .some((value, i) =>
-      value <= values[i]
+      value <= revenues[i]
         ? ++consecutiveYearsWithoutGrowth >= thresholdYears
         : (consecutiveYearsWithoutGrowth = 0)
     );
   const positive = !failed;
 
   return {
-    code,
+    code: "revenueNotGrowing",
     values: {
       foundYears: { value: consecutiveYearsWithoutGrowth, type: "integer" },
     },
