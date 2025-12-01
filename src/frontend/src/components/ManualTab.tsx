@@ -20,6 +20,7 @@ const ManualTab = ({ draft, setDraft, isSynced, save, clear }: Props) => {
           <input
             key={i}
             value={v}
+            aria-label="fdi-input"
             type="number"
             className="fdi-input"
             onChange={(e) =>
@@ -38,6 +39,7 @@ const ManualTab = ({ draft, setDraft, isSynced, save, clear }: Props) => {
             key={i}
             value={v}
             type="number"
+            aria-label="fdi-input"
             className="fdi-input"
             onChange={(e) =>
               setDraft((d: any) => {

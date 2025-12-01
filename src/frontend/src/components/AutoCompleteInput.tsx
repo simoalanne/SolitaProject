@@ -34,6 +34,7 @@ const AutoCompleteInput = ({
     >
       <div style={{ position: "relative" }}>
         <input
+        aria-label="id-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => {
