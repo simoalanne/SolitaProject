@@ -26,7 +26,7 @@ const generalDecsLimits: InBetween = { min: 20, max: 400 };
 const projectRoleDescLimits: InBetween = { min: 20, max: 200 };
 const budgetLimits: InBetween = { min: 1000, max: 1000000000 };
 const requestedFundingLimits: InBetween = { min: 100, max: 1000000000 };
-export const maxFundingRequestRatioToBudget = 0.8;
+export const maxFundingRequestRatioToBudget = 0.6;
 
 // Frontend can use this to show limits in the UI and ensure that it's in sync
 // with the backend validation

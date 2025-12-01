@@ -84,10 +84,10 @@ export const enumToPercentage = <T extends Record<string, number>>(
   thresholds: T
 ): number => Object.entries(thresholds).find(([key]) => key === enumValue)![1];
 
-export type Assessment<K extends string> = {
+export type Assessment<K extends string, Code extends string = string> = {
   result: K;
   rawScore: number;
-  rules: Rule[];
+  rules: (Rule & { code: Code })[];
 };
 
 /**
@@ -98,11 +98,12 @@ export type Assessment<K extends string> = {
  */
 export const makeAssessment = <
   T extends Record<string, number>,
-  K extends keyof T & string = keyof T & string
+  K extends keyof T & string = keyof T & string,
+  Code extends string = string
 >(
-  rules: ResolvedRule[],
+  rules: (ResolvedRule & { result: Rule & { code: Code } })[],
   thresholds: T
-): Assessment<K> => {
+): Assessment<K, Code> => {
   const scoreMap = { favorable: 1, unfavorable: 0 };
   // the rules are filtered twice because rules with n/a outcome should not affect
   // the score but should still be included in the final output

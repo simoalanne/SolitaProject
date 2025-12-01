@@ -35,7 +35,6 @@ const assessProject = async (
     Promise.all(
       projectInput.consortium.map(async (company) => {
         const id = company.businessId;
-        const avgRevenue = avg(company.financialData?.revenues);
         const financialRisk = getFinancialRiskForCompany(
           company,
           config.financialRisk,
@@ -43,10 +42,9 @@ const assessProject = async (
         );
         const fundingHistory = getFundingHistoryForCompany(
           id,
-          avgRevenue,
-          company.isStartupOrRDDriven,
           config.fundingHistory,
-          config.thresholds.fundingHistory
+          config.thresholds.fundingHistory,
+          company.isStartupOrRDDriven
         );
         const roleFeedback = await generateFeedbackForCompany(
           projectInput.generalDescription,
