@@ -67,10 +67,13 @@ export const weightedPercentage = (
 export const percentageToEnum = <T extends Record<string, number>>(
   percent: number,
   thresholds: T
-): keyof T =>
-  Object.entries(thresholds)
-    .sort((a, b) => a[1] - b[1])
-    .find(([_, threshold]) => percent <= threshold)![0];
+): keyof T => {
+  const sorted = Object.entries(thresholds).sort((a, b) => a[1] - b[1]);
+  const found = sorted.find(([_, threshold]) => percent <= threshold);
+  if (found) return found[0] as keyof T;
+  // If percent is higher than all thresholds, return the highest enum value
+  return sorted[sorted.length - 1][0] as keyof T;
+};
 
 /**
  * Converts an enum value to its corresponding percentage threshold.
