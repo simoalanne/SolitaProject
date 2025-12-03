@@ -108,6 +108,15 @@ export const makeAssessment = <
   // the rules are filtered twice because rules with n/a outcome should not affect
   // the score but should still be included in the final output
   const active = rules.filter((r) => r.perform);
+
+  if (active.length === 0) {
+    return {
+      result: "n/a" as K,
+      rawScore: 0,
+      rules: [{ code: "noRulesToPerform" as Code, outcome: "n/a" }],
+    };
+  }
+
   const scored = active
     .filter((r) => r.result.outcome !== "n/a")
     .map((r) => ({
@@ -137,6 +146,9 @@ export const avg = (numbers?: number[]): number | null => {
   if (!numbers || numbers.length === 0) return null;
   return numbers.reduce((a, b) => a + b, 0) / numbers.length;
 };
+
+export const clamp = (num: number, min: number, max: number): number =>
+  Math.min(Math.max(num, min), max);
 
 export const roundToTwoDecimals = (num: number): number =>
   Math.round(num * 100) / 100;

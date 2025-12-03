@@ -20,7 +20,7 @@ type FundingAsssementment = Assessment<FundingHistory, FundingHistoryCodes>;
  * Loads the funding data from the JSON file
  * @returns A promise that resolves to a record mapping Business IDs to past total funding amounts.
  */
-const loadFundingData = async (): Promise<FundingData> => {
+export const loadFundingData = async (): Promise<FundingData> => {
   try {
     const fileContent = await fs.readFile(
       path.resolve(
@@ -56,8 +56,8 @@ export const getFundingHistoryForCompany = (
   if (!fundingEntry) {
     return {
       result: "none",
-      rawScore: 0,
-      rules: [{ code: "noFundingHistory", outcome: "n/a" }],
+      rawScore: 1,
+      rules: [{ code: "noFundingHistory" as FundingHistoryCodes, outcome: "favorable" }],
     };
   }
 
@@ -89,7 +89,7 @@ export const getFundingHistoryForCompany = (
  * @param startupMinYearsAgo - Same as above but applied when the company is a startup or R&D driven.
  * @returns A Rule indicating whether the company has received funding too recently.
  */
-const hasTooRecentFunding = (
+export const hasTooRecentFunding = (
   funding: FundingEntry[],
   isStartupOrRDDriven: boolean,
   minYearsAgo: number,
@@ -113,23 +113,15 @@ const hasTooRecentFunding = (
  * @param maxAllowed - Maximum allowed funding instances.
  * @returns A Rule indicating whether the company has received too many funding instances.
  */
-const hasTooManyInstances = (
+export const hasTooManyInstances = (
   funding: FundingEntry[],
   isStartupOrRDDriven: boolean,
-  maxAllowed: number
+  maxAllowed: number,
+  maxAllowedForStartups: number
 ): FundingRule => {
-  // Startups and R&D driven companies shouldn't be punished for multiple funding instances
-  // cause how are they supposed to grow otherwise? However the funding should also then lead
-  // to growth. Right now this check just assumes that if the company is repeatedly getting funding
-  // it surely is also growing...
-  if (isStartupOrRDDriven) {
-    return {
-      code: "tooManyInstances",
-      outcome: "n/a",
-    };
-  }
   const count = funding.length;
-  const withinLimit = count <= maxAllowed;
+  const thresholdToUse = isStartupOrRDDriven ? maxAllowedForStartups : maxAllowed;
+  const withinLimit = count <= thresholdToUse;
 
   return {
     code: "tooManyInstances",

@@ -24,7 +24,7 @@ export const getCompanyNameFromBusinessId = async (
 ): Promise<MatchedCompanies> => {
   const data = await fetch(`${baseUrl}?businessId=${businessId}`);
   const transformed = transformApiResponse(await data.json(), "");
-  const name = transformed[0].name;
+  const name = transformed[0]?.name;
   return name ? [{ businessId, name }] : [];
 };
 

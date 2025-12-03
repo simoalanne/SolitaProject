@@ -8,7 +8,7 @@ const baseProjectAssessmentConfig = {
           slider: { min: 0, max: 5, step: 1 },
         },
         startingIndex: {
-          value: 1,
+          value: 0,
           type: "integer",
           slider: { min: 0, max: 4, step: 1 },
         },
@@ -38,23 +38,17 @@ const baseProjectAssessmentConfig = {
       weight: 2,
       perform: true,
     },
-    profitNotGrowing: {
-      params: {
-        consecutiveYearsWithoutGrowth: {
-          value: 3,
-          type: "integer",
-          slider: { min: 0, max: 5, step: 1 },
-        },
-      },
-      weight: 1,
-      perform: true,
-    },
     revenueNotGrowing: {
       params: {
         consecutiveYearsWithoutGrowth: {
           value: 3,
           type: "integer",
           slider: { min: 0, max: 5, step: 1 },
+        },
+        growthRateThreshold: {
+          value: 0.03,
+          type: "decimal",
+          slider: { min: 0.01, max: 1, step: 0.01 },
         },
       },
       weight: 3,
@@ -68,16 +62,6 @@ const baseProjectAssessmentConfig = {
           slider: { min: 0.5, max: 5, step: 0.1 },
         },
       },
-      weight: 1,
-      perform: true,
-      readonlyFields: ["weight", "perform"],
-    },
-    noFinancialData: {
-      weight: 1,
-      perform: true,
-      readonlyFields: ["weight", "perform"],
-    },
-    noValidRevenueData: {
       weight: 1,
       perform: true,
       readonlyFields: ["weight", "perform"],
@@ -102,19 +86,19 @@ const baseProjectAssessmentConfig = {
     },
     tooManyInstances: {
       params: {
-        minTimes: {
-          value: 3,
+        maxAllowed: {
+          value: 2,
           type: "integer",
-          slider: { min: 0, max: 5, step: 1 },
+          slider: { min: 0, max: 10, step: 1 },
+        },
+        maxAllowedForStartups: {
+          value: 5,
+          type: "integer",
+          slider: { min: 0, max: 10, step: 1 },
         },
       },
       weight: 1,
       perform: true,
-    },
-    noFundingHistory: {
-      weight: 1,
-      perform: true,
-      readonlyFields: ["weight", "perform"],
     },
   },
   weights: {
