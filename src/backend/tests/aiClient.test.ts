@@ -1,8 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { generateFeedbackForCompany } from "../dist/ai/aiClient.js";
-import dotenv from "dotenv";
-dotenv.config();
+ // this has to be imported before any other modules if they use env vars on top level code
+import "dotenv/config";
+import { generateFeedbackForCompany } from "../src/ai/aiClient.ts";
 
 describe("generateFeedbackForCompany", () => {
     it("Should return strong fit feedback", async () => {
