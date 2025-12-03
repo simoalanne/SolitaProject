@@ -46,6 +46,7 @@ const AdvancedFormConfiguration = ({
         weight: {
           path: [...rulePath, "weight"],
           value: rule.weight,
+          i18nKey: ["weight"],
           ...slider,
           readonly: rule.readonlyFields?.includes("weight") || false,
           type: "integer",

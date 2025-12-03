@@ -4,6 +4,7 @@ import {
   makeAssessment,
   makeRule,
   roundToTwoDecimals,
+  clamp,
   type Assessment,
 } from "./common.ts";
 import { outcomeFromBool, avg } from "./common.ts";
@@ -56,7 +57,7 @@ export const getFinancialRiskForCompany = (
  * @param budgetToRevenueThreshold - Threshold for determining unrealistic budget.
  * @returns An object containing the financial risk and rules if checks fail, otherwise undefined.
  */
-const sanityChecks = (
+export const sanityChecks = (
   isStartupOrRDDriven: boolean,
   financialData: Consortium[number]["financialData"],
   budget: number,
@@ -79,7 +80,9 @@ const sanityChecks = (
     return {
       result: "n/a",
       rawScore: 0,
-      rules: [{ code: "noFinancialData", outcome: "n/a" }],
+      rules: [
+        { code: "noFinancialData" as FinancialRiskCodes, outcome: "n/a" },
+      ],
     };
   }
   const latestNonZeroRevenue = [...financialData.revenues]
@@ -91,7 +94,12 @@ const sanityChecks = (
     return {
       result: "high",
       rawScore: 1,
-      rules: [{ code: "noValidRevenueData", outcome: "unfavorable" }],
+      rules: [
+        {
+          code: "noValidRevenueData" as FinancialRiskCodes,
+          outcome: "unfavorable",
+        },
+      ],
     };
   }
 
@@ -116,7 +124,7 @@ const returnDecimalValue = (value: number) =>
  * @param projectBudget - Project budget amount.
  * @param threshold - Threshold for determining unrealistic budget.
  */
-const hasUnrealisticBudgetToRevenueRatio = (
+export const hasUnrealisticBudgetToRevenueRatio = (
   latestRevenue: number,
   projectBudget: number,
   threshold: number
@@ -137,21 +145,21 @@ const hasUnrealisticBudgetToRevenueRatio = (
  * @param maxAllowed - Maximum allowed consecutive loss years.
  * @returns A rule indicating whether there are many consecutive losses or not.
  */
-const hasManyConsecutiveLosses = (
+export const hasManyConsecutiveLosses = (
   profits: number[],
   startingIndex: number,
   maxAllowed: number
 ): FinancialRiskRule => {
-  let consecutive = 0;
-  const manyLosses = profits
-    .slice(startingIndex)
-    .some((profit) =>
-      profit < 0 ? ++consecutive > maxAllowed : (consecutive = 0)
-    );
-  const positive = !manyLosses;
+  let currentStreak = 0;
+  let maxStreak = 0;
+  profits.slice(clamp(startingIndex, 0, profits.length)).forEach((profit) => {
+    currentStreak = profit < 0 ? currentStreak + 1 : 0;
+    maxStreak = Math.max(maxStreak, currentStreak);
+  });
+  const positive = maxStreak <= maxAllowed;
   return {
     code: "consecutiveLosses",
-    values: { lossYears: { value: consecutive, type: "integer" } },
+    values: { lossYears: { value: maxStreak, type: "integer" } },
     outcome: outcomeFromBool(positive),
   };
 };
@@ -163,7 +171,7 @@ const hasManyConsecutiveLosses = (
  * @param threshold - Threshold percentage for low average profit margin.
  * @returns A rule indicating whether the average profit margin is low or not.
  */
-const hasLowProfitMargin = (
+export const hasLowProfitMargin = (
   revenues: number[],
   profits: number[],
   threshold: number
@@ -198,7 +206,7 @@ const stddev = (numbers: number[]): number => {
  * @param threshold - Maximum allowed volatility threshold
  * @returns A rule indicating whether the volatility is high or not.
  */
-const hasHighRevenueVolatility = (
+export const hasHighRevenueVolatility = (
   revenues: number[],
   threshold: number
 ): FinancialRiskRule => {
@@ -222,27 +230,29 @@ const hasHighRevenueVolatility = (
 /**
  * Checks if the company has failed to grow revenue for a specified number of consecutive years.
  * @param revenues - Array of revenue numbers.
- * @param thresholdYears - Number of consecutive years without growth to trigger the rule.
+ * @param thresholdYears - if the number of consecutive years without growth exceeds this, the rule is unfavorable.
+ * @param growthRateThreshold - Minimum growth rate to consider as growth.
  * @returns A rule indicating whether the company has failed to grow revenue.
  */
-const hasFailedToGrowRevenue = (
+export const hasFailedToGrowRevenue = (
   revenues: number[],
-  thresholdYears: number
+  thresholdYears: number,
+  growthRateThreshold: number
 ): Rule => {
-  let consecutiveYearsWithoutGrowth = 0;
-  const failed = revenues
-    .slice(1)
-    .some((value, i) =>
-      value <= revenues[i]
-        ? ++consecutiveYearsWithoutGrowth >= thresholdYears
-        : (consecutiveYearsWithoutGrowth = 0)
-    );
-  const positive = !failed;
+  let currentStreak = 0;
+  let maxStreak = 0;
+  revenues.slice(1).forEach((rev, i) => {
+    currentStreak =
+      rev <= revenues[i] * (1 + growthRateThreshold) ? currentStreak + 1 : 0;
+    maxStreak = Math.max(maxStreak, currentStreak);
+  });
+
+  const positive = maxStreak <= thresholdYears;
 
   return {
     code: "revenueNotGrowing",
     values: {
-      foundYears: { value: consecutiveYearsWithoutGrowth, type: "integer" },
+      foundYears: { value: maxStreak, type: "integer" },
     },
     outcome: outcomeFromBool(positive),
   };

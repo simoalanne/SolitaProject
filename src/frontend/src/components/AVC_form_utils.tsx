@@ -18,29 +18,12 @@ export const ConfigSlider = ({
   const handleChange = (val: number) => {
     updateForm(param.path, val);
   };
-
-  const isRuleWeight = param.path[param.path.length - 1] === "weight";
-  const isGroupWeight = param.path[0] === "weights";
-  const tooltipKey = `${param.i18nKey ? param.i18nKey.join(".") : param.path.join(".")}.tooltip`;
-  // call t with a cast because key is computed at runtime
-  const rawTooltip = t(tooltipKey as Parameters<typeof t>[0]);
-  let tooltip: string | undefined;
-  if (rawTooltip !== (tooltipKey as unknown as string)) {
-    tooltip = rawTooltip;
-  } else {
-    // fallback to a sensible general tooltip
-    tooltip = isRuleWeight
-      ? t("weight_tooltip_rule")
-      : isGroupWeight
-      ? t("weight_tooltip_group")
-      : undefined;
-  }
-
+  undefined;
   return (
     <Slider
       key={param.path.join(".")}
-      label={getLabel(param.i18nKey || param.path, t)}
-      tooltip={tooltip}
+      label={getLabel(param.i18nKey || param.path, t) || humanizePath(param.path)}
+      tooltip={getLabel([...(param.i18nKey || param.path), "tooltip"], t)}
       value={param.value}
       min={param.min}
       max={param.max}
@@ -62,22 +45,23 @@ export const RuleConfig = ({
   <div className="config-rule">
     <div className="rule-header">
       <h4 className="rule-title">{getLabel(rule.path, t)}</h4>
-      <div className="rule-toggle">
-        <span className="rule-toggle-label">{t("in_use_question")}</span>
-        <ToggleButton
-          label=""
-          value={rule.perform.value}
-          onToggle={(val: boolean) => updateForm(rule.perform.path, val)}
-          readonly={rule.perform.readonly || false}
-        />
-      </div>
+      {!rule.perform.readonly && (
+        <div className="rule-toggle">
+          <span className="rule-toggle-label">{t("in_use_question")}</span>
+          <ToggleButton
+            label=""
+            value={rule.perform.value}
+            onToggle={(val: boolean) => updateForm(rule.perform.path, val)}
+            readonly={rule.perform.readonly || false}
+          />
+        </div>
+      )}
     </div>
 
     {rule.perform.value && (
       <div className="rule-params">
         {rule.params.length > 0 && (
           <>
-            <p>{t("rule_parameters")}:</p>
             {rule.params.map((param: SliderOption) => (
               <ConfigSlider
                 key={param.path.join(".")}
@@ -89,8 +73,7 @@ export const RuleConfig = ({
             ))}
           </>
         )}
-        <p>{t("rule_weight")}:</p>
-        {rule.weight && (
+        {!rule.weight.readonly && (
           <ConfigSlider
             key={rule.weight.path.join(".")}
             param={rule.weight}
@@ -153,6 +136,6 @@ export const getLabel = (
   const key = fieldPath.join(".") as Parameters<typeof t>[0];
   const translated = t(key);
   // If translation returns the same key string, assume missing and fall back
-  if (translated === key) return humanizePath(fieldPath);
+  if (translated === key) return;
   return translated;
 };
