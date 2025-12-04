@@ -232,7 +232,7 @@ export const translations = {
     about_title: "Rahoitusarviointityökalu",
     about_overview_title: "Yleiskuvaus",
     about_overview: "Tämä työkalu on kehitetty yhteistyössä Solitan ja TAMKin kanssa.",
-    about_overview2: "Tarkoitus on demonstroida, rahoitusorganisaatiot arvioivat T&K- ja/tai innovaatioprojekteja korostamalla projektin vahvuuksia, riskejä ja soveltuvuutta rahoitukseen.",
+    about_overview2: "Tarkoitus on demonstroida miten rahoitusorganisaatiot arvioivat T&K- ja/tai innovaatioprojekteja korostamalla projektin vahvuuksia, riskejä ja soveltuvuutta rahoitukseen.",
     about_overview3: "Tulokset ovat ohjeellisia eivätkä takaa tai estä varsinaista rahoitusta.",
     about_criteria_title: "Mitä työkalu arvioi",
     about_criteria: "Arviointi kattaa useita projektin ja osallistuvien yritysten osa-alueita:",
