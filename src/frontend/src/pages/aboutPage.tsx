@@ -13,7 +13,6 @@ export const AboutPage: React.FC = () => {
         <h2>{t("about_overview_title")}</h2>
         <p>{t("about_overview")}</p>
         <p>{t("about_overview2")}</p>
-        <p>{t("about_overview3")}</p>
       </section>
 
       <section>
@@ -27,7 +26,6 @@ export const AboutPage: React.FC = () => {
             <li>{t("about_criterialist_skills")}</li>
           </ul>
         </div>
-        <p>{t("about_submitting")}</p>
         <p>{t("about_submitting2")}</p>
       </section>
 
@@ -41,23 +39,29 @@ export const AboutPage: React.FC = () => {
             <li>{t("about_usagelist_companydesc")}</li>
             <li>{t("about_usagelist_kauppalehti")}</li>
             <li>{t("about_usagelist_startup_or_rd")}</li>
-            <li>{t("about_usagelist_plus")}</li>
+            <li>{t("about_usagelist_adding_new_companies")}</li>
           </ol>
         </div>
       </section>
-
-      <h2>{t("about_disclaimer")}</h2>
-    <p>
-      {t("about_open_source")}{" "}
-      <a
-        href="https://github.com/simoalanne/SolitaProject"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="about-link"
-      >
-        {t("about_open_source_link")}
-      </a>
-    </p>
+      <section>
+        <h2>{t("about_disclaimer")}</h2>
+        <p>{t("about_no_affiliation")}</p>
+        <p>{t("about_overview3")}</p>
+      </section>
+      <section>
+        <h2>{t("about_other_info")}</h2>
+        <p>
+          {t("about_open_source")}
+          <a
+            href="https://github.com/simoalanne/SolitaProject"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="about-link"
+          >
+            {t("about_open_source_link")}
+          </a>
+        </p>
+      </section>
     </div>
   );
 };
