@@ -7,6 +7,7 @@
   max-width: 800px;
   margin-top: 1rem;
   margin-bottom: 1rem;
+  text-align: left;
 }
 
 .about-page h1,
@@ -18,8 +19,8 @@
 
 .about-page h1,
 .about-page h2 {
-  font-size: xx-large;
-  padding: 1rem;
+  padding-bottom: 1rem;
+  padding-top: 1rem;
 }
 
 .about-page ul li {
