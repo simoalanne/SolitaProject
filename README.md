@@ -2,6 +2,13 @@
 
 Full-stack application designed to evaluate multi-company R&D or innovation projects.
 
+![Form](./screenshots/form.png)
+**1. User fills a form for the project idea**
+![Advanced settings](./screenshots/advanced-settings.png)
+**2. Every detail is customizable**
+![Results](./screenshots/results.png)
+**3. User gets detailed feedback on the idea and likelihood of funding**
+
 ## Table of Contents
 - [Concept](#concept)
 - [Overview](#overview)
@@ -32,9 +39,6 @@ Users provide project details, company information, financial data, and textual 
 The system mirrors many patterns used in real-world evaluation processes by public funding organizations. While it cannot cover every nuance of actual decision-making, it is designed to be highly customizable, extendable, and adaptable to different assessment styles.
 
 This tool has been developed in collaboration with **Solita Oy** and **Tampere University of Applied Sciences (TAMK)**.
-
-## Screenshots
-- TBA
 
 ## Key Features
 
@@ -135,16 +139,3 @@ OpenAPI documentation is available at runtime:
 ```
 http://localhost:3000/api/docs/
 ```
-(Adjust the port as needed.)
-
-## Data Sources
-
-### Funding History
-- Stored locally as JSON  
-- Updated using a Playwright script that fetches the latest datasets from the Business Finland website  
-
-### Company Search
-- Uses the PRH company API with improved backend-side relevance ranking  
-
-### Financial Data
-- Entered manually or parsed from pasted financial information using custom frontend parsing logic  
